@@ -129,7 +129,7 @@ static const int letters[] = {
         }
         NSLog(@"%.2f%% complete...", ++y / 9.0 * 100);
     }
-    NSLog(@"Highest scoring play is %@ on (%@) for %ld points", maxLetters, [self debugBoard:maxBoard], maxScore);
+    NSLog(@"Highest scoring play is %@ on (%@) for %ld points", [maxLetters sortedArrayUsingDescriptors:[NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"x" ascending:YES]]], [self debugBoard:maxBoard], maxScore);
 }
 
 #pragma mark - Validation

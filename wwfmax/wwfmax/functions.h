@@ -174,7 +174,6 @@ static NSSet *subwordsAtLocation(NSString *word, NSArray **words, NSRange *range
         return [NSSet setWithObject:[WordStructure wordAsLetters:word x:x y:y]];
     }
     
-    NSMutableSet *ret = [NSMutableSet set];
     NSMutableArray *subwords = [NSMutableArray array];
     for(int i = 0; i < length; i++) {
         const int tmpLength = MIN(i + NUM_LETTERS_TURN, length);
@@ -188,21 +187,26 @@ static NSSet *subwordsAtLocation(NSString *word, NSArray **words, NSRange *range
             }
         }
     }
+    //max in my testing is 25
     if(subwords.count == 0) {
         return nil;
     }
-    const unsigned long count = exp2(subwords.count);
-    NSMutableSet *set = [NSMutableSet setWithCapacity:count - 1];
-    for(unsigned long powerset = 1; powerset < count; powerset++) {
+    
+    const unsigned int count = exp2(subwords.count);
+    NSMutableSet *ret = [NSMutableSet setWithCapacity:count - 1];
+    for(unsigned int powerset = 1; powerset < count; powerset++) {
         WordStructure *wordStruct = [[WordStructure alloc] initWithWord:word];
-        for(unsigned long i = 1, index = 0; index < subwords.count; i <<= 1, index++) {
+        for(unsigned int i = 1, index = 0; index < subwords.count; i <<= 1, index++) {
             if(i & powerset) {
-                [wordStruct addSubword:[subwords objectAtIndex:index]];
+                if(![wordStruct addSubword:[subwords objectAtIndex:index] words:words range:range]) {
+                    wordStruct = nil;
+                    break;
+                }
             }
         }
         NSArray *words = [wordStruct validate];
         if(words) {
-            [set addObjectsFromArray:words];
+            [ret addObjectsFromArray:words];
         }
     }
     

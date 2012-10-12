@@ -13,6 +13,8 @@
 @interface WordStructure ()
 
 @property (nonatomic, strong) NSString *word;
+@property (nonatomic) int lastEnd;
+@property (nonatomic, strong) NSMutableString *subword;
 
 @end
 
@@ -38,6 +40,7 @@
 -(id)initWithWord:(NSString*)word {
     if(self = [self init]) {
         self.word = word;
+        self.lastEnd = INT_MAX;
     }
     return self;
 }
@@ -50,8 +53,21 @@
     return self;
 }
 
--(void)addSubword:(Subword*)subword {
+-(BOOL)addSubword:(Subword*)subword words:(NSArray**)words range:(NSRange*)range {
+    if(subword.start < self.lastEnd) {
+        return NO;
+    }
+    if(subword.start == self.lastEnd) {
+        [self.subword appendString:subword.word];
+        if(!validate(self.subword, words, range)) {
+            return NO;
+        }
+    } else {
+        self.subword = [NSMutableString string];
+    }
     [self.parts addObject:subword];
+    self.lastEnd = subword.end;
+    return YES;
 }
 
 -(NSArray*)validate {
@@ -64,13 +80,10 @@
     for(int i = 0, partIndex = 0; i < self.word.length; i++) {
         if(i > next.end && ++partIndex < parts.count) {
             next = [parts objectAtIndex:partIndex];
-            if(next.start < i) {
-                return nil;
-            }
         }
         if(i == next.start) {
             [self.parts addObject:next];
-            i = next.end;
+            i = next.end - 1;
         } else {
             if(letters-- > 0) {
                 Letter *l = [[Letter alloc] initWithCharacter:[self.word characterAtIndex:i]];

@@ -16,7 +16,7 @@
 +(WordStructure*)wordAsLetters:(NSString*)word x:(int)x y:(int)y;
 -(id)initWithWord:(NSString*)word;
 
--(void)addSubword:(Subword*)subword;
+-(BOOL)addSubword:(Subword*)subword words:(NSArray**)words range:(NSRange*)range;
 -(NSArray*)validate;
 
 @end

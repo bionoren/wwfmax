@@ -9,6 +9,9 @@
 #ifndef FUNCTIONS_WWFMAX
 #define FUNCTIONS_WWFMAX
 
+#import "Subword.h"
+#import "WordStructure.h"
+
 #define NUM_LETTERS_TURN 7
 #define LETTER_OFFSET 97
 
@@ -146,7 +149,7 @@ static BOOL validate(NSString *word, NSArray **words, NSRange *range) {
     return [*words indexOfObject:word inSortedRange:*range options:NSBinarySearchingFirstEqual usingComparator:alphSort] != NSNotFound;
 }
 
-static BOOL portmanteauSearch(NSString *word, NSArray **words, NSRange *range, int freeLetters) {
+static BOOL subwordSearch(NSString *word, NSArray **words, NSRange *range, int freeLetters) {
     if(word.length <= freeLetters) {
         return YES;
     }
@@ -154,7 +157,7 @@ static BOOL portmanteauSearch(NSString *word, NSArray **words, NSRange *range, i
     //greedy works most of the time, so start there
     for(int i = (int)MIN(NUM_LETTERS_TURN, word.length); i > 0; --i) {
         if(validate([word substringToIndex:i], words, range)) {
-            if(portmanteauSearch([word substringFromIndex:i], words, range, freeLetters)) {
+            if(subwordSearch([word substringFromIndex:i], words, range, freeLetters)) {
                 return YES;
             }
         }
@@ -162,7 +165,48 @@ static BOOL portmanteauSearch(NSString *word, NSArray **words, NSRange *range, i
     if(freeLetters == 0) {
         return NO;
     }
-    return portmanteauSearch([word substringFromIndex:1], words, range, freeLetters - 1);
+    return subwordSearch([word substringFromIndex:1], words, range, freeLetters - 1);
+}
+
+static NSSet *subwordsAtLocation(NSString *word, NSArray **words, NSRange *range, int x, int y) {
+    const int length = (int) word.length;
+    if(length <= NUM_LETTERS_TURN) {
+        return [NSSet setWithObject:[WordStructure wordAsLetters:word x:x y:y]];
+    }
+    
+    NSMutableSet *ret = [NSMutableSet set];
+    NSMutableArray *subwords = [NSMutableArray array];
+    for(int i = 0; i < length; i++) {
+        const int tmpLength = MIN(i + NUM_LETTERS_TURN, length);
+        for(int j = i + 1; j < tmpLength; j++) {
+            if(i == 0 && j + 1 == length) {
+                continue;
+            }
+            NSString *subword = [word substringWithRange:NSMakeRange(i, j - i)];
+            if(validate(subword, words, range)) {
+                [subwords addObject:[Subword subwordWithWord:subword start:i end:j]];
+            }
+        }
+    }
+    if(subwords.count == 0) {
+        return nil;
+    }
+    const unsigned long count = exp2(subwords.count);
+    NSMutableSet *set = [NSMutableSet setWithCapacity:count - 1];
+    for(unsigned long powerset = 1; powerset < count; powerset++) {
+        WordStructure *wordStruct = [[WordStructure alloc] initWithWord:word];
+        for(unsigned long i = 1, index = 0; index < subwords.count; i <<= 1, index++) {
+            if(i & powerset) {
+                [wordStruct addSubword:[subwords objectAtIndex:index]];
+            }
+        }
+        NSArray *words = [wordStruct validate];
+        if(words) {
+            [set addObjectsFromArray:words];
+        }
+    }
+    
+    return ret;
 }
 
 static BOOL filterValidate(NSString *word, NSArray *words, NSRange range) {
@@ -171,7 +215,7 @@ static BOOL filterValidate(NSString *word, NSArray *words, NSRange range) {
         return NO;
     }
     //ensure the word can be spelled in sequences of NUM_LETTERS_TURN letters (or less)
-    if(!portmanteauSearch(word, &words, &range, NUM_LETTERS_TURN)) {
+    if(!subwordSearch(word, &words, &range, NUM_LETTERS_TURN)) {
         NSLog(@"Couldn't break down %@", word);
         return NO;
     }

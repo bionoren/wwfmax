@@ -25,6 +25,13 @@ static Letter *letters[225] = {nil};
     return ret;
 }
 
+-(id)initWithCharacter:(char)c {
+    if(self = [super init]) {
+        self.letter = c;
+    }
+    return self;
+}
+
 -(NSString*)description {
     return [NSString stringWithFormat:@"%c (%d, %d)", self.letter, self.x, self.y];
 }

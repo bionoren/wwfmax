@@ -48,6 +48,8 @@ static const int letters[] = {
     1  //z
 };
 
+static char *blankBoard = NULL;
+
 @interface Board ()
 
 @property (nonatomic) char *board;
@@ -63,6 +65,10 @@ static const int letters[] = {
         _letters = calloc(NUM_LETTERS, sizeof(int));
         memcpy(_letters, letters, NUM_LETTERS * sizeof(int));
         _board = calloc(15 * 15, sizeof(char));
+        if(!blankBoard) {
+            blankBoard = calloc(15 * 15, sizeof(char));
+            memcpy(blankBoard, _board, 15 * 15);
+        }
         NSAssert(self.letters[1] == 9, @"self.letters[1] = %d, self.letters[4] = %d", self.letters[1], self.letters[4]);
     }
     return self;
@@ -99,20 +105,45 @@ static const int letters[] = {
     NSUInteger maxScore = 0;
     NSMutableSet *maxLetters = [NSMutableSet setWithCapacity:7];
     char *maxBoard = calloc(15 * 15, sizeof(char));
-    for(int y = 0; y < 9;) {
+    const NSMutableSet *letters = [NSMutableSet setWithCapacity:NUM_LETTERS_TURN];
+    for(int y = 0; y < 8;) {
         for(int x = 0; x < 14; x++) {
-            @autoreleasepool {
-                for(NSString *word in words) {
+            for(NSString *word in words) {
+                @autoreleasepool {
                     if(word.length - x > 15) {
                         continue;
                     }
-#warning incomplete
-                    if(word.length <= NUM_LETTERS_TURN) {
-                        NSString *playableWord = [self testValidate:word words:&words range:&range];
-                        if(!playableWord) {
-                            continue;
+                    NSSet *playableWords = subwordsAtLocation(word, &words, &range, x, y);
+                    if(!playableWords) {
+                        continue;
+                    }
+                    
+                    for(WordStructure *wordStruct in playableWords) {
+                        [self clearBoard];
+                        [letters removeAllObjects];
+                        
+                        NSMutableSet *subwords = [NSMutableSet set];
+                        for(id part in wordStruct.parts) {
+                            if([part isKindOfClass:[Letter class]]) {
+                                [letters addObject:part];
+                            } else {
+                                [subwords addObject:part];
+                            }
                         }
-                        for(NSSet *letters in [playableWord characterSetsAtX:x y:y]) {
+                        if([self validateLetters:letters]) {
+                            BOOL fail = NO;
+                            for(Subword *subword in subwords) {
+                                if(subword.word = [self testValidate:subword.word]) {
+                                    [self addSubword:subword x:x y:y];
+                                } else {
+                                    fail = YES;
+                                    break;
+                                }
+                            }
+                            if(fail) {
+                                continue;
+                            }
+                            
                             int score = [self scoreLetters:letters];
                             if(score > maxScore) {
                                 maxScore = score;
@@ -126,6 +157,7 @@ static const int letters[] = {
                     }
                 }
             }
+            NSLog(@"x pass complete");
         }
         NSLog(@"%.2f%% complete...", ++y / 9.0 * 100);
     }
@@ -134,7 +166,23 @@ static const int letters[] = {
 
 #pragma mark - Validation
 
--(NSString*)testValidate:(NSString*)word words:(NSArray**)words range:(NSRange*)range {
+-(BOOL)validateLetters:(const NSSet*)letterSet {
+    BOOL ret = YES;
+    for(Letter *l in letterSet) {
+        int index = l.letter - LETTER_OFFSET + 1;
+        if(self.letters[index]-- > 0) {
+        } else if(self.letters[0]-- > 0) {
+            l.letter = index + 64;
+        } else {
+            ret = NO;
+            break;
+        }
+    }
+    memcpy(_letters, letters, NUM_LETTERS * sizeof(int));
+    return ret;
+}
+
+-(NSString*)testValidate:(NSString*)word {
     NSMutableString *ret = [NSMutableString stringWithCapacity:word.length];
     //ensure we have enough letters to spell this word
     for(int i = 0; i < word.length; i++) {
@@ -156,7 +204,7 @@ static const int letters[] = {
 
 #pragma mark - Scoring
 
--(unsigned int)scoreLetters:(NSSet*)letters {
+-(unsigned int)scoreLetters:(const NSSet*)letters {
     unsigned int ret = 0;
     unsigned int val = 0;
     int mult = 1;
@@ -223,6 +271,17 @@ static const int letters[] = {
         }
     }
     return ret;
+}
+
+-(void)addSubword:(Subword*)word x:(int)x y:(int)y {
+    for(int i = 0; i < word.word.length; i++) {
+        char c = [word.word characterAtIndex:i];
+        self.board[[self boardCoordinateX:x + word.start + i y:y]] = c;
+    }
+}
+
+-(void)clearBoard {
+    memcpy(_board, blankBoard, 15 * 15);
 }
 
 #pragma mark - Debug / Helper

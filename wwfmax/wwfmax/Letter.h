@@ -15,5 +15,6 @@
 @property (nonatomic) unsigned int y;
 
 +(Letter*)letterWithCharacter:(char)c x:(int)x y:(int)y;
+-(id)initWithCharacter:(char)c;
 
 @end

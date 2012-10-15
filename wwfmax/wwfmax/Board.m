@@ -89,23 +89,22 @@ static char *blankBoard = NULL;
     char *maxBoard = calloc(BOARD_LENGTH * BOARD_LENGTH, sizeof(char));
 
     const static int yMax = BOARD_LENGTH / 2 + BOARD_LENGTH % 2; //ceil(BOARD_LENGTH / 2) as compile time constant
-    for(int y = 0; y < yMax; y++) {
-        for(int x = 0; x < BOARD_LENGTH - 1;) {
-            for(int i = 0, pos = 0; i < numWords; i++, pos += BOARD_LENGTH) {
-                @autoreleasepool {
-                    char *word = &words[pos];
-                    int length = wordLengths[i];
+    for(int i = 0, pos = 0; i < numWords; pos += BOARD_LENGTH, i++) {
+        @autoreleasepool {
+            char *word = &words[pos];
+            int length = wordLengths[i];
 
-                    NSSet *playableWords = subwordsAtLocation(word, length, words, numWords);
-                    if(!playableWords) {
-                        continue;
-                    }
-                    
-                    for(WordStructure *wordStruct in playableWords) {
-                        [self clearBoard];
-                        
-                        if([self validateLetters:wordStruct->_letters length:wordStruct->_numLetters]) {
-                            BOOL fail = NO;
+            NSSet *playableWords = subwordsAtLocation(word, length, words, numWords);
+            if(!playableWords) {
+                continue;
+            }
+            
+            for(WordStructure *wordStruct in playableWords) {
+                [self clearBoard];
+                
+                if([self validateLetters:wordStruct->_letters length:wordStruct->_numLetters]) {
+                    for(int y = 0; y < yMax; y++) {
+                        for(int x = 0; x < BOARD_LENGTH - 1; x++) {
                             for(int j = 0; j < wordStruct->_numSubwords; j++) {
                                 Subword subword = wordStruct->_subwords[j];
                                 assert(subword.start < subword.end);
@@ -114,12 +113,8 @@ static char *blankBoard = NULL;
                                 if([self testValidate:subwordPointer length:subwordLen]) {
                                     [self addSubword:subwordPointer length:subwordLen x:x + subword.start y:y];
                                 } else {
-                                    fail = YES;
-                                    break;
+                                    goto SUBWORD_FAIL;
                                 }
-                            }
-                            if(fail) {
-                                continue;
                             }
                             
                             unsigned int score = [self scoreLetters:wordStruct->_letters length:wordStruct->_numLetters y:y];
@@ -132,9 +127,11 @@ static char *blankBoard = NULL;
                         }
                     }
                 }
+                SUBWORD_FAIL:
+                ;
             }
-            NSLog(@"%.2f%% complete...", (y / (float)yMax + ++x / (float)(BOARD_LENGTH - 1) / (float)yMax) * 100.0);
         }
+        NSLog(@"%.2f%% complete...", i / (float)numWords * 100.0);
     }
     char maxWord[16] = { [0 ... 14] = '_', '\0' };
     for(int i = 0; i < numMaxLetters; i++) {

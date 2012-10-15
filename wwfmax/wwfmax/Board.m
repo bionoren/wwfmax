@@ -10,6 +10,7 @@
 #import "functions.h"
 
 #define NUM_LETTERS 27
+#define DEFAULT_CHAR '.'
 
 /**
  Note that capital letters are used to represent blanks
@@ -46,7 +47,7 @@ static const int letters[] = {
     1  //z
 };
 
-static char *blankBoard = NULL;
+static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGTH * BOARD_LENGTH - 1] = DEFAULT_CHAR };
 
 @interface Board ()
 
@@ -63,10 +64,7 @@ static char *blankBoard = NULL;
         _letters = calloc(NUM_LETTERS, sizeof(int));
         memcpy(_letters, letters, NUM_LETTERS * sizeof(int));
         _board = calloc(BOARD_LENGTH * BOARD_LENGTH, sizeof(char));
-        if(!blankBoard) {
-            blankBoard = calloc(BOARD_LENGTH * BOARD_LENGTH, sizeof(char));
-            memcpy(blankBoard, _board, BOARD_LENGTH * BOARD_LENGTH);
-        }
+        [self clearBoard];
         NSAssert(self.letters[1] == 9, @"self.letters[1] = %d, self.letters[4] = %d", self.letters[1], self.letters[4]);
     }
     return self;
@@ -84,7 +82,9 @@ static char *blankBoard = NULL;
  */
 -(void)solve:(char*)words lengths:(int*)wordLengths count:(int)numWords {
     NSUInteger maxScore = 0;
-    Letter maxLetters[7];
+    char maxWord[BOARD_LENGTH];
+    int maxWordLength = 0;
+    Letter maxLetters[NUM_LETTERS_TURN];
     int numMaxLetters = 0;
     char *maxBoard = calloc(BOARD_LENGTH * BOARD_LENGTH, sizeof(char));
 
@@ -120,8 +120,10 @@ static char *blankBoard = NULL;
                             unsigned int score = [self scoreLetters:wordStruct->_letters length:wordStruct->_numLetters y:y];
                             if(score > maxScore) {
                                 maxScore = score;
-                                memcpy(maxBoard, self.board, 15*15*sizeof(char));
-                                memcpy(maxLetters, wordStruct->_letters, wordStruct->_numLetters);
+                                memcpy(maxBoard, _board, BOARD_LENGTH*BOARD_LENGTH*sizeof(char));
+                                memcpy(maxLetters, wordStruct->_letters, wordStruct->_numLetters * sizeof(Letter));
+                                memcpy(maxWord, word, length * sizeof(char));
+                                maxWordLength = length;
                                 numMaxLetters = wordStruct->_numLetters;
                             }
                         }
@@ -131,16 +133,16 @@ static char *blankBoard = NULL;
                 ;
             }
         }
-        NSLog(@"%.2f%% complete...", i / (float)numWords * 100.0);
+        //NSLog(@"%.2f%% complete...", i / (float)numWords * 100.0);
     }
-    char maxWord[16] = { [0 ... 14] = '_', '\0' };
+    char maxWordLetters[BOARD_LENGTH + 1] = { [0 ... BOARD_LENGTH - 1] = '_', '\0' };
     for(int i = 0; i < numMaxLetters; i++) {
         char c = (char)Y_FROM_HASH(maxLetters[i]);
         int x = X_FROM_HASH(maxLetters[i]);
-        maxWord[x] = c;
+        maxWordLetters[x] = c;
     }
     
-    NSLog(@"Highest scoring play is %s on (%@) for %ld points", maxWord, [self debugBoard:maxBoard], maxScore);
+    NSLog(@"Highest scoring play is %.*s (%.*s) on (%@) for %ld points", numMaxLetters, maxWordLetters, maxWordLength, maxWord, [self debugBoard:maxBoard], maxScore);
     free(maxBoard);
 }
 
@@ -189,7 +191,7 @@ static char *blankBoard = NULL;
     unsigned int ret = 0;
     unsigned int val = 0;
     int mult = 1;
-    int minx = 14;
+    int minx = BOARD_LENGTH;
     int maxx = 0;
     //score the letters and note the word multipliers
     for(int i = 0; i < length; i++) {
@@ -206,8 +208,8 @@ static char *blankBoard = NULL;
     
     //assume the word is horizontal
     //find the actual word boundaries
-    while(--minx >= 0 && self.board[[self boardCoordinateX:minx y:y]]);
-    while(++maxx <= 15 && self.board[[self boardCoordinateX:maxx y:y]]);
+    while(--minx >= 0 && self.board[[self boardCoordinateX:minx y:y]] != DEFAULT_CHAR);
+    while(++maxx <= BOARD_LENGTH && self.board[[self boardCoordinateX:maxx y:y]] != DEFAULT_CHAR);
     
     //finish scoring the word
     for(int i = minx + 1; i < maxx; ++i) {
@@ -226,9 +228,9 @@ static char *blankBoard = NULL;
                 val += valuel(self.board[[self boardCoordinateX:minx y:i]]);
             }
         }
-        if(y < 15 && self.board[[self boardCoordinateX:minx y:y + 1]]) {
+        if(y < BOARD_LENGTH && self.board[[self boardCoordinateX:minx y:y + 1]]) {
             found = YES;
-            for(int i = y + 1; i <= 15 && self.board[[self boardCoordinateX:minx y:i]]; ++i) {
+            for(int i = y + 1; i <= BOARD_LENGTH && self.board[[self boardCoordinateX:minx y:i]]; ++i) {
                 val += valuel(self.board[[self boardCoordinateX:minx y:i]]);
             }
         }
@@ -267,25 +269,21 @@ static char *blankBoard = NULL;
 }
 
 -(void)clearBoard {
-    memcpy(_board, blankBoard, 15 * 15);
+    memcpy(_board, blankBoard, BOARD_LENGTH * BOARD_LENGTH * sizeof(char));
 }
 
 #pragma mark - Debug / Helper
 
 -(int)boardCoordinateX:(int)x y:(int)y {
-    return x + y * 15;
+    return x + y * BOARD_LENGTH;
 }
 
 -(NSString*)debugBoard:(char*)board {
     NSMutableString *ret = [[NSMutableString alloc] initWithString:@"\n"];
-    for(int i = 0; i < 15; i++) {
-        for(int j = 0; j < 15; j++) {
-            char c = board[[self boardCoordinateX:j y:i]];
-            if(c) {
-                [ret appendFormat:@"%c", c];
-            } else {
-                [ret appendString:@"-"];
-            }
+    for(int y = 0; y < BOARD_LENGTH; y++) {
+        for(int x = 0; x < BOARD_LENGTH; x++) {
+            char c = board[[self boardCoordinateX:x y:y]];
+            [ret appendFormat:@"%c", c];
         }
         [ret appendString:@"\n"];
     }

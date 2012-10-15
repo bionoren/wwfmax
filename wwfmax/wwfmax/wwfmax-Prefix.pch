@@ -5,3 +5,18 @@
 #ifdef __OBJC__
     #import <Foundation/Foundation.h>
 #endif
+
+#define NUM_LETTERS_TURN 7
+#define BOARD_LENGTH 15
+#define LETTER_OFFSET_LC 97
+#define LETTER_OFFSET_UC 65
+
+#define HASH(x, y) ((y << 4) | x)
+#define Y_FROM_HASH(hash) (hash >> 4)
+#define X_FROM_HASH(hash) (hash & 0xF)
+
+typedef unsigned int Letter; //upper 8 bits are char, lower 8 bits are x location
+typedef struct {
+    int start;
+    int end;
+} Subword;

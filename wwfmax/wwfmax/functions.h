@@ -9,15 +9,7 @@
 #ifndef FUNCTIONS_WWFMAX
 #define FUNCTIONS_WWFMAX
 
-#import "Subword.h"
 #import "WordStructure.h"
-
-#define NUM_LETTERS_TURN 7
-#define LETTER_OFFSET 97
-
-#define HASH(x, y) ((y << 4) | x)
-#define X_FROM_HASH(hash) (hash >> 4)
-#define Y_FROM_HASH(hash) (hash & 31)
 
 static const NSComparator alphSort = ^NSComparisonResult(id obj1, id obj2) {
     return [obj1 compare:obj2];
@@ -144,86 +136,87 @@ static unsigned int wordMultiplier(unsigned int x, unsigned int y) {
 
 #pragma mark - Validation
 
-static BOOL validate(NSString *word, NSArray **words, NSRange *range) {
-    assert([word isEqualToString:word.lowercaseString]);
-    return [*words indexOfObject:word inSortedRange:*range options:NSBinarySearchingFirstEqual usingComparator:alphSort] != NSNotFound;
-}
-
-static BOOL subwordSearch(NSString *word, NSArray **words, NSRange *range, int freeLetters) {
-    if(word.length <= freeLetters) {
-        return YES;
-    }
+static BOOL validate(char *word, int length, char *words, int numWords) {
+    // inclusive indices
+    //   0 <= imin when using truncate toward zero divide
+    //     imid = (imin+imax)/2;
+    //   imin unrestricted when using truncate toward minus infinity divide
+    //     imid = (imin+imax)>>1; or
+    //     imid = (int)floor((imin+imax)/2.0);
+    //int binary_search(int A[], int key, int imin, int imax)
     
-    //greedy works most of the time, so start there
-    for(int i = (int)MIN(NUM_LETTERS_TURN, word.length); i > 0; --i) {
-        if(validate([word substringToIndex:i], words, range)) {
-            if(subwordSearch([word substringFromIndex:i], words, range, freeLetters)) {
-                return YES;
-            }
+    int imin = 0, imax = numWords;
+    
+    // continually narrow search until just one element remains
+    while(imin < imax) {
+        int imid = (imin + imax) / 2;
+        
+        // code must guarantee the interval is reduced at each iteration
+        assert(imid < imax);
+        // note: 0 <= imin < imax implies imid will always be less than imax
+        
+        if(strcmp(&words[imid], word) < 0) {
+            imin = imid + 1;
+        } else {
+            imax = imid;
         }
     }
-    if(freeLetters == 0) {
+    // At exit of while:
+    //   if A[] is empty, then imax < imin
+    //   otherwise imax == imin
+    
+    // deferred test for equality
+    if(imax == imin && strcmp(&words[imin], word) == 0) {
+        return YES;
+    } else {
         return NO;
     }
-    return subwordSearch([word substringFromIndex:1], words, range, freeLetters - 1);
 }
 
-static NSSet *subwordsAtLocation(NSString *word, NSArray **words, NSRange *range, int x, int y) {
-    const int length = (int) word.length;
+static NSSet *subwordsAtLocation(char *word, int length, char *words, int numWords) {
     if(length <= NUM_LETTERS_TURN) {
-        return [NSSet setWithObject:[WordStructure wordAsLetters:word x:x y:y]];
+        return [NSSet setWithObject:[WordStructure wordAsLetters:word length:length]];
     }
     
-    NSMutableArray *subwords = [NSMutableArray array];
+    //max in my testing is 25
+    Subword subwords[25];
+    int numSubwords = 0;
     for(int i = 0; i < length; i++) {
         const int tmpLength = MIN(i + NUM_LETTERS_TURN, length);
         for(int j = i + 1; j < tmpLength; j++) {
             if(i == 0 && j + 1 == length) {
                 continue;
             }
-            NSString *subword = [word substringWithRange:NSMakeRange(i, j - i)];
-            if(validate(subword, words, range)) {
-                [subwords addObject:[Subword subwordWithWord:subword start:i end:j]];
+            char *subword = &word[i];
+            if(validate(subword, j - i, words, numWords)) {
+                Subword sub = {.start = i, .end = j};
+                subwords[numSubwords++] = sub;
+                assert(numSubwords <= 25);
             }
         }
     }
-    //max in my testing is 25
-    if(subwords.count == 0) {
+    if(numSubwords == 0) {
         return nil;
     }
     
-    const unsigned int count = exp2(subwords.count);
+    const unsigned int count = (int)exp2(numSubwords);
     NSMutableSet *ret = [NSMutableSet setWithCapacity:count - 1];
     for(unsigned int powerset = 1; powerset < count; powerset++) {
-        WordStructure *wordStruct = [[WordStructure alloc] initWithWord:word];
-        for(unsigned int i = 1, index = 0; index < subwords.count; i <<= 1, index++) {
+        Subword comboSubwords[BOARD_LENGTH];
+        int comboSubwordsLength = 0;
+        for(unsigned int i = 1, index = 0; index < numSubwords; i <<= 1, index++) {
             if(i & powerset) {
-                if(![wordStruct addSubword:[subwords objectAtIndex:index] words:words range:range]) {
-                    wordStruct = nil;
-                    break;
-                }
+                comboSubwords[comboSubwordsLength++] = subwords[index];
             }
         }
-        NSArray *words = [wordStruct validate];
+        WordStructure *wordStruct = [[WordStructure alloc] initWithWord:word length:length];
+        NSArray *words = [wordStruct validateSubwords:comboSubwords length:comboSubwordsLength];
         if(words) {
             [ret addObjectsFromArray:words];
         }
     }
     
     return ret;
-}
-
-static BOOL filterValidate(NSString *word, NSArray *words, NSRange range) {
-    if(word.length > 15) {
-        NSLog(@"%@ is too long to play", word);
-        return NO;
-    }
-    //ensure the word can be spelled in sequences of NUM_LETTERS_TURN letters (or less)
-    if(!subwordSearch(word, &words, &range, NUM_LETTERS_TURN)) {
-        NSLog(@"Couldn't break down %@", word);
-        return NO;
-    }
-    return YES;
 }
 
 #endif

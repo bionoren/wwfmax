@@ -7,16 +7,20 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "Subword.h"
 
-@interface WordStructure : NSObject
+@interface WordStructure : NSObject {
+    @public
+    Letter _letters[NUM_LETTERS_TURN];
+    int _numLetters;
+    char *_word;
+    int _length;
+    Subword _subwords[BOARD_LENGTH];
+    int _numSubwords;
+}
 
-@property (nonatomic, strong, readonly) NSMutableArray *parts;
++(WordStructure*)wordAsLetters:(char*)word length:(int)length;
+-(id)initWithWord:(char*)word length:(int)length;
 
-+(WordStructure*)wordAsLetters:(NSString*)word x:(int)x y:(int)y;
--(id)initWithWord:(NSString*)word;
-
--(BOOL)addSubword:(Subword*)subword words:(NSArray**)words range:(NSRange*)range;
--(NSArray*)validate;
+-(NSArray*)validateSubwords:(Subword*)subwords length:(int)numSubwords;
 
 @end

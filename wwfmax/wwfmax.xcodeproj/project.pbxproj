@@ -7,13 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		BE39047A161F92BB00A0A630 /* Subword.m in Sources */ = {isa = PBXBuildFile; fileRef = BE390479161F92BB00A0A630 /* Subword.m */; };
 		BE39047E161F986100A0A630 /* WordStructure.m in Sources */ = {isa = PBXBuildFile; fileRef = BE39047D161F986100A0A630 /* WordStructure.m */; };
-		BE475423161CF33600D4AA0C /* NSString+CharacterSets.m in Sources */ = {isa = PBXBuildFile; fileRef = BE475422161CF33600D4AA0C /* NSString+CharacterSets.m */; };
 		BE50649E161A2DAE003B237A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE50649D161A2DAE003B237A /* Foundation.framework */; };
 		BE5064A1161A2DAE003B237A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = BE5064A0161A2DAE003B237A /* main.m */; };
 		BEC0171E161A2FD40078129A /* Board.m in Sources */ = {isa = PBXBuildFile; fileRef = BEC0171D161A2FD40078129A /* Board.m */; };
-		BEC01725161A38E20078129A /* Letter.m in Sources */ = {isa = PBXBuildFile; fileRef = BEC01724161A38E20078129A /* Letter.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -29,12 +26,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		BE390478161F92BB00A0A630 /* Subword.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Subword.h; sourceTree = "<group>"; };
-		BE390479161F92BB00A0A630 /* Subword.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Subword.m; sourceTree = "<group>"; };
 		BE39047C161F986100A0A630 /* WordStructure.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WordStructure.h; sourceTree = "<group>"; };
 		BE39047D161F986100A0A630 /* WordStructure.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WordStructure.m; sourceTree = "<group>"; };
-		BE475421161CF33600D4AA0C /* NSString+CharacterSets.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+CharacterSets.h"; sourceTree = "<group>"; };
-		BE475422161CF33600D4AA0C /* NSString+CharacterSets.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+CharacterSets.m"; sourceTree = "<group>"; };
 		BE506499161A2DAE003B237A /* wwfmax */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = wwfmax; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE50649D161A2DAE003B237A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		BE5064A0161A2DAE003B237A /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -42,8 +35,6 @@
 		BEC0171C161A2FD40078129A /* Board.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Board.h; sourceTree = "<group>"; };
 		BEC0171D161A2FD40078129A /* Board.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Board.m; sourceTree = "<group>"; };
 		BEC01720161A36B60078129A /* dict.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = dict.txt; sourceTree = "<group>"; };
-		BEC01723161A38E20078129A /* Letter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Letter.h; sourceTree = "<group>"; };
-		BEC01724161A38E20078129A /* Letter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Letter.m; sourceTree = "<group>"; };
 		BEC01729161A40500078129A /* functions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = functions.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -92,14 +83,8 @@
 				BE5064A2161A2DAE003B237A /* Supporting Files */,
 				BEC0171C161A2FD40078129A /* Board.h */,
 				BEC0171D161A2FD40078129A /* Board.m */,
-				BEC01723161A38E20078129A /* Letter.h */,
-				BEC01724161A38E20078129A /* Letter.m */,
-				BE390478161F92BB00A0A630 /* Subword.h */,
-				BE390479161F92BB00A0A630 /* Subword.m */,
 				BE39047C161F986100A0A630 /* WordStructure.h */,
 				BE39047D161F986100A0A630 /* WordStructure.m */,
-				BE475421161CF33600D4AA0C /* NSString+CharacterSets.h */,
-				BE475422161CF33600D4AA0C /* NSString+CharacterSets.m */,
 			);
 			path = wwfmax;
 			sourceTree = "<group>";
@@ -166,9 +151,6 @@
 			files = (
 				BE5064A1161A2DAE003B237A /* main.m in Sources */,
 				BEC0171E161A2FD40078129A /* Board.m in Sources */,
-				BEC01725161A38E20078129A /* Letter.m in Sources */,
-				BE475423161CF33600D4AA0C /* NSString+CharacterSets.m in Sources */,
-				BE39047A161F92BB00A0A630 /* Subword.m in Sources */,
 				BE39047E161F986100A0A630 /* WordStructure.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -185,6 +167,7 @@
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -216,6 +199,7 @@
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";

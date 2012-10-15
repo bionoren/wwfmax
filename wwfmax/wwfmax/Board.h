@@ -10,7 +10,6 @@
 
 @interface Board : NSObject
 
--(void)debug:(NSArray**)words;
--(void)solve:(NSArray*)words;
+-(void)solve:(char*)words lengths:(int*)wordLengths count:(int)numWords;
 
 @end

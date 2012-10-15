@@ -7,9 +7,7 @@
 //
 
 #import "Board.h"
-#import "Letter.h"
 #import "functions.h"
-#import "NSString+CharacterSets.h"
 
 #define NUM_LETTERS 27
 
@@ -64,10 +62,10 @@ static char *blankBoard = NULL;
     if(self = [super init]) {
         _letters = calloc(NUM_LETTERS, sizeof(int));
         memcpy(_letters, letters, NUM_LETTERS * sizeof(int));
-        _board = calloc(15 * 15, sizeof(char));
+        _board = calloc(BOARD_LENGTH * BOARD_LENGTH, sizeof(char));
         if(!blankBoard) {
-            blankBoard = calloc(15 * 15, sizeof(char));
-            memcpy(blankBoard, _board, 15 * 15);
+            blankBoard = calloc(BOARD_LENGTH * BOARD_LENGTH, sizeof(char));
+            memcpy(blankBoard, _board, BOARD_LENGTH * BOARD_LENGTH);
         }
         NSAssert(self.letters[1] == 9, @"self.letters[1] = %d, self.letters[4] = %d", self.letters[1], self.letters[4]);
     }
@@ -81,60 +79,40 @@ static char *blankBoard = NULL;
     _board = NULL;
 }
 
--(void)debug:(NSArray**)words {
-    for(int i = 0; i < NUM_LETTERS; i++) {
-        NSLog(@"Found letter %c => %d", i + LETTER_OFFSET - 1, self.letters[i]);
-    }
-    NSRange range = NSMakeRange(0, (*words).count);
-    for(NSString *word in *words) {
-        filterValidate(word, *words, range);
-    }
-    NSLog(@"Validation complete");
-}
-
 /**
  I'm strictly interested in the top half of the board and horizontal words because of bonus tile symetry.
  */
--(void)solve:(NSArray*)words {
-    NSRange range = NSMakeRange(0, words.count);
-    words = [words filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(NSString *evaluatedObject, NSDictionary *bindings) {
-        return filterValidate(evaluatedObject, words, range);
-    }]];
-    range = NSMakeRange(0, words.count);
-    
+-(void)solve:(char*)words lengths:(int*)wordLengths count:(int)numWords {
     NSUInteger maxScore = 0;
-    NSMutableSet *maxLetters = [NSMutableSet setWithCapacity:7];
-    char *maxBoard = calloc(15 * 15, sizeof(char));
-    const NSMutableSet *letters = [NSMutableSet setWithCapacity:NUM_LETTERS_TURN];
-    for(int y = 0; y < 8;) {
-        for(int x = 0; x < 14; x++) {
-            for(NSString *word in words) {
+    Letter maxLetters[7];
+    int numMaxLetters = 0;
+    char *maxBoard = calloc(BOARD_LENGTH * BOARD_LENGTH, sizeof(char));
+
+    const static int yMax = BOARD_LENGTH / 2 + BOARD_LENGTH % 2; //ceil(BOARD_LENGTH / 2) as compile time constant
+    for(int y = 0; y < yMax; y++) {
+        for(int x = 0; x < BOARD_LENGTH - 1;) {
+            for(int i = 0, pos = 0; i < numWords; i++, pos += BOARD_LENGTH) {
                 @autoreleasepool {
-                    if(word.length - x > 15) {
-                        continue;
-                    }
-                    NSSet *playableWords = subwordsAtLocation(word, &words, &range, x, y);
+                    char *word = &words[pos];
+                    int length = wordLengths[i];
+
+                    NSSet *playableWords = subwordsAtLocation(word, length, words, numWords);
                     if(!playableWords) {
                         continue;
                     }
                     
                     for(WordStructure *wordStruct in playableWords) {
                         [self clearBoard];
-                        [letters removeAllObjects];
                         
-                        NSMutableSet *subwords = [NSMutableSet set];
-                        for(id part in wordStruct.parts) {
-                            if([part isKindOfClass:[Letter class]]) {
-                                [letters addObject:part];
-                            } else {
-                                [subwords addObject:part];
-                            }
-                        }
-                        if([self validateLetters:letters]) {
+                        if([self validateLetters:wordStruct->_letters length:wordStruct->_numLetters]) {
                             BOOL fail = NO;
-                            for(Subword *subword in subwords) {
-                                if(subword.word = [self testValidate:subword.word]) {
-                                    [self addSubword:subword x:x y:y];
+                            for(int j = 0; j < wordStruct->_numSubwords; j++) {
+                                Subword subword = wordStruct->_subwords[j];
+                                assert(subword.start < subword.end);
+                                int subwordLen = subword.end - subword.start;
+                                char *subwordPointer = &(wordStruct->_word[subword.start]);
+                                if([self testValidate:subwordPointer length:subwordLen]) {
+                                    [self addSubword:subwordPointer length:subwordLen x:x + subword.start y:y];
                                 } else {
                                     fail = YES;
                                     break;
@@ -144,35 +122,42 @@ static char *blankBoard = NULL;
                                 continue;
                             }
                             
-                            int score = [self scoreLetters:letters];
+                            unsigned int score = [self scoreLetters:wordStruct->_letters length:wordStruct->_numLetters y:y];
                             if(score > maxScore) {
                                 maxScore = score;
                                 memcpy(maxBoard, self.board, 15*15*sizeof(char));
-                                [maxLetters removeAllObjects];
-                                for(Letter *l in letters) {
-                                    [maxLetters addObject:[l copy]];
-                                }
+                                memcpy(maxLetters, wordStruct->_letters, wordStruct->_numLetters);
+                                numMaxLetters = wordStruct->_numLetters;
                             }
                         }
                     }
                 }
             }
-            NSLog(@"x pass complete");
+            NSLog(@"%.2f%% complete...", (y / (float)yMax + ++x / (float)(BOARD_LENGTH - 1) / (float)yMax) * 100.0);
         }
-        NSLog(@"%.2f%% complete...", ++y / 9.0 * 100);
     }
-    NSLog(@"Highest scoring play is %@ on (%@) for %ld points", [maxLetters sortedArrayUsingDescriptors:[NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"x" ascending:YES]]], [self debugBoard:maxBoard], maxScore);
+    char maxWord[16] = { [0 ... 14] = '_', '\0' };
+    for(int i = 0; i < numMaxLetters; i++) {
+        char c = (char)Y_FROM_HASH(maxLetters[i]);
+        int x = X_FROM_HASH(maxLetters[i]);
+        maxWord[x] = c;
+    }
+    
+    NSLog(@"Highest scoring play is %s on (%@) for %ld points", maxWord, [self debugBoard:maxBoard], maxScore);
+    free(maxBoard);
 }
 
 #pragma mark - Validation
 
--(BOOL)validateLetters:(const NSSet*)letterSet {
+-(BOOL)validateLetters:(Letter*)letters length:(int)length {
     BOOL ret = YES;
-    for(Letter *l in letterSet) {
-        int index = l.letter - LETTER_OFFSET + 1;
+    for(int i = 0; i < length; i++) {
+        Letter l = letters[i];
+        char c = (char)Y_FROM_HASH(l);
+        int index = c - LETTER_OFFSET_LC + 1;
         if(self.letters[index]-- > 0) {
         } else if(self.letters[0]-- > 0) {
-            l.letter = index + 64;
+            letters[i] = (l ^ c) | (index + LETTER_OFFSET_UC - 1);
         } else {
             ret = NO;
             break;
@@ -182,18 +167,17 @@ static char *blankBoard = NULL;
     return ret;
 }
 
--(NSString*)testValidate:(NSString*)word {
-    NSMutableString *ret = [NSMutableString stringWithCapacity:word.length];
+-(BOOL)testValidate:(char*)word length:(int)length {
+    BOOL ret = YES;
     //ensure we have enough letters to spell this word
-    for(int i = 0; i < word.length; i++) {
-        char c = [word characterAtIndex:i];
-        int index = c - LETTER_OFFSET + 1;
+    for(int i = 0; i < length; i++) {
+        char c = word[i];
+        int index = c - LETTER_OFFSET_LC + 1;
         if(self.letters[index]-- > 0) {
-            [ret appendFormat:@"%c", c];
         } else if(self.letters[0]-- > 0) {
-            [ret appendFormat:@"%c", index + 64];
+            word[i] = (char)(index + LETTER_OFFSET_LC - 1);
         } else {
-            ret = nil;
+            ret = NO;
             break;
         }
     }
@@ -204,19 +188,23 @@ static char *blankBoard = NULL;
 
 #pragma mark - Scoring
 
--(unsigned int)scoreLetters:(const NSSet*)letters {
+-(unsigned int)scoreLetters:(Letter *)letters length:(int)length y:(int)y {
     unsigned int ret = 0;
     unsigned int val = 0;
     int mult = 1;
     int minx = 14;
     int maxx = 0;
-    const int y = ((Letter*)[letters anyObject]).y;
     //score the letters and note the word multipliers
-    for(Letter *l in letters) {
-        val += scoreSquare(l.letter, l.x, y);
-        mult *= wordMultiplier(l.x, y);
-        minx = MIN(minx, l.x);
-        maxx = MAX(maxx, l.x);
+    for(int i = 0; i < length; i++) {
+        Letter l = letters[i];
+        char c = (char)Y_FROM_HASH(l);
+        int x = X_FROM_HASH(l);
+        assert(c < 255);
+        assert(x <= BOARD_LENGTH);
+        val += scoreSquare(c, x, y);
+        mult *= wordMultiplier(x, y);
+        minx = MIN(minx, x);
+        maxx = MAX(maxx, x);
     }
     
     //assume the word is horizontal
@@ -233,7 +221,7 @@ static char *blankBoard = NULL;
     //score any sidewords, noting multipliers again
     val = 0;
     mult = 1;
-    for(Letter *l in letters) {
+    for(int i = 0; i < length; i++) {
         BOOL found = NO;
         if(y > 0 && self.board[[self boardCoordinateX:minx y:y - 1]]) {
             found = YES;
@@ -248,14 +236,17 @@ static char *blankBoard = NULL;
             }
         }
         if(found) {
-            val += scoreSquare(l.letter, l.x, y);
-            mult *= wordMultiplier(l.x, y);
+            Letter l = letters[i];
+            char c = (char)Y_FROM_HASH(l);
+            int x = X_FROM_HASH(l);
+            val += scoreSquare(c, x, y);
+            mult *= wordMultiplier(x, y);
         }
     }
     ret += val * mult;
     
     //add bonus for using all letters
-    if(letters.count == NUM_LETTERS_TURN) {
+    if(length == NUM_LETTERS_TURN) {
         ret += 35;
     }
     return ret;
@@ -265,19 +256,17 @@ static char *blankBoard = NULL;
 -(unsigned int)scoreWord:(NSString*)word {
     unsigned int ret = 0;
     for(int i = 0; i < word.length; i++) {
-        char c = [word characterAtIndex:i];
-        if(c >= LETTER_OFFSET) {
+        char c = (char)[word characterAtIndex:i];
+        if(c >= LETTER_OFFSET_LC) {
             ret += scoreSquareHash(c, -1);
         }
     }
     return ret;
 }
 
--(void)addSubword:(Subword*)word x:(int)x y:(int)y {
-    for(int i = 0; i < word.word.length; i++) {
-        char c = [word.word characterAtIndex:i];
-        self.board[[self boardCoordinateX:x + word.start + i y:y]] = c;
-    }
+-(void)addSubword:(char*)word length:(int)length x:(int)x y:(int)y {
+    int start = [self boardCoordinateX:x y:y];
+    memcpy(&(_board[start]), word, length);
 }
 
 -(void)clearBoard {

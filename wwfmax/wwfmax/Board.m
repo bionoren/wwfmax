@@ -12,6 +12,8 @@
 #define NUM_LETTERS 27
 #define DEFAULT_CHAR '.'
 
+#define BOARD_COORDINATE(xvar, yvar) ((xvar) + (yvar) * BOARD_LENGTH)
+
 /**
  Note that capital letters are used to represent blanks
  */
@@ -81,6 +83,9 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
  I'm strictly interested in the top half of the board and horizontal words because of bonus tile symetry.
  */
 -(void)solve:(char*)words lengths:(int*)wordLengths count:(int)numWords {
+    assert(validate("jezebel", 7, words, numWords, wordLengths));
+    assert(validate("azotobacters", 12, words, numWords, wordLengths));
+    
     NSUInteger maxScore = 0;
     char maxWord[BOARD_LENGTH];
     int maxWordLength = 0;
@@ -102,14 +107,11 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
             }
             
             for(WordStructure *wordStruct in playableWords) {
-                [self clearBoard];
-                
-                if(strncmp("jimjams", word, length) == 0) {
-                    NSLog(@"here");
-                }
                 if([self validateLetters:wordStruct->_letters length:wordStruct->_numLetters]) {
                     for(int y = 0; y < yMax; y++) {
                         for(int x = 0; x < BOARD_LENGTH - length; x++) {
+                            [self clearBoard];
+                            
                             for(int j = 0; j < wordStruct->_numSubwords; j++) {
                                 Subword subword = wordStruct->_subwords[j];
                                 assert(subword.start < subword.end);
@@ -139,7 +141,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
                                     int offset = X_FROM_HASH(maxLetters[k]);
                                     maxWordLetters[offset] = c;
                                 }
-                                NSLog(@"Highest scoring play is %.*s (%.*s) at (%d, %d) on (%@) for %ld points", numMaxLetters, maxWordLetters, maxWordLength, maxWord, maxx, maxy, [self debugBoard:maxBoard], maxScore);
+                                NSLog(@"Highest scoring play is %.*s (%.*s) at (%d, %d) on (%@) for %ld points", numMaxLetters, maxWordLetters, maxWordLength, maxWord, maxx, maxy, [Board debugBoard:maxBoard], maxScore);
                             }
                         }
                     }
@@ -157,7 +159,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
         maxWordLetters[x] = c;
     }
     
-    NSLog(@"Highest scoring play is %.*s (%.*s) at (%d, %d) on (%@) for %ld points", numMaxLetters, maxWordLetters, maxWordLength, maxWord, maxx, maxy, [self debugBoard:maxBoard], maxScore);
+    NSLog(@"Highest scoring play is %.*s (%.*s) at (%d, %d) on (%@) for %ld points", numMaxLetters, maxWordLetters, maxWordLength, maxWord, maxx, maxy, [Board debugBoard:maxBoard], maxScore);
     free(maxBoard);
 }
 
@@ -226,12 +228,12 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
     
     //assume the word is horizontal
     //find the actual word boundaries
-    while(--minx >= 0 && self.board[[self boardCoordinateX:minx y:y]] != DEFAULT_CHAR);
-    while(++maxx <= BOARD_LENGTH && self.board[[self boardCoordinateX:maxx y:y]] != DEFAULT_CHAR);
+    while(--minx >= 0 && self.board[BOARD_COORDINATE(minx, y)] != DEFAULT_CHAR);
+    while(++maxx <= BOARD_LENGTH && self.board[BOARD_COORDINATE(maxx, y)] != DEFAULT_CHAR);
     
     //finish scoring the word
     for(int i = minx + 1; i < maxx; ++i) {
-        val += valuel(self.board[[self boardCoordinateX:i y:y]]);
+        val += valuel(self.board[BOARD_COORDINATE(i, y)]);
     }
     ret = val * mult;
     
@@ -240,16 +242,16 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
     mult = 1;
     for(int i = 0; i < length; i++) {
         BOOL found = NO;
-        if(y > 0 && self.board[[self boardCoordinateX:minx y:y - 1]] != DEFAULT_CHAR) {
+        if(y > 0 && self.board[BOARD_COORDINATE(minx, y - 1)] != DEFAULT_CHAR) {
             found = YES;
-            for(int i = y - 1; i >= 0 && self.board[[self boardCoordinateX:minx y:i]] != DEFAULT_CHAR; --i) {
-                val += valuel(self.board[[self boardCoordinateX:minx y:i]]);
+            for(int i = y - 1; i >= 0 && self.board[BOARD_COORDINATE(minx, i)] != DEFAULT_CHAR; --i) {
+                val += valuel(self.board[BOARD_COORDINATE(minx, i)]);
             }
         }
-        if(y < BOARD_LENGTH && self.board[[self boardCoordinateX:minx y:y + 1]] != DEFAULT_CHAR) {
+        if(y < BOARD_LENGTH && self.board[BOARD_COORDINATE(minx, y + 1)] != DEFAULT_CHAR) {
             found = YES;
-            for(int i = y + 1; i <= BOARD_LENGTH && self.board[[self boardCoordinateX:minx y:i]] != DEFAULT_CHAR; ++i) {
-                val += valuel(self.board[[self boardCoordinateX:minx y:i]]);
+            for(int i = y + 1; i <= BOARD_LENGTH && self.board[BOARD_COORDINATE(minx, i)] != DEFAULT_CHAR; ++i) {
+                val += valuel(self.board[BOARD_COORDINATE(minx, i)]);
             }
         }
         if(found) {
@@ -259,7 +261,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
             val += scoreSquare(c, offset, y);
             mult *= wordMultiplier(offset, y);
         }
-=    }
+    }
     ret += val * mult;
     
     //add bonus for using all letters
@@ -282,7 +284,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
 }
 
 -(void)addSubword:(char*)word length:(int)length x:(int)x y:(int)y {
-    int start = [self boardCoordinateX:x y:y];
+    int start = BOARD_COORDINATE(x, y);
     memcpy(&(_board[start]), word, length * sizeof(char));
 }
 
@@ -292,15 +294,11 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
 
 #pragma mark - Debug / Helper
 
--(int)boardCoordinateX:(int)x y:(int)y {
-    return x + y * BOARD_LENGTH;
-}
-
--(NSString*)debugBoard:(char*)board {
++(NSString*)debugBoard:(char*)board {
     NSMutableString *ret = [[NSMutableString alloc] initWithString:@"\n"];
     for(int y = 0; y < BOARD_LENGTH; y++) {
         for(int x = 0; x < BOARD_LENGTH; x++) {
-            char c = board[[self boardCoordinateX:x y:y]];
+            char c = board[BOARD_COORDINATE(x, y)];
             [ret appendFormat:@"%c", c];
         }
         [ret appendString:@"\n"];

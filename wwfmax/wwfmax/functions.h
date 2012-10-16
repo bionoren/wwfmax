@@ -154,8 +154,8 @@ static BOOL validate(char *word, int length, char *words, int numWords, int *wor
         // code must guarantee the interval is reduced at each iteration
         assert(imid < imax);
         // note: 0 <= imin < imax implies imid will always be less than imax
-        
-        if(strcmp(&words[imid], word) < 0) {
+
+        if(strncmp(&words[imid * BOARD_LENGTH], word, length) < 0) {
             imin = imid + 1;
         } else {
             imax = imid;
@@ -166,7 +166,7 @@ static BOOL validate(char *word, int length, char *words, int numWords, int *wor
     //   otherwise imax == imin
     
     // deferred test for equality
-    if(imax == imin && wordLengths[imin] == length && strcmp(&words[imin], word) == 0) {
+    if(imax == imin && wordLengths[imin] == length && strncmp(&words[imin * BOARD_LENGTH], word, length) == 0) {
         return YES;
     } else {
         return NO;
@@ -181,12 +181,9 @@ static NSSet *subwordsAtLocation(char *word, int length, char *words, int numWor
     //max in my testing is 25
     Subword subwords[25];
     int numSubwords = 0;
-    for(int i = 0; i < length; i++) {
-        const int tmpLength = MIN(i + NUM_LETTERS_TURN, length);
-        for(int j = i + 1; j < tmpLength; j++) {
-            if(i == 0 && j + 1 == length) {
-                continue;
-            }
+    for(int i = 0; i < length - 1; i++) { //wwf doesn't acknowledge single letter words
+        const int tmpLength = MIN(i + NUM_LETTERS_TURN, length - 1);
+        for(int j = i + 2; j < tmpLength; j++) {
             char *subword = &word[i];
             if(validate(subword, j - i, words, numWords, wordLengths)) {
                 Subword sub = {.start = i, .end = j};

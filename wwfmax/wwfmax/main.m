@@ -13,6 +13,12 @@
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
+        assert(sizeof(int) == 4);
+        assert(HASH(11, 3) == 59); //3,11
+        Letter hash = HASH(15, 'z');
+        assert(X_FROM_HASH(hash) == 15);
+        assert((char)Y_FROM_HASH(hash) == 'z');
+        
         NSLog(@"%@", [[[NSFileManager alloc] init] currentDirectoryPath]);
         Board *board = [[Board alloc] init];
         
@@ -23,17 +29,18 @@ int main(int argc, const char * argv[]) {
         char buffer[40];
         if(wordFile) {
             int i = 0;
-            int pos = 0;
+            char *word = words;
             while(fgets(buffer, 40, wordFile)) {
-                size_t len = strlen(buffer) - 1;
+                int len = (int)strlen(buffer) - 1;
                 if(len <= BOARD_LENGTH) {
-                    strncpy(&words[pos], buffer, len);
-                    wordLengths[i++] = (int)len;
-                    pos += BOARD_LENGTH;
+                    strncpy(word, buffer, len);
+                    wordLengths[i++] = len;
+                    word += BOARD_LENGTH * sizeof(char);
                 }
             }
             numWords = i - 1;
         }
+        NSLog(@"evaluating %d words", numWords);
         [board solve:words lengths:wordLengths count:numWords];
         free(words);
         free(wordLengths);

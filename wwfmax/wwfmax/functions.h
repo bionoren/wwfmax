@@ -136,7 +136,7 @@ static unsigned int wordMultiplier(unsigned int x, unsigned int y) {
 
 #pragma mark - Validation
 
-static BOOL validate(char *word, int length, char *words, int numWords) {
+static BOOL validate(char *word, int length, char *words, int numWords, int *wordLengths) {
     // inclusive indices
     //   0 <= imin when using truncate toward zero divide
     //     imid = (imin+imax)/2;
@@ -166,14 +166,14 @@ static BOOL validate(char *word, int length, char *words, int numWords) {
     //   otherwise imax == imin
     
     // deferred test for equality
-    if(imax == imin && strcmp(&words[imin], word) == 0) {
+    if(imax == imin && wordLengths[imin] == length && strcmp(&words[imin], word) == 0) {
         return YES;
     } else {
         return NO;
     }
 }
 
-static NSSet *subwordsAtLocation(char *word, int length, char *words, int numWords) {
+static NSSet *subwordsAtLocation(char *word, int length, char *words, int numWords, int *wordLengths) {
     if(length <= NUM_LETTERS_TURN) {
         return [NSSet setWithObject:[WordStructure wordAsLetters:word length:length]];
     }
@@ -188,7 +188,7 @@ static NSSet *subwordsAtLocation(char *word, int length, char *words, int numWor
                 continue;
             }
             char *subword = &word[i];
-            if(validate(subword, j - i, words, numWords)) {
+            if(validate(subword, j - i, words, numWords, wordLengths)) {
                 Subword sub = {.start = i, .end = j};
                 subwords[numSubwords++] = sub;
                 assert(numSubwords <= 25);

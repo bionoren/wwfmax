@@ -16,12 +16,13 @@
 @implementation WordStructure
 
 +(WordStructure*)wordAsLetters:(char*)word length:(int)length {
-    WordStructure *ret = [[WordStructure alloc] init];
-    ret->_word = word;
-    ret->_length = length;
-    for(int i = 0; i < ret->_length; i++) {
-        Letter l = HASH(i, ret->_word[i]);
-        ret->_letters[ret->_numLetters++] = l;
+    WordStructure *ret = [[WordStructure alloc] initWithWord:word length:length];
+    ret->_numLetters = length;
+    for(unsigned int i = 0; i < ret->_length; i++) {
+        char c = ret->_word[i];
+        assert(c <= 'z');
+        Letter l = HASH(i, c);
+        ret->_letters[i] = l;
     }
     
     return ret;
@@ -47,7 +48,7 @@
     //validate and organize self.parts into an ordered breakdown of the word
     Subword next = subwords[0];
     int letters = NUM_LETTERS_TURN;
-    for(int i = 0, subwordIndex = 0; i < _length; i++) {
+    for(unsigned int i = 0, subwordIndex = 0; i < _length; i++) {
         if(i > next.end && ++subwordIndex < numSubwords) {
             next = subwords[subwordIndex];
         }
@@ -55,7 +56,9 @@
             i = next.end - 1;
         } else {
             if(letters-- > 0) {
-                Letter l = HASH(i, _word[i]);
+                char c = _word[i];
+                assert(c <= 'z');
+                Letter l = HASH(i, c);
                 _letters[_numLetters++] = l;
             } else {
                 return nil;
@@ -98,9 +101,11 @@
     _numSubwords--;
     
     WordStructure *tmp = [[WordStructure alloc] initWithWord:_word length:_length];
-    for(int i = 0; i < partLen; i++) {
-        int loc = part.start + i;
-        Letter l = HASH(loc, _word[loc]);
+    for(unsigned int i = 0; i < partLen; i++) {
+        unsigned int loc = part.start + i;
+        char c = _word[loc];
+        assert(c <= 'z');
+        Letter l = HASH(loc, c);
         tmp->_letters[tmp->_numLetters++] = l;
     }
     [ret addObject:tmp];

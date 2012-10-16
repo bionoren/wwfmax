@@ -141,7 +141,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
                                     int offset = X_FROM_HASH(maxLetters[k]);
                                     maxWordLetters[offset] = c;
                                 }
-                                NSLog(@"Highest scoring play is %.*s (%.*s) at (%d, %d) on (%@) for %ld points", numMaxLetters, maxWordLetters, maxWordLength, maxWord, maxx, maxy, [Board debugBoard:maxBoard], maxScore);
+                                NSLog(@"Highest scoring play is %.*s (%.*s) at (%d, %d) on (%@) for %ld points", maxWordLength, maxWordLetters, maxWordLength, maxWord, maxx, maxy, [Board debugBoard:maxBoard], maxScore);
                             }
                         }
                     }
@@ -159,7 +159,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
         maxWordLetters[x] = c;
     }
     
-    NSLog(@"Highest scoring play is %.*s (%.*s) at (%d, %d) on (%@) for %ld points", numMaxLetters, maxWordLetters, maxWordLength, maxWord, maxx, maxy, [Board debugBoard:maxBoard], maxScore);
+    NSLog(@"Highest scoring play is %.*s (%.*s) at (%d, %d) on (%@) for %ld points", maxWordLength, maxWordLetters, maxWordLength, maxWord, maxx, maxy, [Board debugBoard:maxBoard], maxScore);
     free(maxBoard);
 }
 

@@ -15,6 +15,17 @@ static const NSComparator alphSort = ^NSComparisonResult(id obj1, id obj2) {
     return [obj1 compare:obj2];
 };
 
+#pragma mark - Debugging
+
+static void printSubwords(char* word, int length, Subword *subwords, int numSubwords) {
+    printf("Subwords for %.*s:", length, word);
+    for(int i = 0; i < numSubwords; i++) {
+        Subword s = subwords[i];
+        printf(" %.*s,", s.end - s.start, &word[s.start]);
+    }
+    printf("\n");
+}
+
 #pragma mark - Scoring
 
 static unsigned int valuel(char letter) {
@@ -199,20 +210,37 @@ static NSSet *subwordsAtLocation(char *word, int length, char *words, int numWor
     const unsigned int count = (int)exp2(numSubwords);
     NSMutableSet *ret = [NSMutableSet setWithCapacity:count - 1];
     for(unsigned int powerset = 1; powerset < count; powerset++) {
+        //forward declarations to make goto happy
+        WordStructure *wordStruct;
+        NSArray *words;
+        
         Subword comboSubwords[BOARD_LENGTH];
         int comboSubwordsLength = 0;
+        int lastEnd = 0;
         for(unsigned int i = 1, index = 0; index < numSubwords; i <<= 1, index++) {
             if(i & powerset) {
-                comboSubwords[comboSubwordsLength++] = subwords[index];
+                Subword s = subwords[index];
+                if(s.start <= lastEnd) {
+                    goto OVERLAP;
+                } else {
+                    lastEnd = s.end;
+                }
+                comboSubwords[comboSubwordsLength++] = s;
             }
+            /*if(comboSubwordsLength >= BOARD_LENGTH) {
+                printSubwords(word, length, subwords, numSubwords);
+                assert(NO);
+            }*/
         }
-        WordStructure *wordStruct = [[WordStructure alloc] initWithWord:word length:length];
-        NSArray *words = [wordStruct validateSubwords:comboSubwords length:comboSubwordsLength];
+        wordStruct = [[WordStructure alloc] initWithWord:word length:length];
+        words = [wordStruct validateSubwords:comboSubwords length:comboSubwordsLength];
         if(words) {
             [ret addObjectsFromArray:words];
         }
+        OVERLAP:
+        ;
     }
-    
+
     return ret;
 }
 

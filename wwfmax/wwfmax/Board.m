@@ -134,7 +134,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
                                 numMaxLetters = wordStruct->_numLetters;
                                 maxx = x;
                                 maxy = y;
-                                
+#ifdef DEBUG
                                 char maxWordLetters[BOARD_LENGTH + 1] = { [0 ... BOARD_LENGTH - 1] = '_', '\0' };
                                 for(int k = 0; k < numMaxLetters; k++) {
                                     char c = (char)Y_FROM_HASH(maxLetters[k]);
@@ -142,6 +142,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
                                     maxWordLetters[offset] = c;
                                 }
                                 NSLog(@"Highest scoring play is %.*s (%.*s) at (%d, %d) on (%@) for %ld points", maxWordLength, maxWordLetters, maxWordLength, maxWord, maxx, maxy, [Board debugBoard:maxBoard], maxScore);
+#endif
                             }
                         }
                     }

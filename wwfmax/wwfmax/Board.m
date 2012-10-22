@@ -119,6 +119,11 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
                         locs[tmp] = X_FROM_HASH(l);
                     }
                     
+                    int bonus = 0;
+                    if(wordStruct->_numLetters == NUM_LETTERS_TURN) {
+                        bonus = 35;
+                    }
+                    
                     int wordminx = locs[0];
                     int wordmaxx = locs[wordStruct->_numLetters - 1];
                     int offsets[NUM_LETTERS_TURN];
@@ -142,7 +147,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
                                 }
                             }
                             
-                            unsigned int score = [self scoreLetters:wordStruct->_letters length:wordStruct->_numLetters chars:chars minx:wordminx maxx:wordmaxx offsets:offsets x:x y:y];
+                            unsigned int score = [self scoreLetters:wordStruct->_letters length:wordStruct->_numLetters chars:chars minx:wordminx maxx:wordmaxx offsets:offsets x:x y:y] + bonus;
                             if(score > maxScore) {
                                 maxScore = score;
                                 memcpy(maxBoard, _board, BOARD_LENGTH*BOARD_LENGTH*sizeof(char));
@@ -284,9 +289,10 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
     }
     
     //add bonus for using all letters
-    if(length == NUM_LETTERS_TURN) {
+    //this is now done outside this function as an optimization
+    /*if(length == NUM_LETTERS_TURN) {
         ret += 35;
-    }
+    }*/
     return ret;
 }
 

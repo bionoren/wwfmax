@@ -108,9 +108,25 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
             }
             
             for(WordStructure *wordStruct in playableWords) {
+                assert(wordStruct->_numLetters > 0);
                 if([self validateLetters:wordStruct->_letters length:wordStruct->_numLetters]) {
-                    for(int y = 0; y < yMax; y++) {
-                        for(int x = 0; x < BOARD_LENGTH - length; x++) {
+                    char chars[NUM_LETTERS_TURN];
+                    int locs[NUM_LETTERS_TURN];
+                    for(int tmp = 0; tmp < wordStruct->_numLetters; ++tmp) {
+                        Letter l = wordStruct->_letters[tmp];
+                        chars[tmp] = (char)Y_FROM_HASH(l);
+                        locs[tmp] = X_FROM_HASH(l);
+                    }
+                    
+                    int wordminx = locs[0];
+                    int wordmaxx = locs[wordStruct->_numLetters - 1];
+                    int offsets[NUM_LETTERS_TURN];
+                    for(int x = 0; x < BOARD_LENGTH - length; x++) {
+                        for(int tmp = 0; tmp < wordStruct->_numLetters; ++tmp) {
+                            offsets[tmp] = locs[tmp]++;
+                        }
+                        
+                        for(int y = 0; y < yMax; y++) {
                             [self clearBoard];
                             
                             for(int j = 0; j < wordStruct->_numSubwords; j++) {
@@ -125,7 +141,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
                                 }
                             }
                             
-                            unsigned int score = [self scoreLetters:wordStruct->_letters length:wordStruct->_numLetters x:x y:y];
+                            unsigned int score = [self scoreLetters:wordStruct->_letters length:wordStruct->_numLetters chars:chars minx:wordminx maxx:wordmaxx offsets:offsets x:x y:y];
                             if(score > maxScore) {
                                 maxScore = score;
                                 memcpy(maxBoard, _board, BOARD_LENGTH*BOARD_LENGTH*sizeof(char));
@@ -145,6 +161,8 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
                                 NSLog(@"Highest scoring play is %.*s (%.*s) at (%d, %d) on (%@) for %ld points", maxWordLength, maxWordLetters, maxWordLength, maxWord, maxx, maxy, [Board debugBoard:maxBoard], maxScore);
 #endif
                             }
+                            wordminx++;
+                            wordmaxx++;
                         }
                     }
                 }
@@ -154,6 +172,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
         }
         //NSLog(@"%.2f%% complete...", i / (float)numWords * 100.0);
     }
+#ifndef DEBUG
     char maxWordLetters[BOARD_LENGTH + 1] = { [0 ... BOARD_LENGTH - 1] = '_', '\0' };
     for(int i = 0; i < numMaxLetters; i++) {
         char c = (char)Y_FROM_HASH(maxLetters[i]);
@@ -162,6 +181,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
     }
     
     NSLog(@"Highest scoring play is %.*s (%.*s) at (%d, %d) on (%@) for %ld points", maxWordLength, maxWordLetters, maxWordLength, maxWord, maxx, maxy, [Board debugBoard:maxBoard], maxScore);
+#endif
     free(maxBoard);
 }
 
@@ -209,24 +229,17 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
 
 #pragma mark - Scoring
 
--(unsigned int)scoreLetters:(Letter *)letters length:(const int)length x:(const int)x y:(const int)y {
-    unsigned int ret = 0;
+-(unsigned int)scoreLetters:(Letter *)letters length:(const int)length chars:(char*)chars minx:(int)minx maxx:(int)maxx offsets:(int*)offsets x:(const int)x y:(const int)y {
     unsigned int val = 0;
     int mult = 1;
-    int minx = X_FROM_HASH(letters[0]) + x;
-    int maxx = X_FROM_HASH(letters[length - 1]) + x;
-    int offsets[NUM_LETTERS_TURN];
+    
     unsigned int vals[NUM_LETTERS_TURN];
     int mults[NUM_LETTERS_TURN];
     //score the letters and note the word multipliers
-    assert(x <= BOARD_LENGTH);
-    for(int i = 0; i < length; i++) {
-        Letter l = letters[i];
-        char c = (char)Y_FROM_HASH(l);
-        offsets[i] = X_FROM_HASH(l) + x;
-        assert(c <= 'z' && c >= 'A');
+    for(int i = 0; i < length; ++i) {
+        assert(chars[i] <= 'z' && chars[i] >= 'A');
         int hash = HASH(offsets[i], y);
-        vals[i] = scoreSquareHash(c, hash);
+        vals[i] = scoreSquareHash(chars[i], hash);
         mults[i] = wordMultiplierHash(hash);
         val += vals[i];
         mult *= mults[i];
@@ -241,7 +254,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
     for(int i = minx + 1; i < maxx; ++i) {
         val += valuel(_board[BOARD_COORDINATE(i, y)]);
     }
-    ret = val * mult;
+    unsigned int ret = val * mult;
     
     //score any sidewords, noting multipliers again
     for(int i = 0; i < length; ++i) {

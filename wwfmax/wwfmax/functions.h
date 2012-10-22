@@ -208,7 +208,7 @@ static NSSet *subwordsAtLocation(char *word, int length, char *words, int numWor
     }
     
     const unsigned int count = (int)exp2(numSubwords);
-    NSMutableSet *ret = [NSMutableSet setWithCapacity:count - 1];
+    NSMutableSet *ret = [[NSMutableSet alloc] initWithCapacity:count -1];
     for(unsigned int powerset = 1; powerset < count; powerset++) {
         //forward declarations to make goto happy
         WordStructure *wordStruct;

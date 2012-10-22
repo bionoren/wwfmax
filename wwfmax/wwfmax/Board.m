@@ -97,6 +97,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
 
     const static int yMax = BOARD_LENGTH / 2 + BOARD_LENGTH % 2; //ceil(BOARD_LENGTH / 2) as compile time constant
     char *word = words;
+    
     for(int i = 0; i < numWords; word += BOARD_LENGTH * sizeof(char), i++) {
         @autoreleasepool {
             int length = wordLengths[i];
@@ -212,8 +213,8 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
     unsigned int ret = 0;
     unsigned int val = 0;
     int mult = 1;
-    int minx = BOARD_LENGTH;
-    int maxx = 0;
+    int minx = X_FROM_HASH(letters[0]) + x;
+    int maxx = X_FROM_HASH(letters[length - 1]) + x;
     //score the letters and note the word multipliers
     for(int i = 0; i < length; i++) {
         Letter l = letters[i];
@@ -221,20 +222,19 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
         int offset = X_FROM_HASH(l) + x;
         assert(c <= 'z' && c >= 'A');
         assert(x <= BOARD_LENGTH);
-        val += scoreSquare(c, offset, y);
-        mult *= wordMultiplier(offset, y);
-        minx = MIN(minx, offset);
-        maxx = MAX(maxx, offset);
+        int hash = HASH(offset, y);
+        val += scoreSquareHash(c, hash);
+        mult *= wordMultiplierHash(hash);
     }
     
     //assume the word is horizontal
     //find the actual word boundaries
-    while(--minx >= 0 && self.board[BOARD_COORDINATE(minx, y)] != DEFAULT_CHAR);
-    while(++maxx <= BOARD_LENGTH && self.board[BOARD_COORDINATE(maxx, y)] != DEFAULT_CHAR);
+    while(--minx >= 0 && _board[BOARD_COORDINATE(minx, y)] != DEFAULT_CHAR);
+    while(++maxx <= BOARD_LENGTH && _board[BOARD_COORDINATE(maxx, y)] != DEFAULT_CHAR);
     
     //finish scoring the word
     for(int i = minx + 1; i < maxx; ++i) {
-        val += valuel(self.board[BOARD_COORDINATE(i, y)]);
+        val += valuel(_board[BOARD_COORDINATE(i, y)]);
     }
     ret = val * mult;
     
@@ -243,16 +243,16 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
     mult = 1;
     for(int i = 0; i < length; i++) {
         BOOL found = NO;
-        if(y > 0 && self.board[BOARD_COORDINATE(minx, y - 1)] != DEFAULT_CHAR) {
+        if(y > 0 && _board[BOARD_COORDINATE(minx, y - 1)] != DEFAULT_CHAR) {
             found = YES;
-            for(int i = y - 1; i >= 0 && self.board[BOARD_COORDINATE(minx, i)] != DEFAULT_CHAR; --i) {
-                val += valuel(self.board[BOARD_COORDINATE(minx, i)]);
+            for(int i = y - 1; i >= 0 && _board[BOARD_COORDINATE(minx, i)] != DEFAULT_CHAR; --i) {
+                val += valuel(_board[BOARD_COORDINATE(minx, i)]);
             }
         }
-        if(y < BOARD_LENGTH && self.board[BOARD_COORDINATE(minx, y + 1)] != DEFAULT_CHAR) {
+        if(y < BOARD_LENGTH && _board[BOARD_COORDINATE(minx, y + 1)] != DEFAULT_CHAR) {
             found = YES;
-            for(int i = y + 1; i <= BOARD_LENGTH && self.board[BOARD_COORDINATE(minx, i)] != DEFAULT_CHAR; ++i) {
-                val += valuel(self.board[BOARD_COORDINATE(minx, i)]);
+            for(int i = y + 1; i <= BOARD_LENGTH && _board[BOARD_COORDINATE(minx, i)] != DEFAULT_CHAR; ++i) {
+                val += valuel(_board[BOARD_COORDINATE(minx, i)]);
             }
         }
         if(found) {

@@ -76,7 +76,7 @@
     
     //If there are any available letters, break subwords into letters, if possible, in all possible combinations
     //note that there is an advantage to not breaking up a subword if there aren't enough letters available for the full breakup
-    NSMutableArray *ret = [NSMutableArray arrayWithObject:self];
+    NSMutableArray *ret = [[NSMutableArray alloc] initWithObjects:&self count:1];
     int numFreeLetters = NUM_LETTERS_TURN - _numLetters;
     if(numFreeLetters > 0) {
         for(int i = 0; i < _numSubwords; i++) {

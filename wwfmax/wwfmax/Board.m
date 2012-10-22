@@ -209,12 +209,13 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
 
 #pragma mark - Scoring
 
--(unsigned int)scoreLetters:(Letter *)letters length:(int)length x:(int)x y:(int)y {
+-(unsigned int)scoreLetters:(Letter *)letters length:(const int)length x:(const int)x y:(const int)y {
     unsigned int ret = 0;
     unsigned int val = 0;
     int mult = 1;
     int minx = X_FROM_HASH(letters[0]) + x;
     int maxx = X_FROM_HASH(letters[length - 1]) + x;
+    int hashes[NUM_LETTERS_TURN];
     //score the letters and note the word multipliers
     for(int i = 0; i < length; i++) {
         Letter l = letters[i];
@@ -222,9 +223,9 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
         int offset = X_FROM_HASH(l) + x;
         assert(c <= 'z' && c >= 'A');
         assert(x <= BOARD_LENGTH);
-        int hash = HASH(offset, y);
-        val += scoreSquareHash(c, hash);
-        mult *= wordMultiplierHash(hash);
+        hashes[i] = HASH(offset, y);
+        val += scoreSquareHash(c, hashes[i]);
+        mult *= wordMultiplierHash(hashes[i]);
     }
     
     //assume the word is horizontal
@@ -239,31 +240,31 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
     ret = val * mult;
     
     //score any sidewords, noting multipliers again
-    val = 0;
-    mult = 1;
-    for(int i = 0; i < length; i++) {
+    for(int i = 0; i < length; ++i) {
+        Letter l = letters[i];
+        int offset = X_FROM_HASH(l) + x;
+        
+        val = 0;
         BOOL found = NO;
-        if(y > 0 && _board[BOARD_COORDINATE(minx, y - 1)] != DEFAULT_CHAR) {
+        if(y > 0 && _board[BOARD_COORDINATE(offset, y - 1)] != DEFAULT_CHAR) {
             found = YES;
-            for(int i = y - 1; i >= 0 && _board[BOARD_COORDINATE(minx, i)] != DEFAULT_CHAR; --i) {
-                val += valuel(_board[BOARD_COORDINATE(minx, i)]);
+            for(int j = y - 1; j >= 0 && _board[BOARD_COORDINATE(offset, j)] != DEFAULT_CHAR; --j) {
+                val += valuel(_board[BOARD_COORDINATE(offset, j)]);
             }
         }
-        if(y < BOARD_LENGTH && _board[BOARD_COORDINATE(minx, y + 1)] != DEFAULT_CHAR) {
+        if(y < BOARD_LENGTH && _board[BOARD_COORDINATE(offset, y + 1)] != DEFAULT_CHAR) {
             found = YES;
-            for(int i = y + 1; i <= BOARD_LENGTH && _board[BOARD_COORDINATE(minx, i)] != DEFAULT_CHAR; ++i) {
-                val += valuel(_board[BOARD_COORDINATE(minx, i)]);
+            for(int j = y + 1; j <= BOARD_LENGTH && _board[BOARD_COORDINATE(offset, j)] != DEFAULT_CHAR; ++j) {
+                val += valuel(_board[BOARD_COORDINATE(offset, j)]);
             }
         }
         if(found) {
-            Letter l = letters[i];
             char c = (char)Y_FROM_HASH(l);
-            int offset = X_FROM_HASH(l) + x;
-            val += scoreSquare(c, offset, y);
-            mult *= wordMultiplier(offset, y);
+            val += scoreSquareHash(c, hashes[i]);
+            mult = wordMultiplierHash(hashes[i]);
+            ret += val * mult;
         }
     }
-    ret += val * mult;
     
     //add bonus for using all letters
     if(length == NUM_LETTERS_TURN) {

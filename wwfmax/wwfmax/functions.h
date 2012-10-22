@@ -31,55 +31,36 @@ static void printSubwords(char* word, int length, Subword *subwords, int numSubw
 static unsigned int valuel(char letter) {
     switch(letter) {
         case 'a':
-            return 1;
-        case 'b':
-            return 4;
-        case 'c':
-            return 4;
-        case 'd':
-            return 2;
         case 'e':
-            return 1;
-        case 'f':
-            return 4;
-        case 'g':
-            return 3;
-        case 'h':
-            return 3;
         case 'i':
-            return 1;
-        case 'j':
-            return 10;
-        case 'k':
-            return 5;
-        case 'l':
-            return 2;
-        case 'm':
-            return 4;
-        case 'n':
-            return 2;
         case 'o':
-            return 1;
-        case 'p':
-            return 4;
-        case 'q':
-            return 10;
         case 'r':
-            return 1;
         case 's':
-            return 1;
         case 't':
             return 1;
+        case 'd':
+        case 'l':
+        case 'n':
         case 'u':
             return 2;
-        case 'v':
-            return 5;
-        case 'w':
-            return 4;
-        case 'x':
-            return 8;
+        case 'g':
+        case 'h':
         case 'y':
             return 3;
+        case 'b':
+        case 'c':
+        case 'f':
+        case 'm':
+        case 'p':
+        case 'w':
+            return 4;
+        case 'k':
+        case 'v':
+            return 5;
+        case 'x':
+            return 8;
+        case 'j':
+        case 'q':
         case 'z':
             return 10;
         default:

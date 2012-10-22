@@ -165,9 +165,9 @@ static BOOL validate(char *word, int length, char *words, int numWords, int *wor
     }
 }
 
-static NSSet *subwordsAtLocation(char *word, int length, char *words, int numWords, int *wordLengths) {
+static void subwordsAtLocation(NSMutableSet **ret, char *word, int length, char *words, int numWords, int *wordLengths) {
     if(length <= NUM_LETTERS_TURN) {
-        return [NSSet setWithObject:[WordStructure wordAsLetters:word length:length]];
+        return [*ret addObject:[WordStructure wordAsLetters:word length:length]];
     }
     
     //max in my testing is 25
@@ -185,11 +185,10 @@ static NSSet *subwordsAtLocation(char *word, int length, char *words, int numWor
         }
     }
     if(numSubwords == 0) {
-        return nil;
+        [*ret removeAllObjects];
     }
     
     const unsigned int count = (int)exp2(numSubwords);
-    NSMutableSet *ret = [[NSMutableSet alloc] initWithCapacity:count -1];
     for(unsigned int powerset = 1; powerset < count; powerset++) {
         //forward declarations to make goto happy
         WordStructure *wordStruct;
@@ -216,13 +215,11 @@ static NSSet *subwordsAtLocation(char *word, int length, char *words, int numWor
         wordStruct = [[WordStructure alloc] initWithWord:word length:length];
         words = [wordStruct validateSubwords:comboSubwords length:comboSubwordsLength];
         if(words) {
-            [ret addObjectsFromArray:words];
+            [*ret addObjectsFromArray:words];
         }
         OVERLAP:
         ;
     }
-
-    return ret;
 }
 
 #endif

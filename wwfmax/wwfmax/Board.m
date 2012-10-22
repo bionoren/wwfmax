@@ -98,12 +98,13 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
     const static int yMax = BOARD_LENGTH / 2 + BOARD_LENGTH % 2; //ceil(BOARD_LENGTH / 2) as compile time constant
     char *word = words;
     
+    NSMutableSet *playableWords = [NSMutableSet set];
     for(int i = 0; i < numWords; word += BOARD_LENGTH * sizeof(char), i++) {
         @autoreleasepool {
             int length = wordLengths[i];
 
-            NSSet *playableWords = subwordsAtLocation(word, length, words, numWords, wordLengths);
-            if(!playableWords) {
+            subwordsAtLocation(&playableWords, word, length, words, numWords, wordLengths);
+            if(playableWords.count == 0) {
                 continue;
             }
             
@@ -169,6 +170,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
                 SUBWORD_FAIL:
                 ;
             }
+            [playableWords removeAllObjects];
         }
         //NSLog(@"%.2f%% complete...", i / (float)numWords * 100.0);
     }

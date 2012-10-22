@@ -216,15 +216,17 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
     int minx = X_FROM_HASH(letters[0]) + x;
     int maxx = X_FROM_HASH(letters[length - 1]) + x;
     int hashes[NUM_LETTERS_TURN];
+    int offsets[NUM_LETTERS_TURN];
+    char chars[NUM_LETTERS_TURN];
     //score the letters and note the word multipliers
+    assert(x <= BOARD_LENGTH);
     for(int i = 0; i < length; i++) {
         Letter l = letters[i];
-        char c = (char)Y_FROM_HASH(l);
-        int offset = X_FROM_HASH(l) + x;
-        assert(c <= 'z' && c >= 'A');
-        assert(x <= BOARD_LENGTH);
-        hashes[i] = HASH(offset, y);
-        val += scoreSquareHash(c, hashes[i]);
+        chars[i] = (char)Y_FROM_HASH(l);
+        offsets[i] = X_FROM_HASH(l) + x;
+        assert(chars[i] <= 'z' && chars[i] >= 'A');
+        hashes[i] = HASH(offsets[i], y);
+        val += scoreSquareHash(chars[i], hashes[i]);
         mult *= wordMultiplierHash(hashes[i]);
     }
     
@@ -241,8 +243,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
     
     //score any sidewords, noting multipliers again
     for(int i = 0; i < length; ++i) {
-        Letter l = letters[i];
-        int offset = X_FROM_HASH(l) + x;
+        int offset = offsets[i];
         
         val = 0;
         BOOL found = NO;
@@ -259,8 +260,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
             }
         }
         if(found) {
-            char c = (char)Y_FROM_HASH(l);
-            val += scoreSquareHash(c, hashes[i]);
+            val += scoreSquareHash(chars[i], hashes[i]);
             mult = wordMultiplierHash(hashes[i]);
             ret += val * mult;
         }

@@ -215,19 +215,21 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
     int mult = 1;
     int minx = X_FROM_HASH(letters[0]) + x;
     int maxx = X_FROM_HASH(letters[length - 1]) + x;
-    int hashes[NUM_LETTERS_TURN];
     int offsets[NUM_LETTERS_TURN];
-    char chars[NUM_LETTERS_TURN];
+    unsigned int vals[NUM_LETTERS_TURN];
+    int mults[NUM_LETTERS_TURN];
     //score the letters and note the word multipliers
     assert(x <= BOARD_LENGTH);
     for(int i = 0; i < length; i++) {
         Letter l = letters[i];
-        chars[i] = (char)Y_FROM_HASH(l);
+        char c = (char)Y_FROM_HASH(l);
         offsets[i] = X_FROM_HASH(l) + x;
-        assert(chars[i] <= 'z' && chars[i] >= 'A');
-        hashes[i] = HASH(offsets[i], y);
-        val += scoreSquareHash(chars[i], hashes[i]);
-        mult *= wordMultiplierHash(hashes[i]);
+        assert(c <= 'z' && c >= 'A');
+        int hash = HASH(offsets[i], y);
+        vals[i] = scoreSquareHash(c, hash);
+        mults[i] = wordMultiplierHash(hash);
+        val += vals[i];
+        mult *= mults[i];
     }
     
     //assume the word is horizontal
@@ -260,8 +262,8 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
             }
         }
         if(found) {
-            val += scoreSquareHash(chars[i], hashes[i]);
-            mult = wordMultiplierHash(hashes[i]);
+            val += vals[i];
+            mult = mults[i];
             ret += val * mult;
         }
     }

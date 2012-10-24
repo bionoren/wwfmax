@@ -11,9 +11,18 @@
 
 #import "WordStructure.h"
 
-static const NSComparator alphSort = ^NSComparisonResult(id obj1, id obj2) {
-    return [obj1 compare:obj2];
-};
+#pragma mark - Threading
+
+//threadsafe
+static int nextWord(int numWords) {
+    static int index = 0;
+    OSAtomicIncrement64((int64_t*)&index);
+    if(index <= numWords) {
+        return index;
+    } else {
+        return -1;
+    }
+}
 
 #pragma mark - Debugging
 

@@ -28,6 +28,7 @@
 /* Begin PBXFileReference section */
 		BE39047C161F986100A0A630 /* WordStructure.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WordStructure.h; sourceTree = "<group>"; };
 		BE39047D161F986100A0A630 /* WordStructure.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WordStructure.m; sourceTree = "<group>"; };
+		BE44E6A1163861F600C05B4D /* libsystem_kernel.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsystem_kernel.dylib; path = usr/lib/system/libsystem_kernel.dylib; sourceTree = SDKROOT; };
 		BE506499161A2DAE003B237A /* wwfmax */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = wwfmax; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE50649D161A2DAE003B237A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		BE5064A0161A2DAE003B237A /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -53,6 +54,7 @@
 		BE50648E161A2DAD003B237A = {
 			isa = PBXGroup;
 			children = (
+				BE44E6A1163861F600C05B4D /* libsystem_kernel.dylib */,
 				BE50649F161A2DAE003B237A /* wwfmax */,
 				BE50649C161A2DAE003B237A /* Frameworks */,
 				BE50649A161A2DAE003B237A /* Products */,
@@ -223,6 +225,10 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "wwfmax/wwfmax-Prefix.pch";
 				HEADER_SEARCH_PATHS = "";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SDKROOT)/usr/lib/system\"",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -232,6 +238,10 @@
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "wwfmax/wwfmax-Prefix.pch";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SDKROOT)/usr/lib/system\"",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

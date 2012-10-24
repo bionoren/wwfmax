@@ -8,8 +8,30 @@
 
 #import <Foundation/Foundation.h>
 
+struct solution {
+    NSUInteger maxScore;
+    char maxWord[BOARD_LENGTH];
+    int maxWordLength;
+    Letter maxLetters[NUM_LETTERS_TURN];
+    int numMaxLetters;
+    char maxBoard[BOARD_LENGTH * BOARD_LENGTH * sizeof(char)];
+    int maxx;
+    int maxy;
+};
+
 @interface Board : NSObject
 
--(void)solve:(char*)words lengths:(int*)wordLengths count:(int)numWords;
+-(struct solution)solve:(char*)words lengths:(int*)wordLengths count:(int)numWords;
++(NSString*)debugBoard:(char*)board;
 
 @end
+
+static void printSolution(struct solution sol) {
+    char maxWordLetters[BOARD_LENGTH + 1] = { [0 ... BOARD_LENGTH - 1] = '_', '\0' };
+    for(int k = 0; k < sol.numMaxLetters; k++) {
+        char c = (char)Y_FROM_HASH(sol.maxLetters[k]);
+        int offset = X_FROM_HASH(sol.maxLetters[k]);
+        maxWordLetters[offset] = c;
+    }
+    NSLog(@"Highest scoring play is %.*s (%.*s) at (%d, %d) on (%@) for %ld points", sol.maxWordLength, maxWordLetters, sol.maxWordLength, sol.maxWord, sol.maxx, sol.maxy, [Board debugBoard:sol.maxBoard], sol.maxScore);
+}

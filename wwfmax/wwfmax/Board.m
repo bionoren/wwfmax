@@ -82,25 +82,20 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
 /**
  I'm strictly interested in the top half of the board and horizontal words because of bonus tile symetry.
  */
--(void)solve:(char*)words lengths:(int*)wordLengths count:(int)numWords {
+-(struct solution)solve:(char*)words lengths:(int*)wordLengths count:(int)numWords {
     assert(validate("jezebel", 7, words, numWords, wordLengths));
     assert(validate("azotobacters", 12, words, numWords, wordLengths));
     
-    NSUInteger maxScore = 0;
-    char maxWord[BOARD_LENGTH];
-    int maxWordLength = 0;
-    Letter maxLetters[NUM_LETTERS_TURN];
-    int numMaxLetters = 0;
-    char *maxBoard = calloc(BOARD_LENGTH * BOARD_LENGTH, sizeof(char));
-    int maxx = -1;
-    int maxy = -1;
-
+    struct solution ret;
+    ret.maxScore = 0;
+    
     const static int yMax = BOARD_LENGTH / 2 + BOARD_LENGTH % 2; //ceil(BOARD_LENGTH / 2) as compile time constant
     char *word = words;
     
     NSMutableSet *playableWords = [NSMutableSet set];
-    for(int i = 0; i < numWords; word += BOARD_LENGTH * sizeof(char), i++) {
+    for(int i = nextWord(numWords); i >= 0; i = nextWord(numWords)) {
         @autoreleasepool {
+            word = &words[i * BOARD_LENGTH];
             int length = wordLengths[i];
 
             subwordsAtLocation(&playableWords, word, length, words, numWords, wordLengths);
@@ -148,23 +143,17 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
                             }
                             
                             unsigned int score = [self scoreLetters:wordStruct->_letters length:wordStruct->_numLetters chars:chars minx:wordminx maxx:wordmaxx offsets:offsets x:x y:y] + bonus;
-                            if(score > maxScore) {
-                                maxScore = score;
-                                memcpy(maxBoard, _board, BOARD_LENGTH*BOARD_LENGTH*sizeof(char));
-                                memcpy(maxLetters, wordStruct->_letters, wordStruct->_numLetters * sizeof(Letter));
-                                memcpy(maxWord, word, length * sizeof(char));
-                                maxWordLength = length;
-                                numMaxLetters = wordStruct->_numLetters;
-                                maxx = x;
-                                maxy = y;
+                            if(score > ret.maxScore) {
+                                ret.maxScore = score;
+                                memcpy(ret.maxBoard, _board, BOARD_LENGTH*BOARD_LENGTH*sizeof(char));
+                                memcpy(ret.maxLetters, wordStruct->_letters, wordStruct->_numLetters * sizeof(Letter));
+                                memcpy(ret.maxWord, word, length * sizeof(char));
+                                ret.maxWordLength = length;
+                                ret.numMaxLetters = wordStruct->_numLetters;
+                                ret.maxx = x;
+                                ret.maxy = y;
 #ifdef DEBUG
-                                char maxWordLetters[BOARD_LENGTH + 1] = { [0 ... BOARD_LENGTH - 1] = '_', '\0' };
-                                for(int k = 0; k < numMaxLetters; k++) {
-                                    char c = (char)Y_FROM_HASH(maxLetters[k]);
-                                    int offset = X_FROM_HASH(maxLetters[k]);
-                                    maxWordLetters[offset] = c;
-                                }
-                                NSLog(@"Highest scoring play is %.*s (%.*s) at (%d, %d) on (%@) for %ld points", maxWordLength, maxWordLetters, maxWordLength, maxWord, maxx, maxy, [Board debugBoard:maxBoard], maxScore);
+                                printSolution(ret);
 #endif
                             }
                             wordminx++;
@@ -179,17 +168,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
         }
         //NSLog(@"%.2f%% complete...", i / (float)numWords * 100.0);
     }
-#ifndef DEBUG
-    char maxWordLetters[BOARD_LENGTH + 1] = { [0 ... BOARD_LENGTH - 1] = '_', '\0' };
-    for(int i = 0; i < numMaxLetters; i++) {
-        char c = (char)Y_FROM_HASH(maxLetters[i]);
-        int x = X_FROM_HASH(maxLetters[i]);
-        maxWordLetters[x] = c;
-    }
-    
-    NSLog(@"Highest scoring play is %.*s (%.*s) at (%d, %d) on (%@) for %ld points", maxWordLength, maxWordLetters, maxWordLength, maxWord, maxx, maxy, [Board debugBoard:maxBoard], maxScore);
-#endif
-    free(maxBoard);
+    return ret;
 }
 
 #pragma mark - Validation

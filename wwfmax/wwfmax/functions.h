@@ -15,7 +15,7 @@
 
 //threadsafe
 static int nextWord(int numWords) {
-    static int index = 0;
+    static int index = -1;
     OSAtomicIncrement64((int64_t*)&index);
     if(index <= numWords) {
         return index;
@@ -77,8 +77,8 @@ static unsigned int valuel(char letter) {
     }
 }
 
+//we assume you've already prescored
 static unsigned int scoreSquareHash(char letter, unsigned int hash) {
-    int ret = valuel(letter);
     switch(hash) {
         case 6: 	    //0,6
         case 8: 	    //0,8
@@ -88,7 +88,7 @@ static unsigned int scoreSquareHash(char letter, unsigned int hash) {
         case 89:	    //5,9
         case 96:	    //6,0
         case 110:	//6,14
-            return ret*3;
+            return valuel(letter)*2;
         case 18:	    //1,2
         case 28:	    //1,12
         case 33:	    //2,1
@@ -101,9 +101,9 @@ static unsigned int scoreSquareHash(char letter, unsigned int hash) {
         case 76:    //4,12
         case 100:	//6,4
         case 106:	//6,10
-            return ret*2;
+            return valuel(letter);
         default:
-            return ret;
+            return 0;
     }
 }
 
@@ -133,6 +133,29 @@ static unsigned int wordMultiplierHash(unsigned int hash) {
 
 static unsigned int wordMultiplier(unsigned int x, unsigned int y) {
     return wordMultiplierHash(HASH(x, y));
+}
+
+static int prescoreWord(char *word, int length) {
+    unsigned int ret = 0;
+    for(int i = 0; i < length; i++) {
+        ret += valuel(word[i]);
+    }
+    return ret;
+}
+
+static unsigned int scoreLettersWithPrescore(const int prescore, const int length, char *chars, int *offsets, const int  y) {
+    int val = prescore;
+    int mult = 1;
+    
+    //score the letters and note the word multipliers
+    for(int i = 0; i < length; ++i) {
+        assert(chars[i] <= 'z' && chars[i] >= 'A');
+        int hash = HASH(offsets[i], y);
+        val += scoreSquareHash(chars[i], hash);
+        mult *= wordMultiplierHash(hash);
+    }
+    
+    return val * mult;
 }
 
 #pragma mark - Validation

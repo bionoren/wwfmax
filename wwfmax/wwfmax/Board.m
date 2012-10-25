@@ -82,11 +82,11 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
 /**
  I'm strictly interested in the top half of the board and horizontal words because of bonus tile symetry.
  */
--(struct solution)solve:(char*)words lengths:(int*)wordLengths count:(int)numWords {
+-(Solution)solve:(char*)words lengths:(int*)wordLengths count:(int)numWords {
     assert(validate("jezebel", 7, words, numWords, wordLengths));
     assert(validate("azotobacters", 12, words, numWords, wordLengths));
     
-    struct solution ret;
+    Solution ret;
     ret.maxScore = 0;
     
     const static int yMax = BOARD_LENGTH / 2 + BOARD_LENGTH % 2; //ceil(BOARD_LENGTH / 2) as compile time constant
@@ -106,6 +106,8 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
             for(WordStructure *wordStruct in playableWords) {
                 assert(wordStruct->_numLetters > 0);
                 if([self validateLetters:wordStruct->_letters length:wordStruct->_numLetters]) {
+                    const int prescore = prescoreWord(word, length);
+                    
                     char chars[NUM_LETTERS_TURN];
                     int locs[NUM_LETTERS_TURN];
                     for(int tmp = 0; tmp < wordStruct->_numLetters; ++tmp) {
@@ -142,7 +144,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
                                 }
                             }
                             
-                            unsigned int score = [self scoreLetters:wordStruct->_letters length:wordStruct->_numLetters chars:chars minx:wordminx maxx:wordmaxx offsets:offsets x:x y:y] + bonus;
+                            unsigned int score = scoreLettersWithPrescore(prescore, wordStruct->_numLetters, chars, offsets, y) + bonus;
                             if(score > ret.maxScore) {
                                 ret.maxScore = score;
                                 memcpy(ret.maxBoard, _board, BOARD_LENGTH*BOARD_LENGTH*sizeof(char));
@@ -214,66 +216,6 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
 }
 
 #pragma mark - Scoring
-
--(unsigned int)scoreLetters:(Letter *)letters length:(const int)length chars:(char*)chars minx:(int)minx maxx:(int)maxx offsets:(int*)offsets x:(const int)x y:(const int)y {
-    unsigned int val = 0;
-    int mult = 1;
-    
-    unsigned int vals[NUM_LETTERS_TURN];
-    int mults[NUM_LETTERS_TURN];
-    //score the letters and note the word multipliers
-    for(int i = 0; i < length; ++i) {
-        assert(chars[i] <= 'z' && chars[i] >= 'A');
-        int hash = HASH(offsets[i], y);
-        vals[i] = scoreSquareHash(chars[i], hash);
-        mults[i] = wordMultiplierHash(hash);
-        val += vals[i];
-        mult *= mults[i];
-    }
-    
-    //assume the word is horizontal
-    //find the actual word boundaries
-    while(--minx >= 0 && _board[BOARD_COORDINATE(minx, y)] != DEFAULT_CHAR);
-    while(++maxx <= BOARD_LENGTH && _board[BOARD_COORDINATE(maxx, y)] != DEFAULT_CHAR);
-    
-    //finish scoring the word
-    for(int i = minx + 1; i < maxx; ++i) {
-        val += valuel(_board[BOARD_COORDINATE(i, y)]);
-    }
-    unsigned int ret = val * mult;
-    
-    //score any sidewords, noting multipliers again
-    for(int i = 0; i < length; ++i) {
-        int offset = offsets[i];
-        
-        val = 0;
-        BOOL found = NO;
-        if(y > 0 && _board[BOARD_COORDINATE(offset, y - 1)] != DEFAULT_CHAR) {
-            found = YES;
-            for(int j = y - 1; j >= 0 && _board[BOARD_COORDINATE(offset, j)] != DEFAULT_CHAR; --j) {
-                val += valuel(_board[BOARD_COORDINATE(offset, j)]);
-            }
-        }
-        if(y < BOARD_LENGTH && _board[BOARD_COORDINATE(offset, y + 1)] != DEFAULT_CHAR) {
-            found = YES;
-            for(int j = y + 1; j <= BOARD_LENGTH && _board[BOARD_COORDINATE(offset, j)] != DEFAULT_CHAR; ++j) {
-                val += valuel(_board[BOARD_COORDINATE(offset, j)]);
-            }
-        }
-        if(found) {
-            val += vals[i];
-            mult = mults[i];
-            ret += val * mult;
-        }
-    }
-    
-    //add bonus for using all letters
-    //this is now done outside this function as an optimization
-    /*if(length == NUM_LETTERS_TURN) {
-        ret += 35;
-    }*/
-    return ret;
-}
 
 /** this scoring method ignores bonus tiles */
 -(unsigned int)scoreWord:(NSString*)word {

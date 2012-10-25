@@ -43,13 +43,13 @@ int main(int argc, const char * argv[]) {
         }
         NSLog(@"evaluating %d words", numWords);
         dispatch_group_t dispatchGroup = dispatch_group_create();
-        __block struct solution sol;
+        __block Solution sol;
         sol.maxScore = 0;
         NSLock *lock = [[NSLock alloc] init];
         for(int i = 0; i < NUM_THREADS; i++) {
             dispatch_group_async(dispatchGroup, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                 Board *board = [[Board alloc] init];
-                struct solution temp = [board solve:words lengths:wordLengths count:numWords];
+                Solution temp = [board solve:words lengths:wordLengths count:numWords];
                 if([lock lockBeforeDate:[NSDate distantFuture]]) {
                     if(temp.maxScore > sol.maxScore) {
                         sol = temp;

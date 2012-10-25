@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-struct solution {
+typedef struct {
     NSUInteger maxScore;
     char maxWord[BOARD_LENGTH];
     int maxWordLength;
@@ -17,16 +17,16 @@ struct solution {
     char maxBoard[BOARD_LENGTH * BOARD_LENGTH * sizeof(char)];
     int maxx;
     int maxy;
-};
+} Solution;
 
 @interface Board : NSObject
 
--(struct solution)solve:(char*)words lengths:(int*)wordLengths count:(int)numWords;
+-(Solution)solve:(char*)words lengths:(int*)wordLengths count:(int)numWords;
 +(NSString*)debugBoard:(char*)board;
 
 @end
 
-static void printSolution(struct solution sol) {
+static void printSolution(Solution sol) {
     char maxWordLetters[BOARD_LENGTH + 1] = { [0 ... BOARD_LENGTH - 1] = '_', '\0' };
     for(int k = 0; k < sol.numMaxLetters; k++) {
         char c = (char)Y_FROM_HASH(sol.maxLetters[k]);

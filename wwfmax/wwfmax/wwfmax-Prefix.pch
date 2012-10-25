@@ -15,8 +15,17 @@
 #define Y_FROM_HASH(hash) (hash >> 4)
 #define X_FROM_HASH(hash) (hash & 0xF)
 
-typedef unsigned int Letter; //upper 8 bits are char, lower 8 bits are x location
+typedef unsigned int Letter; //upper 8 bits are char, lower 4 bits are x location
+
 typedef struct {
     int start;
     int end;
 } Subword;
+
+typedef struct {
+    int x;
+    int y;
+    char *word;
+    int wordLength;
+    unsigned int wordScore;
+} Sideword;

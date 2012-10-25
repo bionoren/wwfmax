@@ -11,6 +11,7 @@
 		BE50649E161A2DAE003B237A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE50649D161A2DAE003B237A /* Foundation.framework */; };
 		BE5064A1161A2DAE003B237A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = BE5064A0161A2DAE003B237A /* main.m */; };
 		BEC0171E161A2FD40078129A /* Board.m in Sources */ = {isa = PBXBuildFile; fileRef = BEC0171D161A2FD40078129A /* Board.m */; };
+		BEFE74F71638F8C900FD191F /* functions.m in Sources */ = {isa = PBXBuildFile; fileRef = BEFE74F61638F8C900FD191F /* functions.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -37,6 +38,7 @@
 		BEC0171D161A2FD40078129A /* Board.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Board.m; sourceTree = "<group>"; };
 		BEC01720161A36B60078129A /* dict.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = dict.txt; sourceTree = "<group>"; };
 		BEC01729161A40500078129A /* functions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = functions.h; sourceTree = "<group>"; };
+		BEFE74F61638F8C900FD191F /* functions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = functions.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -82,6 +84,7 @@
 			children = (
 				BE5064A0161A2DAE003B237A /* main.m */,
 				BEC01729161A40500078129A /* functions.h */,
+				BEFE74F61638F8C900FD191F /* functions.m */,
 				BE5064A2161A2DAE003B237A /* Supporting Files */,
 				BEC0171C161A2FD40078129A /* Board.h */,
 				BEC0171D161A2FD40078129A /* Board.m */,
@@ -154,6 +157,7 @@
 				BE5064A1161A2DAE003B237A /* main.m in Sources */,
 				BEC0171E161A2FD40078129A /* Board.m in Sources */,
 				BE39047E161F986100A0A630 /* WordStructure.m in Sources */,
+				BEFE74F71638F8C900FD191F /* functions.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

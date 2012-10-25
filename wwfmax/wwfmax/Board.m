@@ -116,30 +116,21 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
                         locs[tmp] = X_FROM_HASH(l);
                     }
                     
-                    int bonus = 0;
-                    if(wordStruct->_numLetters == NUM_LETTERS_TURN) {
-                        bonus = 35;
-                    }
+                    int bonus = (wordStruct->_numLetters == NUM_LETTERS_TURN)?35:0;
                     
-                    int wordminx = locs[0];
-                    int wordmaxx = locs[wordStruct->_numLetters - 1];
                     int offsets[NUM_LETTERS_TURN];
-                    for(int x = 0; x < BOARD_LENGTH - length; x++) {
+                    for(int x = 0; x < BOARD_LENGTH - length; ++x) {
                         for(int tmp = 0; tmp < wordStruct->_numLetters; ++tmp) {
                             offsets[tmp] = locs[tmp]++;
                         }
                         
-                        for(int y = 0; y < yMax; y++) {
-                            [self clearBoard];
-                            
-                            for(int j = 0; j < wordStruct->_numSubwords; j++) {
+                        for(int y = 0; y < yMax; ++y) {
+                            for(int j = 0; j < wordStruct->_numSubwords; ++j) {
                                 Subword subword = wordStruct->_subwords[j];
                                 assert(subword.start < subword.end);
                                 int subwordLen = subword.end - subword.start;
                                 char *subwordPointer = &(wordStruct->_word[subword.start]);
-                                if([self testValidate:subwordPointer length:subwordLen]) {
-                                    [self addSubword:subwordPointer length:subwordLen x:x + subword.start y:y];
-                                } else {
+                                if(![self testValidate:subwordPointer length:subwordLen]) {
                                     goto SUBWORD_FAIL;
                                 }
                             }
@@ -147,6 +138,13 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
                             unsigned int score = scoreLettersWithPrescore(prescore, wordStruct->_numLetters, chars, offsets, y) + bonus;
                             if(score > ret.maxScore) {
                                 ret.maxScore = score;
+                                
+                                for(int j = 0; j < wordStruct->_numSubwords; ++j) {
+                                    Subword subword = wordStruct->_subwords[j];
+                                    int subwordLen = subword.end - subword.start;
+                                    char *subwordPointer = &(wordStruct->_word[subword.start]);
+                                    [self addSubword:subwordPointer length:subwordLen x:x + subword.start y:y];
+                                }
                                 memcpy(ret.maxBoard, _board, BOARD_LENGTH*BOARD_LENGTH*sizeof(char));
                                 memcpy(ret.maxLetters, wordStruct->_letters, wordStruct->_numLetters * sizeof(Letter));
                                 memcpy(ret.maxWord, word, length * sizeof(char));
@@ -154,12 +152,12 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
                                 ret.numMaxLetters = wordStruct->_numLetters;
                                 ret.maxx = x;
                                 ret.maxy = y;
+                                
+                                [self clearBoard];
 #ifdef DEBUG
                                 printSolution(ret);
 #endif
                             }
-                            wordminx++;
-                            wordmaxx++;
                         }
                     }
                 }
@@ -216,18 +214,6 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
 }
 
 #pragma mark - Scoring
-
-/** this scoring method ignores bonus tiles */
--(unsigned int)scoreWord:(NSString*)word {
-    unsigned int ret = 0;
-    for(int i = 0; i < word.length; i++) {
-        char c = (char)[word characterAtIndex:i];
-        if(c >= LETTER_OFFSET_LC) {
-            ret += scoreSquareHash(c, -1);
-        }
-    }
-    return ret;
-}
 
 -(void)addSubword:(char*)word length:(int)length x:(int)x y:(int)y {
     int start = BOARD_COORDINATE(x, y);

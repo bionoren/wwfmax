@@ -37,7 +37,7 @@ unsigned int wordMultiplierHash(unsigned int hash);
 
 unsigned int wordMultiplier(unsigned int x, unsigned int y);
 
-int prescoreWord(char *word, int length);
+int prescoreWord(const char *word, const int length);
 
 unsigned int scoreLettersWithPrescore(const int prescore, const int length, char *chars, int *offsets, const int y);
 

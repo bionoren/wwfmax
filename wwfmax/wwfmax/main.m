@@ -10,7 +10,7 @@
 #import "Board.h"
 #import "functions.h"
 
-#define NUM_THREADS 1
+#define NUM_THREADS 8
 
 //anecdotally, ~2.5% of the shipped dictionary is unplayable, mostly because the words are too long for the board, but also because there aren't enough of the required letters and because some words can't be broken down into sufficiently small subwords
 
@@ -30,7 +30,13 @@ int main(int argc, const char * argv[]) {
         int *prescores = calloc(numWords, sizeof(int));
         //for each letter, for each board position, a list of pointers to words which can be anchored by that letter at that board position
         //first element of the list is the list length
-        Sideword ****sideWords = malloc(26 * BOARD_LENGTH * numWords * sizeof(Sideword*));
+        SidewordCache ***sideWords = malloc(26 * sizeof(SidewordCache**)); //for the inner list size, I'm guessing at how many slots we'll actually need
+        for(int i = 0; i < 26; i++) {
+            sideWords[i] = malloc(BOARD_LENGTH * sizeof(SidewordCache*));
+            for(int j = 0; j < BOARD_LENGTH; j++) {
+                sideWords[i][j] = calloc(numWords * 3, sizeof(SidewordCache));
+            }
+        }
         
         FILE *wordFile = fopen("dict.txt", "r");
         if(wordFile) {
@@ -55,9 +61,26 @@ int main(int argc, const char * argv[]) {
         for(int i = 0; i < NUM_THREADS; i++) {
             dispatch_group_async(dispatchGroup, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                 for(int i = nextWord(numWords); i >= 0; i = nextWord(numWords)) {
-                    char *word = &(words[i * BOARD_LENGTH]);
-                    int length = wordLengths[i];
+                    const char *word = &(words[i * BOARD_LENGTH]);
+                    const int length = wordLengths[i];
                     prescores[i] = prescoreWord(word, length);
+                    for(int j = 0; j < BOARD_LENGTH; j++) {
+                        if(j + length < BOARD_LENGTH) {
+                            for(int k = j; k >= 0; k--) {
+                                for(int l = 0; l < length; l++) {
+                                    char c = word[l];
+                                    int y = k + l;
+                                    SidewordCache *wordList = sideWords[c - LETTER_OFFSET_LC][y];
+                                    SidewordCache sc = wordList[(wordList[0].index)++];
+                                    assert(wordList[0].index < numWords * 3);
+                                    sc.index = i;
+                                    sc.offset = l;
+                                }
+                            }
+                        } else {
+                            break;
+                        }
+                    }
                 }
             });
         }

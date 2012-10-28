@@ -11,16 +11,21 @@
 #define LETTER_OFFSET_LC 97
 #define LETTER_OFFSET_UC 65
 
-#define HASH(x, y) ((y << 4) | x)
+#define HASH(x, y) ((short)((y << 4) | x))
 #define Y_FROM_HASH(hash) (hash >> 4)
 #define X_FROM_HASH(hash) (hash & 0xF)
 
-typedef unsigned int Letter; //upper 8 bits are char, lower 4 bits are x location
+typedef unsigned short Letter; //upper 8 bits are char, lower 4 bits are x location
 
 typedef struct {
     int start;
     int end;
 } Subword;
+
+typedef struct {
+    int index;
+    int offset;
+} SidewordCache;
 
 typedef struct {
     int x;
@@ -33,5 +38,5 @@ typedef struct {
     int numWords;
     int *lengths;
     int *prescores;
-    Sideword ****sidewords;
+    SidewordCache ***sidewords;
 } WordInfo;

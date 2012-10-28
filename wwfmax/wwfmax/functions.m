@@ -14,14 +14,18 @@
 #pragma mark - Threading
 
 //threadsafe
+static int wordIndex = -1;
 int nextWord(int numWords) {
-    static int index = -1;
-    OSAtomicIncrement64((int64_t*)&index);
-    if(index <= numWords) {
-        return index;
+    OSAtomicIncrement64((int64_t*)&wordIndex);
+    if(wordIndex <= numWords) {
+        return wordIndex;
     } else {
         return -1;
     }
+}
+
+void resetWords() {
+    wordIndex = -1;
 }
 
 #pragma mark - Debugging
@@ -168,7 +172,7 @@ unsigned int wordMultiplier(unsigned int x, unsigned int y) {
     return wordMultiplierHash(HASH(x, y));
 }
 
-int prescoreWord(char *word, int length) {
+int prescoreWord(const char *word, const int length) {
     unsigned int ret = 0;
     for(int i = 0; i < length; i++) {
         ret += valuel(word[i]);
@@ -193,7 +197,7 @@ unsigned int scoreLettersWithPrescore(const int prescore, const int length, char
 
 #pragma mark - Validation
 
-BOOL validate(char *word, int length, char *words, int numWords, int *wordLengths) {
+BOOL validate(const char *word, const int length, const WordInfo *info) {
     // inclusive indices
     //   0 <= imin when using truncate toward zero divide
     //     imid = (imin+imax)/2;
@@ -202,7 +206,7 @@ BOOL validate(char *word, int length, char *words, int numWords, int *wordLength
     //     imid = (int)floor((imin+imax)/2.0);
     //int binary_search(int A[], int key, int imin, int imax)
     
-    int imin = 0, imax = numWords;
+    int imin = 0, imax = info->numWords;
     
     // continually narrow search until just one element remains
     while(imin < imax) {
@@ -212,7 +216,7 @@ BOOL validate(char *word, int length, char *words, int numWords, int *wordLength
         assert(imid < imax);
         // note: 0 <= imin < imax implies imid will always be less than imax
         
-        if(strncmp(&words[imid * BOARD_LENGTH], word, length) < 0) {
+        if(strncmp(&(info->words[imid * BOARD_LENGTH]), word, length) < 0) {
             imin = imid + 1;
         } else {
             imax = imid;
@@ -223,14 +227,14 @@ BOOL validate(char *word, int length, char *words, int numWords, int *wordLength
     //   otherwise imax == imin
     
     // deferred test for equality
-    if(imax == imin && wordLengths[imin] == length && strncmp(&words[imin * BOARD_LENGTH], word, length) == 0) {
+    if(imax == imin && info->lengths[imin] == length && strncmp(&(info->words[imin * BOARD_LENGTH]), word, length) == 0) {
         return YES;
     } else {
         return NO;
     }
 }
 
-void subwordsAtLocation(NSMutableSet **ret, char *word, int length, char *words, int numWords, int *wordLengths) {
+void subwordsAtLocation(NSMutableSet **ret, char *word, const int length, const WordInfo *info) {
     if(length <= NUM_LETTERS_TURN) {
         return [*ret addObject:[WordStructure wordAsLetters:word length:length]];
     }
@@ -241,8 +245,8 @@ void subwordsAtLocation(NSMutableSet **ret, char *word, int length, char *words,
     for(int i = 0; i < length - 1; ++i) { //wwf doesn't acknowledge single letter words
         const int tmpLength = MIN(i + NUM_LETTERS_TURN, length - 1);
         for(int j = i + 2; j < tmpLength; ++j) {
-            char *subword = &word[i];
-            if(validate(subword, j - i, words, numWords, wordLengths)) {
+            const char *subword = &word[i];
+            if(validate(subword, j - i, info)) {
                 Subword sub = {.start = i, .end = j};
                 subwords[numSubwords++] = sub;
                 assert(numSubwords <= 25);

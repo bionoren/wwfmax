@@ -25,7 +25,13 @@ typedef struct {
 typedef struct {
     int x;
     int y;
-    char *word;
-    int wordLength;
-    unsigned int wordScore;
+    int index;
 } Sideword;
+
+typedef struct {
+    char *words;
+    int numWords;
+    int *lengths;
+    int *prescores;
+    Sideword ****sidewords;
+} WordInfo;

@@ -82,23 +82,21 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
 /**
  I'm strictly interested in the top half of the board and horizontal words because of bonus tile symetry.
  */
--(Solution)solve:(char*)words lengths:(int*)wordLengths count:(int)numWords {
-    assert(validate("jezebel", 7, words, numWords, wordLengths));
-    assert(validate("azotobacters", 12, words, numWords, wordLengths));
+-(Solution)solve:(const WordInfo*)info {
+    assert(validate("jezebel", 7, info));
+    assert(validate("azotobacters", 12, info));
     
     Solution ret;
     ret.maxScore = 0;
     
-    const static int yMax = BOARD_LENGTH / 2 + BOARD_LENGTH % 2; //ceil(BOARD_LENGTH / 2) as compile time constant
-    char *word = words;
-    
     NSMutableSet *playableWords = [NSMutableSet set];
-    for(int i = nextWord(numWords); i >= 0; i = nextWord(numWords)) {
+    for(int i = nextWord(info->numWords); i >= 0; i = nextWord(info->numWords)) {
         @autoreleasepool {
-            word = &words[i * BOARD_LENGTH];
-            int length = wordLengths[i];
+            const char *word = &(info->words[i * BOARD_LENGTH]);
+            const int length = info->lengths[i];
+            const int prescore = info->prescores[i];
 
-            subwordsAtLocation(&playableWords, word, length, words, numWords, wordLengths);
+            subwordsAtLocation(&playableWords, word, length, info);
             if(playableWords.count == 0) {
                 continue;
             }
@@ -106,8 +104,6 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
             for(WordStructure *wordStruct in playableWords) {
                 assert(wordStruct->_numLetters > 0);
                 if([self validateLetters:wordStruct->_letters length:wordStruct->_numLetters]) {
-                    const int prescore = prescoreWord(word, length);
-                    
                     char chars[NUM_LETTERS_TURN];
                     int locs[NUM_LETTERS_TURN];
                     for(int tmp = 0; tmp < wordStruct->_numLetters; ++tmp) {
@@ -124,7 +120,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
                             offsets[tmp] = locs[tmp]++;
                         }
                         
-                        for(int y = 0; y < yMax; ++y) {
+                        for(int y = 0; y < BOARD_LENGTH; ++y) {
                             for(int j = 0; j < wordStruct->_numSubwords; ++j) {
                                 Subword subword = wordStruct->_subwords[j];
                                 assert(subword.start < subword.end);

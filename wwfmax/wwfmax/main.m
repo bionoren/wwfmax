@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "Board.h"
+#import "functions.h"
 
 #define NUM_THREADS 1
 
@@ -26,6 +27,11 @@ int main(int argc, const char * argv[]) {
         int numWords = 173101;
         char *words = calloc(numWords * BOARD_LENGTH, sizeof(char));
         int *wordLengths = calloc(numWords, sizeof(int));
+        int *prescores = calloc(numWords, sizeof(int));
+        //for each letter, for each board position, a list of pointers to words which can be anchored by that letter at that board position
+        //first element of the list is the list length
+        Sideword ****sideWords = malloc(26 * BOARD_LENGTH * numWords * sizeof(Sideword*));
+        
         FILE *wordFile = fopen("dict.txt", "r");
         if(wordFile) {
             char buffer[40];
@@ -42,14 +48,30 @@ int main(int argc, const char * argv[]) {
             numWords = i - 1;
         }
         NSLog(@"evaluating %d words", numWords);
+        
+        const WordInfo info = {.words = words, .numWords = numWords, .lengths = wordLengths, .prescores = prescores, .sidewords = sideWords};
+        
         dispatch_group_t dispatchGroup = dispatch_group_create();
+        for(int i = 0; i < NUM_THREADS; i++) {
+            dispatch_group_async(dispatchGroup, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                for(int i = nextWord(numWords); i >= 0; i = nextWord(numWords)) {
+                    char *word = &(words[i * BOARD_LENGTH]);
+                    int length = wordLengths[i];
+                    prescores[i] = prescoreWord(word, length);
+                }
+            });
+        }
+        dispatch_group_wait(dispatchGroup, DISPATCH_TIME_FOREVER);
+        
+        resetWords();
+        
         __block Solution sol;
         sol.maxScore = 0;
         NSLock *lock = [[NSLock alloc] init];
         for(int i = 0; i < NUM_THREADS; i++) {
             dispatch_group_async(dispatchGroup, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                 Board *board = [[Board alloc] init];
-                Solution temp = [board solve:words lengths:wordLengths count:numWords];
+                Solution temp = [board solve:&info];
                 if([lock lockBeforeDate:[NSDate distantFuture]]) {
                     if(temp.maxScore > sol.maxScore) {
                         sol = temp;
@@ -64,6 +86,8 @@ int main(int argc, const char * argv[]) {
         
         free(words);
         free(wordLengths);
+        free(prescores);
+        free(sideWords);
     }
     return 0;
 }

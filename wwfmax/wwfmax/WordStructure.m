@@ -15,7 +15,7 @@
 
 @implementation WordStructure
 
-+(WordStructure*)wordAsLetters:(char*)word length:(int)length {
++(WordStructure*)wordAsLetters:(char*)word length:(const int)length {
     WordStructure *ret = [[WordStructure alloc] initWithWord:word length:length];
     ret->_numLetters = length;
     for(unsigned int i = 0; i < ret->_length; i++) {
@@ -36,7 +36,7 @@
     return self;
 }
 
--(id)initWithWord:(char*)word length:(int)length; {
+-(id)initWithWord:(char*)word length:(const int)length; {
     if(self = [self init]) {
         _word = word;
         _length = length;

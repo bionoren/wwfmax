@@ -18,8 +18,8 @@
     int _numSubwords;
 }
 
-+(WordStructure*)wordAsLetters:(char*)word length:(int)length;
--(id)initWithWord:(char*)word length:(int)length;
++(WordStructure*)wordAsLetters:(char*)word length:(const int)length;
+-(id)initWithWord:(char*)word length:(const int)length;
 
 -(NSArray*)validateSubwords:(Subword*)subwords length:(int)numSubwords;
 

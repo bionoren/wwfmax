@@ -21,7 +21,7 @@ typedef struct {
 
 @interface Board : NSObject
 
--(Solution)solve:(char*)words lengths:(int*)wordLengths count:(int)numWords;
+-(Solution)solve:(const WordInfo*)info;
 +(NSString*)debugBoard:(char*)board;
 
 @end

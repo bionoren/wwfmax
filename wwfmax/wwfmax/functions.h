@@ -15,6 +15,7 @@
 
 //threadsafe
 int nextWord(int numWords);
+void resetWords();
 
 #pragma mark - Debugging
 
@@ -38,12 +39,12 @@ unsigned int wordMultiplier(unsigned int x, unsigned int y);
 
 int prescoreWord(char *word, int length);
 
-unsigned int scoreLettersWithPrescore(const int prescore, const int length, char *chars, int *offsets, const int  y);
+unsigned int scoreLettersWithPrescore(const int prescore, const int length, char *chars, int *offsets, const int y);
 
 #pragma mark - Validation
 
-BOOL validate(char *word, int length, char *words, int numWords, int *wordLengths);
+BOOL validate(char *word, int length, const WordInfo *info);
 
-void subwordsAtLocation(NSMutableSet **ret, char *word, int length, char *words, int numWords, int *wordLengths);
+void subwordsAtLocation(NSMutableSet **ret, const char *word, const int length, const WordInfo *info);
 
 #endif

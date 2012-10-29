@@ -43,7 +43,7 @@ unsigned int scoreLettersWithPrescore(const int prescore, const int length, char
 
 #pragma mark - Validation
 
-BOOL validate(char *word, int length, const WordInfo *info);
+BOOL validate(const char *word, const int length, const WordInfo *info);
 
 void subwordsAtLocation(NSMutableSet **ret, const char *word, const int length, const WordInfo *info);
 

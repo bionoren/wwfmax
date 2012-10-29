@@ -34,7 +34,7 @@ int main(int argc, const char * argv[]) {
         for(int i = 0; i < 26; i++) {
             sideWords[i] = malloc(BOARD_LENGTH * sizeof(SidewordCache*));
             for(int j = 0; j < BOARD_LENGTH; j++) {
-                sideWords[i][j] = calloc(numWords * 3, sizeof(SidewordCache));
+                sideWords[i][j] = calloc(numWords, sizeof(SidewordCache));
             }
         }
         
@@ -64,21 +64,23 @@ int main(int argc, const char * argv[]) {
                     const char *word = &(words[i * BOARD_LENGTH]);
                     const int length = wordLengths[i];
                     prescores[i] = prescoreWord(word, length);
-                    for(int j = 0; j < BOARD_LENGTH; j++) {
-                        if(j + length < BOARD_LENGTH) {
-                            for(int k = j; k >= 0; k--) {
-                                for(int l = 0; l < length; l++) {
-                                    char c = word[l];
-                                    int y = k + l;
-                                    SidewordCache *wordList = sideWords[c - LETTER_OFFSET_LC][y];
-                                    SidewordCache sc = wordList[(wordList[0].index)++];
-                                    assert(wordList[0].index < numWords * 3);
-                                    sc.index = i;
-                                    sc.offset = l;
+                    for(int l = 0; l < length; l++) {
+                        char c = word[l];
+                        if((l == 0 || validate(word, l, &info)) && (l < length - 1 || validate(&word[l + 1], length - l, &info))) {
+                            for(int j = 0; j < BOARD_LENGTH; j++) {
+                                if(j + length < BOARD_LENGTH) {
+                                    for(int k = j; k >= 0; k--) {
+                                        int y = k + l;
+                                        SidewordCache *wordList = sideWords[c - LETTER_OFFSET_LC][y];
+                                        SidewordCache sc = wordList[(wordList[0].index)++];
+                                        assert(wordList[0].index < numWords);
+                                        sc.index = i;
+                                        sc.offset = l;
+                                    }
+                                } else {
+                                    break;
                                 }
                             }
-                        } else {
-                            break;
                         }
                     }
                 }

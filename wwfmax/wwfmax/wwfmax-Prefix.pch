@@ -15,7 +15,7 @@
 #define Y_FROM_HASH(hash) (hash >> 4)
 #define X_FROM_HASH(hash) (hash & 0xF)
 
-typedef unsigned short Letter; //upper 8 bits are char, lower 4 bits are x location
+typedef short Letter; //upper 8 bits are char, lower 4 bits are x location
 
 typedef struct {
     int start;

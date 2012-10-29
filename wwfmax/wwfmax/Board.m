@@ -131,9 +131,9 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
                                 }
                             }
                             
-                            unsigned int score = scoreLettersWithPrescore(prescore, wordStruct->_numLetters, chars, offsets, y) + bonus;
-                            if(score > ret.maxScore) {
-                                ret.maxScore = score;
+                            int wordScore = scoreLettersWithPrescore(prescore, wordStruct->_numLetters, chars, offsets, y) + bonus;
+                            if(wordScore > ret.maxScore) {
+                                ret.maxScore = wordScore;
                                 
                                 for(int j = 0; j < wordStruct->_numSubwords; ++j) {
                                     Subword subword = wordStruct->_subwords[j];

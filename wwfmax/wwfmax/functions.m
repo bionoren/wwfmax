@@ -41,7 +41,7 @@ void printSubwords(char* word, int length, Subword *subwords, int numSubwords) {
 
 #pragma mark - Scoring
 
-unsigned int valuel(char letter) {
+int valuel(char letter) {
     switch(letter) {
         case 'a':
         case 'e':
@@ -81,7 +81,7 @@ unsigned int valuel(char letter) {
     }
 }
 
-unsigned int scoreSquarePrescoredHash(char letter, unsigned int hash) {
+int scoreSquarePrescoredHash(char letter, int hash) {
     switch(hash) {
         case 6: 	    //0,6
         case 8: 	    //0,8
@@ -110,12 +110,12 @@ unsigned int scoreSquarePrescoredHash(char letter, unsigned int hash) {
     }
 }
 
-unsigned int scoreSquarePrescored(char letter, unsigned int x, unsigned int y) {
+int scoreSquarePrescored(char letter, int x, int y) {
     return scoreSquarePrescoredHash(letter, HASH(x, y));
 }
 
-unsigned int scoreSquareHash(char letter, unsigned int hash) {
-    unsigned int ret = valuel(letter);
+int scoreSquareHash(char letter, int hash) {
+    int ret = valuel(letter);
     switch(hash) {
         case 6: 	    //0,6
         case 8: 	    //0,8
@@ -144,11 +144,11 @@ unsigned int scoreSquareHash(char letter, unsigned int hash) {
     }
 }
 
-unsigned int scoreSquare(char letter, unsigned int x, unsigned int y) {
+int scoreSquare(char letter, int x, int y) {
     return scoreSquareHash(letter, HASH(x, y));
 }
 
-unsigned int wordMultiplierHash(unsigned int hash) {
+int wordMultiplierHash(int hash) {
     switch(hash) {
         case 3:     //0,3
         case 11:    //0,11
@@ -168,19 +168,19 @@ unsigned int wordMultiplierHash(unsigned int hash) {
     }
 }
 
-unsigned int wordMultiplier(unsigned int x, unsigned int y) {
+int wordMultiplier(int x, int y) {
     return wordMultiplierHash(HASH(x, y));
 }
 
 int prescoreWord(const char *word, const int length) {
-    unsigned int ret = 0;
+    int ret = 0;
     for(int i = 0; i < length; i++) {
         ret += valuel(word[i]);
     }
     return ret;
 }
 
-unsigned int scoreLettersWithPrescore(const int prescore, const int length, char *chars, int *offsets, const int  y) {
+int scoreLettersWithPrescore(const int prescore, const int length, char *chars, int *offsets, const int  y) {
     int val = prescore;
     int mult = 1;
     
@@ -257,8 +257,8 @@ void subwordsAtLocation(NSMutableSet **ret, char *word, const int length, const 
         [*ret removeAllObjects];
     }
     
-    const unsigned int count = (int)exp2(numSubwords);
-    for(unsigned int powerset = 1; powerset < count; powerset++) {
+    const int count = (int)exp2(numSubwords);
+    for(int powerset = 1; powerset < count; powerset++) {
         //forward declarations to make goto happy
         WordStructure *wordStruct;
         NSArray *words;
@@ -266,7 +266,7 @@ void subwordsAtLocation(NSMutableSet **ret, char *word, const int length, const 
         Subword comboSubwords[BOARD_LENGTH];
         int comboSubwordsLength = 0;
         int lastEnd = 0;
-        for(unsigned int i = 1, index = 0; index < numSubwords; i <<= 1, ++index) {
+        for(int i = 1, index = 0; index < numSubwords; i <<= 1, ++index) {
             if(i & powerset) {
                 Subword s = subwords[index];
                 if(s.start <= lastEnd) {

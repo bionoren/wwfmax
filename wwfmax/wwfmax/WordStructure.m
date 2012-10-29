@@ -18,7 +18,7 @@
 +(WordStructure*)wordAsLetters:(char*)word length:(const int)length {
     WordStructure *ret = [[WordStructure alloc] initWithWord:word length:length];
     ret->_numLetters = length;
-    for(unsigned int i = 0; i < ret->_length; i++) {
+    for(int i = 0; i < ret->_length; i++) {
         char c = ret->_word[i];
         assert(c <= 'z');
         Letter l = HASH(i, c);
@@ -48,7 +48,7 @@
     //validate and organize self.parts into an ordered breakdown of the word
     Subword next = subwords[0];
     int letters = NUM_LETTERS_TURN;
-    for(unsigned int i = 0, subwordIndex = 0; i < _length; i++) {
+    for(int i = 0, subwordIndex = 0; i < _length; i++) {
         if(i > next.end && ++subwordIndex < numSubwords) {
             next = subwords[subwordIndex];
         }
@@ -101,8 +101,8 @@
     _numSubwords--;
     
     WordStructure *tmp = [[WordStructure alloc] initWithWord:_word length:_length];
-    for(unsigned int i = 0; i < partLen; i++) {
-        unsigned int loc = part.start + i;
+    for(int i = 0; i < partLen; i++) {
+        int loc = part.start + i;
         char c = _word[loc];
         assert(c <= 'z');
         Letter l = HASH(loc, c);

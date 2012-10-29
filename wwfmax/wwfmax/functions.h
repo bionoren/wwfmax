@@ -23,23 +23,23 @@ void printSubwords(char* word, int length, Subword *subwords, int numSubwords);
 
 #pragma mark - Scoring
 
-unsigned int valuel(char letter);
+int valuel(char letter);
 
-unsigned int scoreSquarePrescoredHash(char letter, unsigned int hash);
+int scoreSquarePrescoredHash(char letter, int hash);
 
-unsigned int scoreSquarePrescored(char letter, unsigned int x, unsigned int y);
+int scoreSquarePrescored(char letter, int x, int y);
 
-unsigned int scoreSquareHash(char letter, unsigned int hash);
+int scoreSquareHash(char letter, int hash);
 
-unsigned int scoreSquare(char letter, unsigned int x, unsigned int y);
+int scoreSquare(char letter, int x, int y);
 
-unsigned int wordMultiplierHash(unsigned int hash);
+int wordMultiplierHash(int hash);
 
-unsigned int wordMultiplier(unsigned int x, unsigned int y);
+int wordMultiplier(int x, int y);
 
 int prescoreWord(const char *word, const int length);
 
-unsigned int scoreLettersWithPrescore(const int prescore, const int length, char *chars, int *offsets, const int y);
+int scoreLettersWithPrescore(const int prescore, const int length, char *chars, int *offsets, const int y);
 
 #pragma mark - Validation
 

@@ -34,7 +34,8 @@ int main(int argc, const char * argv[]) {
         for(int i = 0; i < 26; i++) {
             sideWords[i] = malloc(BOARD_LENGTH * sizeof(SidewordCache*));
             for(int j = 0; j < BOARD_LENGTH; j++) {
-                sideWords[i][j] = calloc(numWords, sizeof(SidewordCache));
+                sideWords[i][j] = malloc((1 << 17) * sizeof(SidewordCache));
+                sideWords[i][j][0].index = 0;
             }
         }
         
@@ -73,7 +74,7 @@ int main(int argc, const char * argv[]) {
                                         int y = k + l;
                                         SidewordCache *wordList = sideWords[c - LETTER_OFFSET_LC][y];
                                         SidewordCache sc = wordList[(wordList[0].index)++];
-                                        assert(wordList[0].index < numWords);
+                                        assert(wordList[0].index < 1 << 17);
                                         sc.index = i;
                                         sc.offset = l;
                                     }
@@ -109,10 +110,16 @@ int main(int argc, const char * argv[]) {
         dispatch_group_wait(dispatchGroup, DISPATCH_TIME_FOREVER);
         printSolution(sol);
         
+        for(int i = 0; i < 26; i++) {
+            for(int j = 0; j < BOARD_LENGTH; j++) {
+                free(sideWords[i][j]);
+            }
+            free(sideWords[i]);
+        }
+        free(sideWords);
         free(words);
         free(wordLengths);
         free(prescores);
-        free(sideWords);
     }
     return 0;
 }

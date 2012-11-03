@@ -44,7 +44,7 @@
     return self;
 }
 
--(BOOL)validateSubwords:(Subword*)subwords length:(int)numSubwords {
+-(BOOL)validateSubwords:(Subword*)subwords length:(int)numSubwords info:(const WordInfo*)info {
     //validate and organize self.parts into an ordered breakdown of the word
     Subword next = subwords[0];
     int letters = NUM_LETTERS_TURN;
@@ -65,13 +65,18 @@
             }
         }
     }
-#ifdef DEBUG
-    for(int i = 0; i < numSubwords; i++) {
-        Subword s = subwords[i];
-        assert(s.start < s.end);
+    
+    if(numSubwords) {
+        Subword lastSubword = subwords[0];
+        for(int i = 1; i < numSubwords; i++) {
+            Subword s = subwords[i];
+            if(lastSubword.end == s.start && !validate(&(self->_word[lastSubword.start]), s.end - lastSubword.start, info)) {
+                return NO;
+            }
+        }
+        memcpy(_subwords, subwords, numSubwords * sizeof(Subword));
     }
-#endif
-    memcpy(_subwords, subwords, numSubwords * sizeof(Subword));
+    
     _numSubwords = numSubwords;
     
     return YES;

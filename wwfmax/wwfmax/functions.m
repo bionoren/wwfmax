@@ -274,7 +274,7 @@ void subwordsAtLocation(NSMutableSet **ret, char *word, const int length, const 
             }
         }
         wordStruct = [[WordStructure alloc] initWithWord:word length:length];
-        if([wordStruct validateSubwords:comboSubwords length:comboSubwordsLength]) {
+        if([wordStruct validateSubwords:comboSubwords length:comboSubwordsLength info:info]) {
             [*ret addObject:wordStruct];
         }
     OVERLAP:
@@ -328,7 +328,7 @@ BOOL playable(char *word, const int length, const WordInfo *info) {
             }
         }
         wordStruct = [[WordStructure alloc] initWithWord:word length:length];
-        if([wordStruct validateSubwords:comboSubwords length:comboSubwordsLength]) {
+        if([wordStruct validateSubwords:comboSubwords length:comboSubwordsLength info:info]) {
             return YES;
         }
     OVERLAP:

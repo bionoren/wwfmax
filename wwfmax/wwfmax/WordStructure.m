@@ -44,7 +44,7 @@
     return self;
 }
 
--(NSArray*)validateSubwords:(Subword*)subwords length:(int)numSubwords {
+-(BOOL)validateSubwords:(Subword*)subwords length:(int)numSubwords {
     //validate and organize self.parts into an ordered breakdown of the word
     Subword next = subwords[0];
     int letters = NUM_LETTERS_TURN;
@@ -61,7 +61,7 @@
                 Letter l = HASH(i, c);
                 _letters[_numLetters++] = l;
             } else {
-                return nil;
+                return NO;
             }
         }
     }
@@ -74,50 +74,7 @@
     memcpy(_subwords, subwords, numSubwords * sizeof(Subword));
     _numSubwords = numSubwords;
     
-    //If there are any available letters, break subwords into letters, if possible, in all possible combinations
-    //note that there is an advantage to not breaking up a subword if there aren't enough letters available for the full breakup
-    NSMutableArray *ret = [[NSMutableArray alloc] initWithObjects:&self count:1];
-    int numFreeLetters = NUM_LETTERS_TURN - _numLetters;
-    if(numFreeLetters > 0) {
-        for(int i = 0; i < _numSubwords; i++) {
-            Subword s = _subwords[i];
-            if(s.end - s.start < numFreeLetters) {
-                [ret addObjectsFromArray:[self breakUpSubwordsAtIndex:i freeLetters:numFreeLetters]];
-            }
-        }
-    }
-    return ret;
-}
-
--(NSArray*)breakUpSubwordsAtIndex:(int)index freeLetters:(int)letters {
-    NSMutableArray *ret = [NSMutableArray array];
-    Subword part = _subwords[index];
-    int partLen = part.end - part.start;
-    letters -= partLen;
-    NSAssert(letters >= 0, @"WTF? letters = %d", letters);
-    for(int i = index + 1; i < _numSubwords; i++) {
-        _subwords[i - 1] = _subwords[i];
-    }
-    _numSubwords--;
-    
-    WordStructure *tmp = [[WordStructure alloc] initWithWord:_word length:_length];
-    for(int i = 0; i < partLen; i++) {
-        int loc = part.start + i;
-        char c = _word[loc];
-        assert(c <= 'z');
-        Letter l = HASH(loc, c);
-        tmp->_letters[tmp->_numLetters++] = l;
-    }
-    [ret addObject:tmp];
-    for(int i = 0; i < _numSubwords; i++) {
-        part = _subwords[i];
-        partLen = part.end - part.start;
-        if(partLen < letters) {
-            [ret addObjectsFromArray:[self breakUpSubwordsAtIndex:i freeLetters:letters]];
-        }
-    }
-    
-    return ret;
+    return YES;
 }
 
 @end

@@ -21,6 +21,6 @@
 +(WordStructure*)wordAsLetters:(char*)word length:(const int)length;
 -(id)initWithWord:(char*)word length:(const int)length;
 
--(NSArray*)validateSubwords:(Subword*)subwords length:(int)numSubwords;
+-(BOOL)validateSubwords:(Subword*)subwords length:(int)numSubwords;
 
 @end

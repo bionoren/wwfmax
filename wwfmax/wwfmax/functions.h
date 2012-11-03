@@ -47,4 +47,6 @@ BOOL validate(const char *word, const int length, const WordInfo *info);
 
 void subwordsAtLocation(NSMutableSet **ret, const char *word, const int length, const WordInfo *info);
 
+BOOL playable(char *word, const int length, const WordInfo *info);
+
 #endif

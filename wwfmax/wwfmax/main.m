@@ -16,7 +16,7 @@
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
-        assert(sizeof(int) == 4);
+        assert(sizeof(short) >= 2);
         assert(HASH(11, 3) == 59); //3,11
         Letter hash = HASH(BOARD_LENGTH, 'z');
         assert(X_FROM_HASH(hash) == BOARD_LENGTH);
@@ -30,11 +30,11 @@ int main(int argc, const char * argv[]) {
         int *prescores = calloc(numWords, sizeof(int));
         //for each letter, for each board position, a list of pointers to words which can be anchored by that letter at that board position
         //first element of the list is the list length
-        SidewordCache ***sideWords = malloc(26 * sizeof(SidewordCache**)); //for the inner list size, I'm guessing at how many slots we'll actually need
-        for(int i = 0; i < 26; i++) {
+        SidewordCache ***sideWords = malloc(26 * sizeof(SidewordCache**));
+        for(int i = 0; i < 26; ++i) {
             sideWords[i] = malloc(BOARD_LENGTH * sizeof(SidewordCache*));
-            for(int j = 0; j < BOARD_LENGTH; j++) {
-                sideWords[i][j] = malloc((1 << 17) * sizeof(SidewordCache));
+            for(int j = 0; j < BOARD_LENGTH; ++j) {
+                sideWords[i][j] = malloc((1 << 17) * sizeof(SidewordCache)); //for the inner list size, I'm guessing at how many slots we'll actually need
                 sideWords[i][j][0].index = 0;
             }
         }
@@ -49,28 +49,37 @@ int main(int argc, const char * argv[]) {
                 if(len <= BOARD_LENGTH) {
                     strncpy(word, buffer, len);
                     wordLengths[i++] = len;
+                    assert(i < numWords);
                     word += BOARD_LENGTH * sizeof(char);
                 }
             }
             numWords = i - 1;
         }
+        
         NSLog(@"evaluating %d words", numWords);
         
         const WordInfo info = {.words = words, .numWords = numWords, .lengths = wordLengths, .prescores = prescores, .sidewords = sideWords};
         
         dispatch_group_t dispatchGroup = dispatch_group_create();
-        for(int i = 0; i < NUM_THREADS; i++) {
+        for(int i = 0; i < NUM_THREADS; ++i) {
             dispatch_group_async(dispatchGroup, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                 for(int i = nextWord(numWords); i >= 0; i = nextWord(numWords)) {
-                    const char *word = &(words[i * BOARD_LENGTH]);
+                    char *word = &(words[i * BOARD_LENGTH]);
                     const int length = wordLengths[i];
+                    
+                    if(!playable(word, length, &info)) {
+                        words[i * BOARD_LENGTH] = 0;
+                        wordLengths[i] = 0;
+                        continue;
+                    }
+                    
                     prescores[i] = prescoreWord(word, length);
-                    for(int l = 0; l < length; l++) {
+                    for(int l = 0; l < length; ++l) {
                         char c = word[l];
                         if((l == 0 || validate(word, l, &info)) && (l < length - 1 || validate(&word[l + 1], length - l, &info))) {
-                            for(int j = 0; j < BOARD_LENGTH; j++) {
+                            for(int j = 0; j < BOARD_LENGTH; ++j) {
                                 if(j + length < BOARD_LENGTH) {
-                                    for(int k = j; k >= 0; k--) {
+                                    for(int k = j; k >= 0; --k) {
                                         int y = k + l;
                                         SidewordCache *wordList = sideWords[c - LETTER_OFFSET_LC][y];
                                         SidewordCache sc = wordList[(wordList[0].index)++];
@@ -94,7 +103,7 @@ int main(int argc, const char * argv[]) {
         __block Solution sol;
         sol.maxScore = 0;
         NSLock *lock = [[NSLock alloc] init];
-        for(int i = 0; i < NUM_THREADS; i++) {
+        for(int i = 0; i < NUM_THREADS; ++i) {
             dispatch_group_async(dispatchGroup, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                 Board *board = [[Board alloc] init];
                 Solution temp = [board solve:&info];
@@ -110,8 +119,8 @@ int main(int argc, const char * argv[]) {
         dispatch_group_wait(dispatchGroup, DISPATCH_TIME_FOREVER);
         printSolution(sol);
         
-        for(int i = 0; i < 26; i++) {
-            for(int j = 0; j < BOARD_LENGTH; j++) {
+        for(int i = 0; i < 26; ++i) {
+            for(int j = 0; j < BOARD_LENGTH; ++j) {
                 free(sideWords[i][j]);
             }
             free(sideWords[i]);

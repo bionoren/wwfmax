@@ -253,15 +253,11 @@ void subwordsAtLocation(NSMutableSet **ret, char *word, const int length, const 
             }
         }
     }
-    if(numSubwords == 0) {
-        [*ret removeAllObjects];
-    }
     
     const int count = (int)exp2(numSubwords);
     for(int powerset = 1; powerset < count; powerset++) {
         //forward declarations to make goto happy
         WordStructure *wordStruct;
-        NSArray *words;
         
         Subword comboSubwords[BOARD_LENGTH];
         int comboSubwordsLength = 0;
@@ -278,13 +274,67 @@ void subwordsAtLocation(NSMutableSet **ret, char *word, const int length, const 
             }
         }
         wordStruct = [[WordStructure alloc] initWithWord:word length:length];
-        words = [wordStruct validateSubwords:comboSubwords length:comboSubwordsLength];
-        if(words) {
-            [*ret addObjectsFromArray:words];
+        if([wordStruct validateSubwords:comboSubwords length:comboSubwordsLength]) {
+            [*ret addObject:wordStruct];
         }
     OVERLAP:
         ;
     }
+}
+
+BOOL playable(char *word, const int length, const WordInfo *info) {
+    if(length <= NUM_LETTERS_TURN) {
+        return YES;
+    }
+    
+    //max in my testing is 25
+    Subword subwords[25];
+    int numSubwords = 0;
+    for(int i = 0; i < length - 1; ++i) { //wwf doesn't acknowledge single letter words
+        const int tmpLength = MIN(i + NUM_LETTERS_TURN, length - 1);
+        for(int j = i + 2; j < tmpLength; ++j) {
+            const char *subword = &word[i];
+            if(validate(subword, j - i, info)) {
+                Subword sub = {.start = i, .end = j};
+                subwords[numSubwords++] = sub;
+                assert(numSubwords <= 25);
+                if(length - (j - i) <= NUM_LETTERS_TURN) {
+                    return YES;
+                }
+            }
+        }
+    }
+    if(numSubwords == 0) {
+        return NO;
+    }
+    
+    const int count = (int)exp2(numSubwords);
+    for(int powerset = 1; powerset < count; powerset++) {
+        //forward declarations to make goto happy
+        WordStructure *wordStruct;
+        
+        Subword comboSubwords[BOARD_LENGTH];
+        int comboSubwordsLength = 0;
+        int lastEnd = 0;
+        for(int i = 1, index = 0; index < numSubwords; i <<= 1, ++index) {
+            if(i & powerset) {
+                Subword s = subwords[index];
+                if(s.start <= lastEnd) {
+                    goto OVERLAP;
+                } else {
+                    lastEnd = s.end;
+                }
+                comboSubwords[comboSubwordsLength++] = s;
+            }
+        }
+        wordStruct = [[WordStructure alloc] initWithWord:word length:length];
+        if([wordStruct validateSubwords:comboSubwords length:comboSubwordsLength]) {
+            return YES;
+        }
+    OVERLAP:
+        ;
+    }
+    return NO;
 }
 
 #endif

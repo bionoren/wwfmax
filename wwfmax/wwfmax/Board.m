@@ -84,7 +84,6 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
  */
 -(Solution)solve:(const WordInfo*)info {
     assert(validate("jezebel", 7, info));
-    assert(validate("azotobacters", 12, info));
     
     Solution ret;
     ret.maxScore = 0;
@@ -92,8 +91,11 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
     NSMutableSet *playableWords = [NSMutableSet set];
     for(int i = nextWord(info->numWords); i >= 0; i = nextWord(info->numWords)) {
         @autoreleasepool {
-            const char *word = &(info->words[i * BOARD_LENGTH]);
             const int length = info->lengths[i];
+            if(length == 0) {
+                continue;
+            }
+            const char *word = &(info->words[i * BOARD_LENGTH]);
             const int prescore = info->prescores[i];
 
             subwordsAtLocation(&playableWords, word, length, info);
@@ -132,6 +134,14 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
                             }
                             
                             int wordScore = scoreLettersWithPrescore(prescore, wordStruct->_numLetters, chars, offsets, y) + bonus;
+                            for(int letterCount = 0; letterCount < wordStruct->_numLetters; ++letterCount) {
+                                char c = chars[letterCount];
+                                int charIndex = (c >= 'a')?(c - LETTER_OFFSET_LC):(c - LETTER_OFFSET_UC);
+                                SidewordCache *sidewords = info->sidewords[charIndex][y];
+                                for(int sidewordIndex = 1; sidewordIndex < sidewords[0].index; ++sidewords) {
+                                    SidewordCache sc = sidewords[sidewordIndex];
+                                }
+                            }
                             if(wordScore > ret.maxScore) {
                                 ret.maxScore = wordScore;
                                 

@@ -53,9 +53,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
 
 @interface Board ()
 
-@property (nonatomic) char *board;
 @property (nonatomic) int *letters;
-@property (nonatomic, strong) NSMutableDictionary *sidewordCache;
 
 @end
 
@@ -65,8 +63,6 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
     if(self = [super init]) {
         _letters = calloc(NUM_LETTERS, sizeof(int));
         memcpy(_letters, letterCounts, NUM_LETTERS * sizeof(int));
-        _board = calloc(BOARD_LENGTH * BOARD_LENGTH, sizeof(char));
-        [self clearBoard];
         NSAssert(self.letters[1] == 9, @"self.letters[1] = %d, self.letters[4] = %d", self.letters[1], self.letters[4]);
     }
     return self;
@@ -75,8 +71,6 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
 -(void)dealloc {
     free(_letters);
     _letters = NULL;
-    free(_board);
-    _board = NULL;
 }
 
 /**
@@ -106,6 +100,16 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
             for(WordStructure *wordStruct in playableWords) {
                 assert(wordStruct->_numLetters > 0);
                 if([self validateLetters:wordStruct->_letters length:wordStruct->_numLetters]) {
+                    for(int j = 0; j < wordStruct->_numSubwords; ++j) {
+                        Subword subword = wordStruct->_subwords[j];
+                        assert(subword.start < subword.end);
+                        int subwordLen = subword.end - subword.start;
+                        char *subwordPointer = &(wordStruct->_word[subword.start]);
+                        if(![self testValidate:subwordPointer length:subwordLen]) {
+                            goto SUBWORD_FAIL;
+                        }
+                    }
+                    
                     char chars[NUM_LETTERS_TURN];
                     int locs[NUM_LETTERS_TURN];
                     for(int tmp = 0; tmp < wordStruct->_numLetters; ++tmp) {
@@ -116,50 +120,26 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
                     
                     int bonus = (wordStruct->_numLetters == NUM_LETTERS_TURN)?35:0;
                     
-                    int offsets[NUM_LETTERS_TURN];
-                    for(int x = 0; x < BOARD_LENGTH - length; ++x) {
-                        for(int tmp = 0; tmp < wordStruct->_numLetters; ++tmp) {
-                            offsets[tmp] = locs[tmp]++;
-                        }
-                        
-                        for(int y = 0; y < BOARD_LENGTH; ++y) {
-                            for(int j = 0; j < wordStruct->_numSubwords; ++j) {
-                                Subword subword = wordStruct->_subwords[j];
-                                assert(subword.start < subword.end);
-                                int subwordLen = subword.end - subword.start;
-                                char *subwordPointer = &(wordStruct->_word[subword.start]);
-                                if(![self testValidate:subwordPointer length:subwordLen]) {
-                                    goto SUBWORD_FAIL;
-                                }
-                            }
+                    for(int y = 0; y < BOARD_LENGTH; ++y) {
+                        for(int x = 0; x < BOARD_LENGTH - length; ++x) {
+                            int wordScore = scoreLettersWithPrescore(prescore, wordStruct->_numLetters, chars, locs, x, y) + bonus;
                             
-                            int wordScore = scoreLettersWithPrescore(prescore, wordStruct->_numLetters, chars, offsets, y) + bonus;
-                            for(int letterCount = 0; letterCount < wordStruct->_numLetters; ++letterCount) {
-                                char c = chars[letterCount];
-                                int charIndex = (c >= 'a')?(c - LETTER_OFFSET_LC):(c - LETTER_OFFSET_UC);
-                                SidewordCache *sidewords = info->sidewords[charIndex][y];
-                                for(int sidewordIndex = 1; sidewordIndex < sidewords[0].index; ++sidewords) {
-                                    SidewordCache sc = sidewords[sidewordIndex];
-                                }
-                            }
                             if(wordScore > ret.maxScore) {
                                 ret.maxScore = wordScore;
                                 
+                                [self clearBoard:ret.maxBoard];
                                 for(int j = 0; j < wordStruct->_numSubwords; ++j) {
                                     Subword subword = wordStruct->_subwords[j];
                                     int subwordLen = subword.end - subword.start;
                                     char *subwordPointer = &(wordStruct->_word[subword.start]);
-                                    [self addSubword:subwordPointer length:subwordLen x:x + subword.start y:y];
+                                    [self addSubword:subwordPointer length:subwordLen board:ret.maxBoard x:x + subword.start y:y];
                                 }
-                                memcpy(ret.maxBoard, _board, BOARD_LENGTH*BOARD_LENGTH*sizeof(char));
                                 memcpy(ret.maxLetters, wordStruct->_letters, wordStruct->_numLetters * sizeof(Letter));
                                 memcpy(ret.maxWord, word, length * sizeof(char));
                                 ret.maxWordLength = length;
                                 ret.numMaxLetters = wordStruct->_numLetters;
                                 ret.maxx = x;
                                 ret.maxy = y;
-                                
-                                [self clearBoard];
 #ifdef DEBUG
                                 printSolution(ret);
 #endif
@@ -221,13 +201,13 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
 
 #pragma mark - Scoring
 
--(void)addSubword:(char*)word length:(int)length x:(int)x y:(int)y {
+-(void)addSubword:(char*)word length:(int)length board:(char*)board x:(int)x y:(int)y {
     int start = BOARD_COORDINATE(x, y);
-    memcpy(&(_board[start]), word, length * sizeof(char));
+    memcpy(&(board[start]), word, length * sizeof(char));
 }
 
--(void)clearBoard {
-    memcpy(_board, blankBoard, BOARD_LENGTH * BOARD_LENGTH * sizeof(char));
+-(void)clearBoard:(char*)board {
+    memcpy(board, blankBoard, BOARD_LENGTH * BOARD_LENGTH * sizeof(char));
 }
 
 #pragma mark - Debug / Helper

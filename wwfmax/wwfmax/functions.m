@@ -180,14 +180,14 @@ int prescoreWord(const char *word, const int length) {
     return ret;
 }
 
-int scoreLettersWithPrescore(const int prescore, const int length, char *chars, int *offsets, const int  y) {
+int scoreLettersWithPrescore(const int prescore, const int length, char *chars, int *offsets, const int x, const int y) {
     int val = prescore;
     int mult = 1;
     
     //score the letters and note the word multipliers
     for(int i = 0; i < length; ++i) {
         assert(chars[i] <= 'z' && chars[i] >= 'A');
-        int hash = HASH(offsets[i], y);
+        int hash = HASH(offsets[i] + x, y);
         val += scoreSquarePrescoredHash(chars[i], hash);
         mult *= wordMultiplierHash(hash);
     }

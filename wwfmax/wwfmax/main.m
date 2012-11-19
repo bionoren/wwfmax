@@ -30,14 +30,6 @@ int main(int argc, const char * argv[]) {
         int *prescores = calloc(numWords, sizeof(int));
         //for each letter, for each board position, a list of pointers to words which can be anchored by that letter at that board position
         //first element of the list is the list length
-        SidewordCache ***sideWords = malloc(26 * sizeof(SidewordCache**));
-        for(int i = 0; i < 26; ++i) {
-            sideWords[i] = malloc(BOARD_LENGTH * sizeof(SidewordCache*));
-            for(int j = 0; j < BOARD_LENGTH; ++j) {
-                sideWords[i][j] = malloc((1 << 17) * sizeof(SidewordCache)); //for the inner list size, I'm guessing at how many slots we'll actually need
-                sideWords[i][j][0].index = 0;
-            }
-        }
         
         FILE *wordFile = fopen("dict.txt", "r");
         if(wordFile) {
@@ -58,7 +50,7 @@ int main(int argc, const char * argv[]) {
         
         NSLog(@"evaluating %d words", numWords);
         
-        const WordInfo info = {.words = words, .numWords = numWords, .lengths = wordLengths, .prescores = prescores, .sidewords = sideWords};
+        const WordInfo info = {.words = words, .numWords = numWords, .lengths = wordLengths, .prescores = prescores};
         
         dispatch_group_t dispatchGroup = dispatch_group_create();
         for(int i = 0; i < NUM_THREADS; ++i) {
@@ -74,25 +66,6 @@ int main(int argc, const char * argv[]) {
                     }
                     
                     prescores[i] = prescoreWord(word, length);
-                    for(int l = 0; l < length; ++l) {
-                        char c = word[l];
-                        if((l == 0 || validate(word, l, &info)) && (l < length - 1 || validate(&word[l + 1], length - l, &info))) {
-                            for(int j = 0; j < BOARD_LENGTH; ++j) {
-                                if(j + length < BOARD_LENGTH) {
-                                    for(int k = j; k >= 0; --k) {
-                                        int y = k + l;
-                                        SidewordCache *wordList = sideWords[c - LETTER_OFFSET_LC][y];
-                                        SidewordCache sc = wordList[(wordList[0].index)++];
-                                        assert(wordList[0].index < 1 << 17);
-                                        sc.index = i;
-                                        sc.offset = l;
-                                    }
-                                } else {
-                                    break;
-                                }
-                            }
-                        }
-                    }
                 }
             });
         }
@@ -119,13 +92,6 @@ int main(int argc, const char * argv[]) {
         dispatch_group_wait(dispatchGroup, DISPATCH_TIME_FOREVER);
         printSolution(sol);
         
-        for(int i = 0; i < 26; ++i) {
-            for(int j = 0; j < BOARD_LENGTH; ++j) {
-                free(sideWords[i][j]);
-            }
-            free(sideWords[i]);
-        }
-        free(sideWords);
         free(words);
         free(wordLengths);
         free(prescores);

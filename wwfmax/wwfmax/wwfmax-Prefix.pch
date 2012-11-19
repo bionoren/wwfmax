@@ -23,20 +23,8 @@ typedef struct {
 } Subword;
 
 typedef struct {
-    int index;
-    int offset;
-} SidewordCache;
-
-typedef struct {
-    int x;
-    int y;
-    int index;
-} Sideword;
-
-typedef struct {
     char *words;
     int numWords;
     int *lengths;
     int *prescores;
-    SidewordCache ***sidewords;
 } WordInfo;

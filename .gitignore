@@ -1,3 +1,9 @@
 *.DS_Store
 *xcuserdata
 *.xcworkspace
+*.dat
+*.jar
+test
+*.txt
+CWG-Creator.c
+Justin-CWG-Search.c

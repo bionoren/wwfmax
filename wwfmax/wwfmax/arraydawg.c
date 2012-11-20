@@ -364,7 +364,7 @@ ArrayDawgPtr ArrayDawgInit(char **Dictionary, int *SegmentLenghts, int MaxString
     for(int i = 1; i <= NumberOfLivingNodes; i++) {
         CurrentNodeInteger = (Result->DawgArray)[i].Child;
         CurrentNodeInteger <<= TRADITIONAL_CHILD_SHIFT;
-        CurrentNodeInteger += ((Result->DawgArray)[i].Letter) - 'A';
+        CurrentNodeInteger += ((Result->DawgArray)[i].Letter) - 'a';
         if((Result->DawgArray)[i].EndOfWordFlag) {
             CurrentNodeInteger += TRADITIONAL_EOW_FLAG;
         }
@@ -450,7 +450,7 @@ ArrayDawgPtr ArrayDawgInit(char **Dictionary, int *SegmentLenghts, int MaxString
         CurrentNumberOfChildren = strlen(CurrentChildLetterString);
         CompleteChildList = 0;
         for(int j = 0; j < CurrentNumberOfChildren; j++) {
-            CompleteChildList += PowersOfTwo[CurrentChildLetterString[j] - 'A'];
+            CompleteChildList += PowersOfTwo[CurrentChildLetterString[j] - 'a'];
         }
         ChildListValues[i] = CompleteChildList;
     }

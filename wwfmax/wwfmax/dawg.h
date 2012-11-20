@@ -11,7 +11,7 @@
 
 #import "tnode.h"
 
-#define MAX 15
+#define MAX BOARD_LENGTH
 
 struct dawg {
     int NumberOfTotalWords;

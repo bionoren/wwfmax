@@ -13,7 +13,7 @@
 #include "CWGLib.h"
 
 // This is an important function involved in any movement through the CWG.
-// The "CompleteChildList" is masked according to "LetterPosition", and then a byte-wise pop-count is carried out. ('A' => 0).
+// The "CompleteChildList" is masked according to "LetterPosition", and then a byte-wise pop-count is carried out. ('a' => 0).
 // The function retruns the corresponding offset for the "LetterPosition"th letter.
 int ListFormatPopCount(int CompleteChildList, int LetterPosition){
     // This jump-table eliminates needless instructions and cumbersome conditional tests.

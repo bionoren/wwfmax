@@ -16,6 +16,7 @@
 #include "dawg.h"
 #include "breadthqueue.h"
 #include "arraydawg.h"
+#include "assert.h"
 
 // General high-level program constants.
 #define INPUT_LIMIT 30
@@ -23,27 +24,8 @@
 #define LIST_FORMAT_INDEX_MASK 0X3FFE0000
 #define LIST_FORMAT_BIT_SHIFT 17
 
-// The lexicon text file.
-#define RAW_LEXICON "Word-List.txt"
-
 // The complete "CWG" graph is stored here.
 #define CWG_DATA "CWG_Data_For_Word-List.dat"
-
-// Returns the positive "int" rerpresented by "TheNumberNotYet" string.  An invalid "TheNumberNotYet" returns "0".
-int StringToPositiveInt(char* TheNumberNotYet) {
-    int Result = 0;
-    size_t Length = strlen(TheNumberNotYet);
-    if(Length > 10) {
-        return 0;
-    }
-    for(int i = 0; i < Length; i++) {
-        if(TheNumberNotYet[i] < '0' || TheNumberNotYet[i] > '9') {
-            return 0;
-        }
-        Result += ((TheNumberNotYet[i] - '0') * PowersOfTen[Length - i - 1 ]);
-    }
-    return Result;
-}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -66,7 +48,7 @@ int TraverseTheDawgArrayRecurse(int *TheDawg, int *ListFormats, int *OnIt, int C
             if(ChildListFormat & PowersOfTwo[i]) {
                 // Because the i'th letter exists, run "ListFormatPopCount", to extract the "CorrectOffset".
                 int CorrectOffset = ListFormatPopCount(ChildListFormat, i) - 1;
-                WhatsBelowMe += TraverseTheDawgArrayRecurse(TheDawg, ListFormats, OnIt, CurrentChild + CorrectOffset, TheWordSoFar, FillThisPosition + 1, i + 'A', WordCounter, PrintMe);
+                WhatsBelowMe += TraverseTheDawgArrayRecurse(TheDawg, ListFormats, OnIt, CurrentChild + CorrectOffset, TheWordSoFar, FillThisPosition + 1, i + 'a', WordCounter, PrintMe);
             }
         }
     }
@@ -79,11 +61,11 @@ void TraverseTheDawgArray(int *TheDawg, int *TheListFormats, int *BelowingMe, bo
     int TheCounter = 0;
     char RunningWord[MAX + 1];
     for(char i = 0; i < NUMBER_OF_ENGLISH_LETTERS; i++) {
-        TraverseTheDawgArrayRecurse(TheDawg, TheListFormats, BelowingMe, i + 1, RunningWord, 0, 'A' + i, &TheCounter, PrintToScreen);
+        TraverseTheDawgArrayRecurse(TheDawg, TheListFormats, BelowingMe, i + 1, RunningWord, 0, 'a' + i, &TheCounter, PrintToScreen);
     }
 }
 
-int create() {
+int createDataStructure(const WordInfo *info) {
     printf("\n  The 28-Step CWG-Creation-Process has commenced: (Hang in there, it will be over soon.)\n");
     // All of the words of similar length will be stored sequentially in the same array so that there will be (MAX + 1) arrays in total.
     // The Smallest length of a string is assumed to be 2.
@@ -92,65 +74,48 @@ int create() {
         AllWordsInEnglish[i] = NULL;
     }
     
-    FILE *Input = fopen(RAW_LEXICON, "r");
-    char ThisLine[100] = "\0";
-    
-    fgets(ThisLine, 100, Input);
-    CutOffExtraChars(ThisLine);
-    int FirstLineIsSize = StringToPositiveInt(ThisLine);
-    
-    printf("\n  FirstLineIsSize = Number-Of-Words = |%d|\n", FirstLineIsSize);
     int DictionarySizeIndex[MAX + 1];
-    for(int i = 0; i <= MAX; i++ ) {
+    for(int i = 0; i <= MAX; i++) {
         DictionarySizeIndex[i] = 0;
     }
-    char **LexiconInRam = (char**)malloc(FirstLineIsSize * sizeof(char*));
     
-    // The first line is the Number-Of-Words, so read them all into RAM, temporarily.
-    for(int i = 0; i < FirstLineIsSize; i++) {
-        fgets(ThisLine, 100, Input);
-        CutOffExtraChars(ThisLine);
-        size_t LineLength = strlen(ThisLine);
-        if(LineLength <= MAX) {
-            DictionarySizeIndex[LineLength]++;
+    for(int i = 0; i < info->numWords; i++) {
+        if(info->lengths[i] != 0) {
+            DictionarySizeIndex[info->lengths[i]]++;
         }
-        LexiconInRam[i] = (char*)malloc((LineLength + 1) * sizeof(char));
-        strcpy(LexiconInRam[i], ThisLine);
     }
-    printf("\n  Word-List.txt is now in RAM.\n");
     // Allocate enough space to hold all of the words in strings so that we can add them to the trie by length.
     for (int i = 2; i < (MAX + 1); i++) {
-        AllWordsInEnglish[i] = (char*)malloc((i + 1) * DictionarySizeIndex[i] * sizeof(char));
+        AllWordsInEnglish[i] = (char*)calloc((i + 1) * DictionarySizeIndex[i], sizeof(char));
     }
+    printf("\n  Word-List.txt is now in RAM.\n");
     
     int CurrentTracker[MAX + 1];
     for(int i = 0; i < (MAX + 1); i++) {
         CurrentTracker[i] = 0;
     }
     // Copy all of the strings into the halfway house 1.
-    for(int i = 0; i < FirstLineIsSize; i++) {
-        size_t CurrentLength = strlen(LexiconInRam[i]);
+    int numWords = info->numWords;
+    for(int i = 0; i < info->numWords; i++) {
+        int CurrentLength = info->lengths[i];
         // Simply copy a string from its temporary ram location to the array of length equivelant strings for processing in making the DAWG.
-        if(CurrentLength <= MAX) {
-            strcpy(&((AllWordsInEnglish[CurrentLength])[(CurrentTracker[CurrentLength] * (CurrentLength + 1))]), LexiconInRam[i]);
+        if(CurrentLength != 0) {
+            strncpy(&((AllWordsInEnglish[CurrentLength])[(CurrentTracker[CurrentLength] * (CurrentLength + 1))]), &(info->words[i]), CurrentLength);
+            CurrentTracker[CurrentLength]++;
+        } else {
+            numWords--;
         }
-        CurrentTracker[CurrentLength] += 1;
     }
     printf("\n  The words are now stored in an array according to length.\n\n");
     // Make sure that the counting has resulted in all of the strings being placed correctly.
-    for(int i = 0; i < (MAX + 1); i++ ) {
+    for(int i = 0; i < (MAX + 1); i++) {
         if(DictionarySizeIndex[i] == CurrentTracker[i]) {
             printf("  |%2d| Letter word count = |%5d| is verified.\n", i, CurrentTracker[i]);
         } else {
-            printf("  Something went wrong with |%2d| letter words.\n", i);
+            printf("  Something went wrong with |%2d| letter words. (%d != %d)\n", i, DictionarySizeIndex[i], CurrentTracker[i]);
+            assert(false);
         }
     }
-    
-    // Free the the initial dynamically allocated memory.
-    for(int i = 0; i < FirstLineIsSize; i++) {
-        free(LexiconInRam[i]);
-    }
-    free(LexiconInRam);
     
     printf("\n  Begin Creator init function.\n\n");
     
@@ -635,7 +600,7 @@ int create() {
     
     FILE* FinalProduct = fopen(CWG_DATA, "wb");
     
-    fwrite(&FirstLineIsSize, sizeof(int), 1, FinalProduct);
+    fwrite(&numWords, sizeof(int), 1, FinalProduct);
     fwrite(&ArrayOneSize, sizeof(int), 1, FinalProduct);
     fwrite(&ArrayTwoSize, sizeof(int), 1, FinalProduct);
     fwrite(&ArrayThreeSize, sizeof(int), 1, FinalProduct);
@@ -650,7 +615,7 @@ int create() {
     
     fclose(FinalProduct);
     
-    printf("\n  The new CWG is ready to use.  Now, understand it, then go out and use it.\n\n");
+    printf("\n  The new CWG is ready to use.\n\n");
     
     return 0;
 }

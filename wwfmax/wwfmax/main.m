@@ -9,6 +9,8 @@
 #import <Foundation/Foundation.h>
 #import "Board.h"
 #import "functions.h"
+#import "CWG-Creator.h"
+#import "Justin-CWG-Search.h"
 
 #define NUM_THREADS 1
 
@@ -26,10 +28,11 @@ int main(int argc, const char * argv[]) {
         
         int numWords = 173101;
         char *words = calloc(numWords * BOARD_LENGTH, sizeof(char));
-        int *wordLengths = calloc(numWords, sizeof(int));
-        int *prescores = calloc(numWords, sizeof(int));
-        //for each letter, for each board position, a list of pointers to words which can be anchored by that letter at that board position
-        //first element of the list is the list length
+        assert(words);
+        int *wordLengths = malloc(numWords * sizeof(int));
+        assert(wordLengths);
+        int *prescores = malloc(numWords * sizeof(int));
+        assert(prescores);
         
         FILE *wordFile = fopen("dict.txt", "r");
         if(wordFile) {
@@ -72,6 +75,9 @@ int main(int argc, const char * argv[]) {
         dispatch_group_wait(dispatchGroup, DISPATCH_TIME_FOREVER);
         
         resetWords();
+        
+        createDataStructure(&info);
+        debug();
         
         __block Solution sol;
         sol.maxScore = 0;

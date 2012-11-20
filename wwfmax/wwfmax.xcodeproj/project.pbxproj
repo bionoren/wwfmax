@@ -44,6 +44,7 @@
 		BE50649D161A2DAE003B237A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		BE5064A0161A2DAE003B237A /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		BE5064A3161A2DAE003B237A /* wwfmax-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "wwfmax-Prefix.pch"; sourceTree = "<group>"; };
+		BE5216F8165B1B43004976A1 /* Justin-CWG-Search.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Justin-CWG-Search.h"; sourceTree = "<group>"; };
 		BE5C56C2164F2DBB009835FA /* dawg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = dawg.c; sourceTree = "<group>"; };
 		BE5C56C5164F2DC7009835FA /* dawg.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dawg.h; sourceTree = "<group>"; };
 		BE5C56C6164F2FF2009835FA /* breadthqueue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = breadthqueue.h; sourceTree = "<group>"; };
@@ -127,6 +128,7 @@
 			children = (
 				BE5C56C9164F3255009835FA /* CWG-Creator.h */,
 				BE77EAE91646F70D00D3943D /* CWG-Creator.c */,
+				BE5216F8165B1B43004976A1 /* Justin-CWG-Search.h */,
 				BE77EAEA1646F70D00D3943D /* Justin-CWG-Search.c */,
 				BE03CD8E1648717B00A5CA9D /* CWGLib.h */,
 				BE03CD901648718500A5CA9D /* CWGLib.c */,

@@ -9,6 +9,6 @@
 #ifndef wwfmax_CWG_Creator_h
 #define wwfmax_CWG_Creator_h
 
-
+int createDataStructure(const WordInfo *info);
 
 #endif

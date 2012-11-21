@@ -40,7 +40,10 @@ int main(int argc, const char * argv[]) {
             int i = 0;
             char *word = words;
             while(fgets(buffer, 40, wordFile)) {
-                int len = (int)strlen(buffer) - 1;
+                int len = (int)strlen(buffer);
+                if(buffer[len - 1] == '\n') {
+                    --len;
+                }
                 if(len <= BOARD_LENGTH) {
                     strncpy(word, buffer, len);
                     wordLengths[i++] = len;
@@ -48,7 +51,7 @@ int main(int argc, const char * argv[]) {
                     word += BOARD_LENGTH * sizeof(char);
                 }
             }
-            numWords = i - 1;
+            numWords = i;
         }
         
         NSLog(@"evaluating %d words", numWords);

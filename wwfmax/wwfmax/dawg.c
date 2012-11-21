@@ -54,7 +54,7 @@ int TnodeDawgAddWord(TnodePtr ParentNode, const char *Word) {
 // Add "NewWord" to "ThisDawg", which at this point is a "Trie" with a lot of information in each node.
 // "NewWord" must not exist in "ThisDawg" already.
 void DawgAddWord(DawgPtr ThisDawg, char *NewWord) {
-    ThisDawg->NumberOfTotalWords += 1;
+    ThisDawg->NumberOfTotalWords++;
     int NodesAdded = TnodeDawgAddWord(ThisDawg->First, NewWord);
     ThisDawg->NumberOfTotalNodes += NodesAdded;
 }

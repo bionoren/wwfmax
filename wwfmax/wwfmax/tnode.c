@@ -68,7 +68,7 @@ char TnodeProtected(TnodePtr ThisTnode) {
 
 // Allocate a "Tnode" and fill it with initial values.
 TnodePtr TnodeInit(char Chap, TnodePtr OverOne, char WordEnding, char Leveler, int StarterDepth, TnodePtr Parent, char IsaChild) {
-    TnodePtr Result = (Tnode *)malloc(sizeof(Tnode));
+    TnodePtr Result = (TnodePtr)malloc(sizeof(Tnode));
     Result->Letter = Chap;
     Result->ArrayIndex = 0;
     Result->NumberOfChildren = 0;

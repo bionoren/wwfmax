@@ -9,8 +9,8 @@
 #include "CWGLib.h"
 #include "assert.h"
 
-#define GRAPH_DATA "CWG_Data_For_Word-List.dat"
-#define OUT_LIST "Numbered-Word-List.txt"
+#define GRAPH_DATA "/Volumes/Users/Users/bion/Downloads/CWG_Data_For_Word-List.dat"
+#define OUT_LIST "/Volumes/Users/Users/bion/Downloads/Numbered-Word-List.txt"
 
 #define INPUT_BUFFER_SIZE 100
 #define ESCAPE_SEQUENCE "999"

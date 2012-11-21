@@ -125,8 +125,8 @@ ArrayDawgPtr ArrayDawgInit(char **Dictionary, int *SegmentLenghts, int MaxString
     while(SegmentLenghts[index] == 0) {
         index++;
     }
-    Result->MinStringLength = index;
-    Result->MaxStringLength = MaxStringLength;
+    Result->MinStringLength = (char)index;
+    Result->MaxStringLength = (char)MaxStringLength;
     Result->NumberOfStrings = 0;
     for(int i = Result->MinStringLength; i <= Result->MaxStringLength; i++) {
         Result->NumberOfStrings += SegmentLenghts[i];
@@ -136,7 +136,7 @@ ArrayDawgPtr ArrayDawgInit(char **Dictionary, int *SegmentLenghts, int MaxString
     /// Create a Temp Trie structure and then feed in the given dictionary.
     DawgPtr TemporaryTrie = DawgInit();
     for(int j = Result->MinStringLength; j <= Result->MaxStringLength; j++) {
-        for(int i = 0; i < SegmentLenghts[j]; i++ ) {
+        for(int i = 0; i < SegmentLenghts[j]; i++) {
             DawgAddWord(TemporaryTrie, &(Dictionary[j][(j + 1) * i]));
         }
     }

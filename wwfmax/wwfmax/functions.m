@@ -17,7 +17,7 @@
 static int wordIndex = -1;
 int nextWord(int numWords) {
     OSAtomicIncrement64((int64_t*)&wordIndex);
-    if(wordIndex <= numWords) {
+    if(wordIndex < numWords) {
         return wordIndex;
     } else {
         return -1;
@@ -206,7 +206,7 @@ BOOL validate(const char *word, const int length, const WordInfo *info) {
     //     imid = (int)floor((imin+imax)/2.0);
     //int binary_search(int A[], int key, int imin, int imax)
     
-    int imin = 0, imax = info->numWords;
+    int imin = 0, imax = info->numWords - 1;
     
     // continually narrow search until just one element remains
     while(imin < imax) {

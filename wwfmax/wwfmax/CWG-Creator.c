@@ -25,7 +25,7 @@
 #define LIST_FORMAT_BIT_SHIFT 17
 
 // The complete "CWG" graph is stored here.
-#define CWG_DATA "CWG_Data_For_Word-List.dat"
+#define CWG_DATA "/Volumes/Users/Users/bion/Downloads/CWG_Data_For_Word-List.dat"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -68,16 +68,8 @@ void TraverseTheDawgArray(int *TheDawg, int *TheListFormats, int *BelowingMe, bo
 int createDataStructure(const WordInfo *info) {
     printf("\n  The 28-Step CWG-Creation-Process has commenced: (Hang in there, it will be over soon.)\n");
     // All of the words of similar length will be stored sequentially in the same array so that there will be (MAX + 1) arrays in total.
-    // The Smallest length of a string is assumed to be 2.
-    char *AllWordsInEnglish[MAX + 1];
-    for(int i = 0; i < (MAX + 1); i++) {
-        AllWordsInEnglish[i] = NULL;
-    }
-    
-    int DictionarySizeIndex[MAX + 1];
-    for(int i = 0; i <= MAX; i++) {
-        DictionarySizeIndex[i] = 0;
-    }
+    char *AllWordsInEnglish[MAX + 1] = {NULL};
+    int DictionarySizeIndex[MAX + 1] = {0};
     
     for(int i = 0; i < info->numWords; i++) {
         if(info->lengths[i] != 0) {
@@ -85,22 +77,24 @@ int createDataStructure(const WordInfo *info) {
         }
     }
     // Allocate enough space to hold all of the words in strings so that we can add them to the trie by length.
-    for (int i = 2; i < (MAX + 1); i++) {
+    // The Smallest length of a string is assumed to be 2.
+    for(int i = 2; i < (MAX + 1); i++) {
         AllWordsInEnglish[i] = (char*)calloc((i + 1) * DictionarySizeIndex[i], sizeof(char));
     }
     printf("\n  Word-List.txt is now in RAM.\n");
     
-    int CurrentTracker[MAX + 1];
-    for(int i = 0; i < (MAX + 1); i++) {
-        CurrentTracker[i] = 0;
-    }
+    int CurrentTracker[MAX + 1] = {0};
     // Copy all of the strings into the halfway house 1.
     int numWords = info->numWords;
     for(int i = 0; i < info->numWords; i++) {
         int CurrentLength = info->lengths[i];
         // Simply copy a string from its temporary ram location to the array of length equivelant strings for processing in making the DAWG.
         if(CurrentLength != 0) {
-            strncpy(&((AllWordsInEnglish[CurrentLength])[(CurrentTracker[CurrentLength] * (CurrentLength + 1))]), &(info->words[i]), CurrentLength);
+            char *word = &(info->words[i * MAX]);
+            char *temp = strncpy(&(AllWordsInEnglish[CurrentLength][CurrentTracker[CurrentLength] * (CurrentLength + 1)]), word, CurrentLength);
+            if(CurrentLength != 15) {
+                assert(strcmp(temp, word) == 0);
+            }
             CurrentTracker[CurrentLength]++;
         } else {
             numWords--;

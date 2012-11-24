@@ -13,6 +13,7 @@
 #include "CWGLib.h"
 #include "dawg.h"
 #include "breadthqueue.h"
+#include "assert.h"
 
 #define TRADITIONAL_CHILD_SHIFT 5
 #define TRADITIONAL_EOW_FLAG 0X00800000
@@ -111,6 +112,39 @@ int ArrayDnodeNumberOfChildrenPlusString(ArrayDnodePtr DoggieDog, int Index, cha
         CurrentArrayPosition += 1;
     }
     return 0;
+}
+
+void printDawgDotRecurse(ArrayDawgPtr dawg, FILE *dawgdot, int parent, int index) {
+    ArrayDnode node = dawg->DawgArray[index];
+    
+    fprintf(dawgdot, "%d [label=\"%c(%d)\"];\n", index, node.Letter, index);
+    if(node.EndOfWordFlag) {
+        fprintf(dawgdot, "%d [color=blue, style=bold]", index);
+    }
+    
+    if(node.Child) {
+        fprintf(dawgdot, "%d -> %d;\n", index, node.Child);
+        printDawgDotRecurse(dawg, dawgdot, index, node.Child);
+    }
+    if(node.Next) {
+        fprintf(dawgdot, "%d -> %d;\n", parent, node.Next);
+        printDawgDotRecurse(dawg, dawgdot, parent, node.Next);
+    }
+}
+
+void printDawgDot(ArrayDawgPtr dawg, int numNodes) {
+    FILE *dawgdot = fopen("/Volumes/Users/Users/bion/Downloads/dawg.dot", "w");
+    fprintf(dawgdot, "digraph dawg {\n");
+    
+    for(int i = 0; i < numNodes; i++) {
+        if(dawg->DawgArray[i].Level == 1) {
+            fprintf(dawgdot, "%d [color=red, style=bold]", i);
+            printDawgDotRecurse(dawg, dawgdot, i, i);
+        }
+    }
+    
+    fprintf(dawgdot, "}");
+    fclose(dawgdot);
 }
 
 // This function is the core of the dawg creation procedure.  Pay close attention to the order of the steps involved.
@@ -455,7 +489,10 @@ ArrayDawgPtr ArrayDawgInit(char **Dictionary, int *SegmentLenghts, int MaxString
         ChildListValues[i] = CompleteChildList;
     }
     
-    fprintf(Text, "Behold, the |%d| graph nodes are decoded below.\r\n\r\n", NumberOfLivingNodes);
+    fprintf(Text, "Behold, the |%d| graph nodes are decoded below.\n\n", NumberOfLivingNodes);
+    fprintf(Text, "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+    fprintf(Text, "  Num | EOW   List Format     Children          | NodeVal  | Level |char|EOW| Next| Child |NumChilds |    CurrChildLetterStrs    |         z     ChildListBinary    a | ChildVal\n");
+    fprintf(Text, "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
     
     // We are now ready to output to the text file, and the "Main" intermediate binary data file.
     for(int i = 1; i <= NumberOfLivingNodes; i++) {
@@ -481,25 +518,28 @@ ArrayDawgPtr ArrayDawgInit(char **Dictionary, int *SegmentLenghts, int MaxString
         fwrite(&CompleteThirtyTwoBitNode, sizeof(int), 1, Main);
         ConvertIntNodeToBinaryString(CompleteThirtyTwoBitNode, TheNodeInBinary);
         ConvertChildListIntToBinaryString(ChildListValues[CurrentOffsetNumberIndex], TheChildListInBinary);
-        fprintf(Text, "N%6d-%s,Raw|%10d|,Lev|%2d|", i, TheNodeInBinary, CompleteThirtyTwoBitNode, (Result->DawgArray)[i].Level);
-        fprintf(Text, ",{'%c',%d,%6d", (Result->DawgArray)[i].Letter, (Result->DawgArray)[i].EndOfWordFlag, (Result->DawgArray)[i].Next);
-        fprintf(Text, ",%6d},Childs|%2d|-|%26s|", (Result->DawgArray)[i].Child , CurrentNumberOfChildren, CurrentChildLetterString);
-        fprintf(Text, ",ChildList%s-|%8d|.\r\n", TheChildListInBinary, ChildListValues[CurrentOffsetNumberIndex] );
+        assert((CurrentNumberOfChildren == 0 && Result->DawgArray[i].EndOfWordFlag) || CurrentNumberOfChildren > 0);
+        fprintf(Text, "%6d  %s    %10d      %2d ", i, TheNodeInBinary, CompleteThirtyTwoBitNode, (Result->DawgArray)[i].Level);
+        fprintf(Text, " { %c  %d %6d", Result->DawgArray[i].Letter, Result->DawgArray[i].EndOfWordFlag, Result->DawgArray[i].Next);
+        fprintf(Text, " %6d}        %2d   %26s ", Result->DawgArray[i].Child , CurrentNumberOfChildren, CurrentChildLetterString);
+        fprintf(Text, " %s  %8d\n", TheChildListInBinary, ChildListValues[CurrentOffsetNumberIndex] );
         if(CompleteThirtyTwoBitNode == 0) {
             printf("\n  Error in node encoding process.\n");
         }
     }
     fclose(Main);
     
+    printDawgDot(Result, NumberOfLivingNodes);
+    
     fwrite(&NumberOfUniqueChildStrings, sizeof(int), 1, Secondary);
     fwrite(ChildListValues, sizeof(int), NumberOfUniqueChildStrings, Secondary);
     fclose(Secondary);
     
-    fprintf(Text, "\r\nNumber Of Living Nodes |%d| Plus The NULL Node.  Also, there are %d child list ints.\r\n\r\n"
+    fprintf(Text, "\nNumber Of Living Nodes |%d| Plus The NULL Node.  Also, there are %d child list ints.\n\n"
             , NumberOfLivingNodes, NumberOfUniqueChildStrings);
     
     for(int i = 0; i < NumberOfUniqueChildStrings; i++) {
-        fprintf(Text, "#%4d - |%26s| - |%8d|\r\n", i, HolderOfUniqueChildStrings[i], ChildListValues[i]);
+        fprintf(Text, "#%4d - |%26s| - |%8d|\n", i, HolderOfUniqueChildStrings[i], ChildListValues[i]);
     }
     
     // free all of the memory used to compile the Child-List-Format array.
@@ -532,10 +572,10 @@ ArrayDawgPtr ArrayDawgInit(char **Dictionary, int *SegmentLenghts, int MaxString
     
     fclose(ListE);
     
-    fprintf(Text, "\nEndOfListCount |%d|\r\n\r\n", EndOfListCount);
+    fprintf(Text, "\nEndOfListCount |%d|\n\n", EndOfListCount);
     
     for(int i = 0; i < EndOfListCount; i++) {
-        fprintf(Text, "#%5d - |%d|\r\n", i, EndOfListIndicies[i]);
+        fprintf(Text, "#%5d - |%d|\n", i, EndOfListIndicies[i]);
     }
     
     fclose(Text);

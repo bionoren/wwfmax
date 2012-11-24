@@ -34,7 +34,7 @@ int TraverseTheDawgArrayRecurse(int *TheDawg, int *ListFormats, int *OnIt, int C
     int WhatsBelowMe = 0;
     TheWordSoFar[FillThisPosition] = CurrentLetter;
     if(TheDawg[CurrentIndex] & EOW_FLAG) {
-        *WordCounter += 1;
+        (*WordCounter)++;
         TheWordSoFar[FillThisPosition+ 1] = '\0';
         if(PrintMe) {
             printf("#|%d| - |%s|\n", *WordCounter, TheWordSoFar);
@@ -86,11 +86,13 @@ int createDataStructure(const WordInfo *info) {
     int CurrentTracker[MAX + 1] = {0};
     // Copy all of the strings into the halfway house 1.
     int numWords = info->numWords;
+    int temp = 0;
     for(int i = 0; i < info->numWords; i++) {
         int CurrentLength = info->lengths[i];
         // Simply copy a string from its temporary ram location to the array of length equivelant strings for processing in making the DAWG.
-        if(CurrentLength != 0) {
+        if(CurrentLength != 0 && (CurrentTracker[CurrentLength] == 0)) {// || temp++%6000 == 0)) {
             char *word = &(info->words[i * MAX]);
+            printf("dict contains %.*s\n", CurrentLength, word);
             char *temp = strncpy(&(AllWordsInEnglish[CurrentLength][CurrentTracker[CurrentLength] * (CurrentLength + 1)]), word, CurrentLength);
             if(CurrentLength != 15) {
                 assert(strcmp(temp, word) == 0);
@@ -107,7 +109,7 @@ int createDataStructure(const WordInfo *info) {
             printf("  |%2d| Letter word count = |%5d| is verified.\n", i, CurrentTracker[i]);
         } else {
             printf("  Something went wrong with |%2d| letter words. (%d != %d)\n", i, DictionarySizeIndex[i], CurrentTracker[i]);
-            assert(false);
+            //assert(false);
         }
     }
     
@@ -162,7 +164,7 @@ int createDataStructure(const WordInfo *info) {
     printf("\nStep 19 - Traverse the DawgArray to fill the NumberOfWordsBelowMe array.\n");
     
     // This function is run to fill the "NumberOfWordsBelowMe" array.
-    TraverseTheDawgArray(PartOneArray, PartTwoArray, NumberOfWordsBelowMe, false);
+    TraverseTheDawgArray(PartOneArray, PartTwoArray, NumberOfWordsBelowMe, true);
     
     printf("\nStep 20 - Use FinalNodeLocations and NumberOfWordsBelowMe to fill the NumberOfWordsToEndOfBranchList array.\n");
     
@@ -175,7 +177,7 @@ int createDataStructure(const WordInfo *info) {
             CurrentCount += NumberOfWordsBelowMe[j];
         }
         NumberOfWordsToEndOfBranchList[i] = CurrentCount;
-        if(i ==  FinalNodeLocations[CurrentFinalNodeIndex]) {
+        if(i == FinalNodeLocations[CurrentFinalNodeIndex]) {
             CurrentFinalNodeIndex++;
         }
     }
@@ -508,7 +510,7 @@ int createDataStructure(const WordInfo *info) {
     printf("\nStep 26 - Recompile WTEOBL array by graph traversal, and test equivalence with the one modified during list-killing.\n");
     
     // Compile "RearrangedNumberOfWordsToEndOfBranchList", and verify that it is the same as "NumberOfWordsToEndOfBranchList".
-    TraverseTheDawgArray(PartOneArray, PartTwoArray, NumberOfWordsBelowMe, false);
+    TraverseTheDawgArray(PartOneArray, PartTwoArray, NumberOfWordsBelowMe, true);
     
     // This little piece of code compiles the "RearrangedNumberOfWordsToEndOfBranchList" array.
     // The requirements are the "NumberOfWordsBelowMe" array and the "FinalNodeLocations" array.
@@ -527,9 +529,7 @@ int createDataStructure(const WordInfo *info) {
     printf("\n  New WTEOBL array is compiled, so test for equality.\n");
     
     for(int i = 1; i <= CurrentNumberOfPartOneNodes; i++) {
-        if(RearrangedNumberOfWordsToEndOfBranchList[i] != NumberOfWordsToEndOfBranchList[i]) {
-            printf("\nMismatch found.\n");
-        }
+        assert(RearrangedNumberOfWordsToEndOfBranchList[i] == NumberOfWordsToEndOfBranchList[i]);
     }
     
     printf("\n  Equality test complete.\n");

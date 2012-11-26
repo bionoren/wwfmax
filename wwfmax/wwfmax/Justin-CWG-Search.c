@@ -115,7 +115,6 @@ int LastPosition = 0;
 // A recursive function to print the lexicon contained in the CWG to a text file.
 // The function also tests the hash-tracking logic.  If the words are output using successive numbers, the graph works perfectly.
 void Print_CWG_Word_ListRecurse(int ThisIndex, int FillThisPlace, char ThisLetter, char *WorkingWord, int CurrentHashMarker) {
-    fprintf(WordDump, "%d [label=\"%c(%d)\"];\n", ThisIndex, ThisLetter, ThisIndex);
     int node = TheNodeArray[ThisIndex];
     int TheChildIndex = node & CHILD_MASK;
     
@@ -124,9 +123,9 @@ void Print_CWG_Word_ListRecurse(int ThisIndex, int FillThisPlace, char ThisLette
         WorkingWord[FillThisPlace + 1] = '\0';
         CurrentHashMarker--;
         int HashCheck = (IndexCorrection - CurrentHashMarker);
-        fprintf(WordDump, "%d [color=blue, style=bold];\n", ThisIndex);
-        //fprintf(WordDump, "[%d]-|%s|\r\n", HashCheck, WorkingWord);
-        //assert(HashCheck == ++LastPosition);
+        //fprintf(WordDump, "%d [color=blue, style=bold];\n", ThisIndex);
+        fprintf(WordDump, "[%d]-|%s|\r\n", HashCheck, WorkingWord);
+        assert(HashCheck == ++LastPosition);
     }
     if(TheChildIndex) {
         int TheChildListFormat = TheListFormatArray[(node & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT];
@@ -134,7 +133,7 @@ void Print_CWG_Word_ListRecurse(int ThisIndex, int FillThisPlace, char ThisLette
         int hashconst = CurrentHashMarker - (shortList?TheShort_WTEOBL_Array[TheChildIndex]:TheUnsignedChar_WTEOBL_Array[TheChildIndex - WTEOBL_Transition]);
         for(char i = 0; i < NUMBER_OF_ENGLISH_LETTERS; i++) {
             if(TheChildListFormat & PowersOfTwo[i]) {
-                fprintf(WordDump, "%d -> %d;\n", ThisIndex, TheChildIndex);
+                //fprintf(WordDump, "%d -> %d [label=\"%c\"];\n", ThisIndex, TheChildIndex, i + 'a');
                 Print_CWG_Word_ListRecurse(TheChildIndex, FillThisPlace + 1, i + 'a', WorkingWord, hashconst + (shortList?TheShort_WTEOBL_Array[TheChildIndex]:TheUnsignedChar_WTEOBL_Array[TheChildIndex - WTEOBL_Transition]));
                 TheChildIndex++;
             }
@@ -146,13 +145,12 @@ void Print_CWG_Word_ListRecurse(int ThisIndex, int FillThisPlace, char ThisLette
 void Print_CWG_Word_List() {
     char MessWithMe[BOARD_LENGTH + 1];
     WordDump = fopen(OUT_LIST, "w");
-    fprintf(WordDump, "digraph CWG {\n");
+    //fprintf(WordDump, "digraph CWG {\n");
     for(char i = 1; i <= NUMBER_OF_ENGLISH_LETTERS; i++) {
-        fprintf(WordDump, "%d [color=red, style=bold];\n", i);
+        //fprintf(WordDump, "%d [color=red, style=bold, label=\"%c(%d)\"];\n", i, i + '`', i);
         Print_CWG_Word_ListRecurse(i, 0, i + '`', MessWithMe, TheRoot_WTEOBL_Array[i]);
     }
-    fprintf(WordDump, "}");
-    abort();
+    //fprintf(WordDump, "}");
     fclose(WordDump);
 }
 

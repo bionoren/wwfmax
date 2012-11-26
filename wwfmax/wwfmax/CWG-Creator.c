@@ -30,12 +30,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 int TraverseTheDawgArrayRecurse(int *TheDawg, int *ListFormats, int *OnIt, int CurrentIndex, char *TheWordSoFar, int FillThisPosition, char CurrentLetter, int *WordCounter, bool PrintMe) {
+    assert(FillThisPosition <= MAX);
     int CurrentChild;
     int WhatsBelowMe = 0;
     TheWordSoFar[FillThisPosition] = CurrentLetter;
     if(TheDawg[CurrentIndex] & EOW_FLAG) {
         (*WordCounter)++;
-        TheWordSoFar[FillThisPosition+ 1] = '\0';
+        TheWordSoFar[FillThisPosition + 1] = '\0';
         if(PrintMe) {
             printf("#|%d| - |%s|\n", *WordCounter, TheWordSoFar);
         }
@@ -86,13 +87,13 @@ int createDataStructure(const WordInfo *info) {
     int CurrentTracker[MAX + 1] = {0};
     // Copy all of the strings into the halfway house 1.
     int numWords = info->numWords;
-    int temp = 0;
+    char *word;
     for(int i = 0; i < info->numWords; i++) {
         int CurrentLength = info->lengths[i];
         // Simply copy a string from its temporary ram location to the array of length equivelant strings for processing in making the DAWG.
-        if(CurrentLength != 0 && (CurrentTracker[CurrentLength] == 0)) {// || temp++%6000 == 0)) {
-            char *word = &(info->words[i * MAX]);
-            printf("dict contains %.*s\n", CurrentLength, word);
+        if(CurrentLength != 0) {// && ((CurrentLength > 8 && CurrentTracker[CurrentLength] == 0) || info->words[i * MAX] != word[0])) {
+            word = &(info->words[i * MAX]);
+            //printf("dict contains %.*s\n", CurrentLength, word);
             char *temp = strncpy(&(AllWordsInEnglish[CurrentLength][CurrentTracker[CurrentLength] * (CurrentLength + 1)]), word, CurrentLength);
             if(CurrentLength != 15) {
                 assert(strcmp(temp, word) == 0);
@@ -139,13 +140,10 @@ int createDataStructure(const WordInfo *info) {
     fread(PartTwoArray, sizeof(int), NumberOfPartTwoNodes, PartTwo);
     fread(FinalNodeLocations, sizeof(int), NumberOfFinalNodes, ListE);
     
-    int *NumberOfWordsBelowMe = (int *)malloc((NumberOfPartOneNodes + 1)*sizeof(int));
-    int *NumberOfWordsToEndOfBranchList =(int *)malloc((NumberOfPartOneNodes + 1)*sizeof(int));
-    int *RearrangedNumberOfWordsToEndOfBranchList =(int *)malloc((NumberOfPartOneNodes + 1)*sizeof(int));
+    int *NumberOfWordsBelowMe = (int *)calloc((NumberOfPartOneNodes + 1), sizeof(int));
+    int *NumberOfWordsToEndOfBranchList =(int *)calloc((NumberOfPartOneNodes + 1), sizeof(int));
+    int *RearrangedNumberOfWordsToEndOfBranchList =(int *)calloc((NumberOfPartOneNodes + 1), sizeof(int));
     
-    NumberOfWordsBelowMe[0] = 0;
-    NumberOfWordsToEndOfBranchList[0] = 0;
-    RearrangedNumberOfWordsToEndOfBranchList[0] = 0;
     PartOneArray[0] = 0;
     
     fclose(PartOne);
@@ -164,7 +162,7 @@ int createDataStructure(const WordInfo *info) {
     printf("\nStep 19 - Traverse the DawgArray to fill the NumberOfWordsBelowMe array.\n");
     
     // This function is run to fill the "NumberOfWordsBelowMe" array.
-    TraverseTheDawgArray(PartOneArray, PartTwoArray, NumberOfWordsBelowMe, true);
+    TraverseTheDawgArray(PartOneArray, PartTwoArray, NumberOfWordsBelowMe, false);
     
     printf("\nStep 20 - Use FinalNodeLocations and NumberOfWordsBelowMe to fill the NumberOfWordsToEndOfBranchList array.\n");
     
@@ -185,26 +183,17 @@ int createDataStructure(const WordInfo *info) {
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Now with preliminary analysis complete, it is time to rearrange the PartOne nodes and then set up PartThree.
     
-    int ListSizeCounter[NUMBER_OF_ENGLISH_LETTERS + 1];
+    int ListSizeCounter[NUMBER_OF_ENGLISH_LETTERS + 1] = {0};
     int TotalNumberOfLists = 0;
-    bool AreWeInBigList = false;
-    int TheCurrentChild;
     int StartOfCurrentList = 1;
     int SizeOfCurrentList = FinalNodeLocations[0];
     int EndOfCurrentList = FinalNodeLocations[0];
     int InsertionPoint = 1;
     int CurrentlyCopyingThisList = 0;
     int *PartOneRearrangedArray = (int *)malloc((NumberOfPartOneNodes + 1)*sizeof(int));
-    int *CurrentAdjustments = (int *)malloc((NumberOfPartOneNodes + 1)*sizeof(int));
+    int *CurrentAdjustments = (int *)calloc((NumberOfPartOneNodes + 1), sizeof(int));
     
     PartOneRearrangedArray[0] = 0;
-    for(int i = 0; i <= NumberOfPartOneNodes; i++) {
-        CurrentAdjustments[i] = 0;
-    }
-    
-    for(int i = 0; i <= NUMBER_OF_ENGLISH_LETTERS; i++) {
-        ListSizeCounter[i] = 0;
-    }
     
     printf("\nStep 21 - Relocate all node-lists with WTEOBL values greater than 255, to the front of the Main CWG array.\n");
     
@@ -212,11 +201,12 @@ int createDataStructure(const WordInfo *info) {
     
     // This code is responsible for rearranging the node lists inside of the CWG int array so the word-heavy lists filter to the front.
     CurrentFinalNodeIndex = 0;
-    for(int i = 1; i <= NumberOfPartOneNodes; i++ ) {
+    for(int i = 1; i <= NumberOfPartOneNodes; i++) {
+        bool AreWeInBigList = false;
         if(NumberOfWordsToEndOfBranchList[i] > 255) {
             AreWeInBigList = true;
         }
-        if(i ==  EndOfCurrentList) {
+        if(i == EndOfCurrentList) {
             ListSizeCounter[SizeOfCurrentList]++;
             // We are now at the end of a big list that must to be moved up to the InsertionPoint.
             // This also implies moving everything between its current location and its new one.
@@ -242,7 +232,7 @@ int createDataStructure(const WordInfo *info) {
                     // The two arrays are identical now up to the new insertion point.
                     // At this stage, the "CurrentAdjustments" array is all zeros.
                     for(int j = 1; j <= NumberOfPartOneNodes; j++) {
-                        TheCurrentChild = (PartOneArray[j] & CHILD_MASK);
+                        int TheCurrentChild = (PartOneArray[j] & CHILD_MASK);
                         if((TheCurrentChild >= InsertionPoint) && (TheCurrentChild < StartOfCurrentList)) {
                             CurrentAdjustments[j] = SizeOfCurrentList;
                         }
@@ -272,15 +262,14 @@ int createDataStructure(const WordInfo *info) {
                     FinalNodeLocations[j] = FinalNodeLocations[j - 1] + SizeOfCurrentList;
                 }
                 FinalNodeLocations[CurrentlyCopyingThisList] = InsertionPoint - 1;
-                CurrentlyCopyingThisList += 1;
+                CurrentlyCopyingThisList++;
                 
             }
             // Even when we are not in a big list, we still need to update the current list parameters.
-            CurrentFinalNodeIndex += 1;
+            CurrentFinalNodeIndex++;
             SizeOfCurrentList = FinalNodeLocations[CurrentFinalNodeIndex] - EndOfCurrentList;
             EndOfCurrentList = FinalNodeLocations[CurrentFinalNodeIndex];
             StartOfCurrentList = i + 1;
-            AreWeInBigList = false;
         }
     }
     
@@ -318,10 +307,7 @@ int createDataStructure(const WordInfo *info) {
     printf("\n  TotalNumberOfLists = |%d|\n", TotalNumberOfLists);
     
     int **NodeListsBySize = (int**)malloc((NUMBER_OF_ENGLISH_LETTERS + 1) * sizeof(int*));
-    int WhereWeAt[NUMBER_OF_ENGLISH_LETTERS + 1];
-    for(int i = 0; i <= NUMBER_OF_ENGLISH_LETTERS; i++) {
-        WhereWeAt[i] = 0;
-    }
+    int WhereWeAt[NUMBER_OF_ENGLISH_LETTERS + 1] = {0};
     
     for(int i = 1; i <= NUMBER_OF_ENGLISH_LETTERS; i++) {
         NodeListsBySize[i] = (int*)malloc(ListSizeCounter[i] * sizeof(int));
@@ -334,7 +320,7 @@ int createDataStructure(const WordInfo *info) {
     EndOfCurrentList = FinalNodeLocations[0];
     SizeOfCurrentList = FinalNodeLocations[0];
     for(int i = 0; i < NumberOfFinalNodes; i++) {
-        (NodeListsBySize[SizeOfCurrentList])[WhereWeAt[SizeOfCurrentList]] = EndOfCurrentList;
+        NodeListsBySize[SizeOfCurrentList][WhereWeAt[SizeOfCurrentList]] = EndOfCurrentList;
         WhereWeAt[SizeOfCurrentList]++;
         CurrentFinalNodeIndex++;
         SizeOfCurrentList = FinalNodeLocations[CurrentFinalNodeIndex] - EndOfCurrentList;
@@ -343,12 +329,8 @@ int createDataStructure(const WordInfo *info) {
     
     printf("\n  End-Of-List values are now organized.\n");
     
-    int TheNewChild;
     int TotalNumberOfKilledLists = 0;
     int TotalNumberOfKilledNodes = 0;
-    int NewNumberOfKilledLists = -1;
-    int InspectThisEndOfList;
-    int MaybeReplaceWithThisEndOfList;
     int CurrentNumberOfPartOneNodes = NumberOfPartOneNodes;
     bool EliminateCurrentList = true;
     
@@ -358,19 +340,19 @@ int createDataStructure(const WordInfo *info) {
     // "i" is the list-length of lists we are trying to kill.
     for(int i = NUMBER_OF_ENGLISH_LETTERS; i >= 1; i--) {
         printf("  Try To Eliminate Lists of Size |%2d| - ", i);
-        NewNumberOfKilledLists = 0;
+        int NewNumberOfKilledLists = 0;
         // Look for partial lists at the end of "j" sized lists, to replace the "i" sized lists with.
         for(int j = NUMBER_OF_ENGLISH_LETTERS; j >= i; j--) {
             // Try to kill list # "Z".
             for(int k = 0; k < ListSizeCounter[i]; k++ ) {
-                InspectThisEndOfList = (NodeListsBySize[i])[k];
+                int InspectThisEndOfList = NodeListsBySize[i][k];
                 // Try to replace with list # "k".
                 for(int l = 0; l < ListSizeCounter[j]; l++) {
                     // Never try to replace a list with itself.
-                    if((i == j) && (k == l)) {
+                    if(i == j && k == l) {
                         continue;
                     }
-                    MaybeReplaceWithThisEndOfList = (NodeListsBySize[j])[l];
+                    int MaybeReplaceWithThisEndOfList = (NodeListsBySize[j])[l];
                     for(int m = 0; m < i; m++) {
                         if(PartOneArray[InspectThisEndOfList - m] != PartOneArray[MaybeReplaceWithThisEndOfList - m]) {
                             EliminateCurrentList = false;
@@ -381,9 +363,9 @@ int createDataStructure(const WordInfo *info) {
                     if(EliminateCurrentList == true) {
                         // Step 1 - Replace all references to the duplicate list with the earlier equivalent.
                         for(int m = 1; m <= CurrentNumberOfPartOneNodes; m++) {
-                            TheCurrentChild = (PartOneArray[m] & CHILD_MASK);
-                            if((TheCurrentChild > (InspectThisEndOfList - i)) && (TheCurrentChild <= InspectThisEndOfList)) {
-                                TheNewChild = MaybeReplaceWithThisEndOfList - (InspectThisEndOfList - TheCurrentChild);
+                            int TheCurrentChild = PartOneArray[m] & CHILD_MASK;
+                            if(TheCurrentChild > InspectThisEndOfList - i && TheCurrentChild <= InspectThisEndOfList) {
+                                int TheNewChild = MaybeReplaceWithThisEndOfList - (InspectThisEndOfList - TheCurrentChild);
                                 PartOneArray[m] -= TheCurrentChild;
                                 PartOneArray[m] += TheNewChild;
                             }
@@ -397,28 +379,28 @@ int createDataStructure(const WordInfo *info) {
                         CurrentNumberOfPartOneNodes -= i;
                         // Step 4 - Lower all references to the nodes coming after the dupe list.
                         for(int m = 1; m <= CurrentNumberOfPartOneNodes; m++) {
-                            TheCurrentChild = (PartOneArray[m] & CHILD_MASK);
+                            int TheCurrentChild = PartOneArray[m] & CHILD_MASK;
                             if(TheCurrentChild > InspectThisEndOfList) {
                                 PartOneArray[m] -= i;
                             }
                         }
                         // Step 5 - Readjust all of the lists after "k" forward 1 and down i to the value, and lower ListSizeCounter[i] by 1.
-                        for(int m = k; m < (ListSizeCounter[i] - 1); m++) {
-                            (NodeListsBySize[i])[m] = (NodeListsBySize[i])[m + 1] - i;
+                        for(int m = k; m < ListSizeCounter[i] - 1; m++) {
+                            NodeListsBySize[i][m] = NodeListsBySize[i][m + 1] - i;
                         }
-                        ListSizeCounter[i] -= 1;
+                        ListSizeCounter[i]--;
                         // Step 6 - Lower any list, of any size, greater than (NodeListsBySize[i])[k], down by i.
-                        for(int m = 1; m <= (i - 1); m++) {
+                        for(int m = 1; m <= i - 1; m++) {
                             for(int n = 0; n < ListSizeCounter[m]; n++) {
-                                if((NodeListsBySize[m])[n] > InspectThisEndOfList) {
-                                    (NodeListsBySize[m])[n] -= i;
+                                if(NodeListsBySize[m][n] > InspectThisEndOfList) {
+                                    NodeListsBySize[m][n] -= i;
                                 }
                             }
                         }
                         for(int m = (i + 1); m <= NUMBER_OF_ENGLISH_LETTERS; m++) {
                             for(int n = 0; n < ListSizeCounter[m]; n++) {
-                                if((NodeListsBySize[m])[n] > InspectThisEndOfList) {
-                                    (NodeListsBySize[m])[n] -= i;
+                                if(NodeListsBySize[m][n] > InspectThisEndOfList) {
+                                    NodeListsBySize[m][n] -= i;
                                 }
                             }
                         }
@@ -483,7 +465,7 @@ int createDataStructure(const WordInfo *info) {
     // Filter all of the living "FinalNode" values into the "FinalNodeLocations" array.
     for(int i = NUMBER_OF_ENGLISH_LETTERS; i >= 1; i-- ) {
         for(int j = 0; j < ListSizeCounter[i]; j++) {
-            FinalNodeLocations[TotalNumberOfLists - 1] = (NodeListsBySize[i])[j];
+            FinalNodeLocations[TotalNumberOfLists - 1] = NodeListsBySize[i][j];
             // The new list has been placed at the end of the "FinalNodeLocations" array, now filter it up to where it should be.
             for(int k = (TotalNumberOfLists - 1); k > 0; k--) {
                 if(FinalNodeLocations[k - 1] > FinalNodeLocations[k]) {
@@ -502,15 +484,52 @@ int createDataStructure(const WordInfo *info) {
     for(int i = 0; i < (TotalNumberOfLists - 1); i++) {
         if(FinalNodeLocations[i] == FinalNodeLocations[i + 1]) {
             printf("\nNo Two Lists Can End On The Same Node. |%d|%d|\n", i, FinalNodeLocations[i]);
+            assert(false);
         }
     }
     
+    printf("\nCompacting child lists...\n");
+    int killedChildLists = 0;
+    for(int i = 0; i < NumberOfPartTwoNodes; i++) {
+        for(int j = i + 1; j < NumberOfPartTwoNodes; j++) {
+            //if there's a duplicate...
+            if(PartTwoArray[i] == PartTwoArray[j]) {
+                //...remove the duplicate
+                for(int k = 1; k <= CurrentNumberOfPartOneNodes; k++) {
+                    int node = PartOneArray[k];
+                    if(((node & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT) == j) {
+                        int next = node & CHILD_MASK;
+                        node -= node & LIST_FORMAT_INDEX_MASK;
+                        node += i << LIST_FORMAT_BIT_SHIFT;
+                        PartOneArray[k] = node;
+                        assert(next == (node & CHILD_MASK));
+                    }
+                }
+                //...compact the lists
+                for(int k = j + 1; k < NumberOfPartTwoNodes; k++) {
+                    PartTwoArray[k - 1] = PartTwoArray[k];
+                    for(int l = 1; l <= CurrentNumberOfPartOneNodes; l++) {
+                        int node = PartOneArray[l];
+                        if(((node & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT) == k) {
+                            node -= node & LIST_FORMAT_INDEX_MASK;
+                            node += (k - 1) << LIST_FORMAT_BIT_SHIFT;
+                            PartOneArray[l] = node;
+                        }
+                    }
+                }
+                NumberOfPartTwoNodes--;
+                killedChildLists++;
+            }
+        }
+    }
+    printf("Killed %d child lists\n", killedChildLists);
+        
     printf("\n  The FinalNodeLocations array is now compiled and tested for obvious errors.\n");
     
     printf("\nStep 26 - Recompile WTEOBL array by graph traversal, and test equivalence with the one modified during list-killing.\n");
     
     // Compile "RearrangedNumberOfWordsToEndOfBranchList", and verify that it is the same as "NumberOfWordsToEndOfBranchList".
-    TraverseTheDawgArray(PartOneArray, PartTwoArray, NumberOfWordsBelowMe, true);
+    TraverseTheDawgArray(PartOneArray, PartTwoArray, NumberOfWordsBelowMe, false);
     
     // This little piece of code compiles the "RearrangedNumberOfWordsToEndOfBranchList" array.
     // The requirements are the "NumberOfWordsBelowMe" array and the "FinalNodeLocations" array.
@@ -521,7 +540,7 @@ int createDataStructure(const WordInfo *info) {
             CurrentCount += NumberOfWordsBelowMe[j];
         }
         RearrangedNumberOfWordsToEndOfBranchList[i] = CurrentCount;
-        if(i ==  FinalNodeLocations[CurrentFinalNodeIndex]) {
+        if(i == FinalNodeLocations[CurrentFinalNodeIndex]) {
             CurrentFinalNodeIndex++;
         }
     }
@@ -586,27 +605,63 @@ int createDataStructure(const WordInfo *info) {
         PartFourArray[i] = 0;
     }
     for(int i = ArrayThreeSize; i < ArrayFourSize; i++) {
-        PartFourArray[i] = RearrangedNumberOfWordsToEndOfBranchList[i];
+        PartFourArray[i] = (short)RearrangedNumberOfWordsToEndOfBranchList[i];
     }
     for(int i = 0; i < ArrayFiveSize; i++) {
-        PartFiveArray[i] = RearrangedNumberOfWordsToEndOfBranchList[ArrayFourSize + i];
+        PartFiveArray[i] = (char)RearrangedNumberOfWordsToEndOfBranchList[ArrayFourSize + i];
     }
     
     FILE* FinalProduct = fopen(CWG_DATA, "wb");
+    char *tempDebugName = malloc((strlen(CWG_DATA) + 4) * sizeof(char));
+    strcpy(tempDebugName, CWG_DATA);
+    strcat(tempDebugName, ".txt");
+    printf("name = %s", tempDebugName);
+    FILE* FinalProductDebug = fopen(tempDebugName, "w");
     
     fwrite(&numWords, sizeof(int), 1, FinalProduct);
+    fprintf(FinalProductDebug, "numWords = %d\n", numWords);
     fwrite(&ArrayOneSize, sizeof(int), 1, FinalProduct);
+    fprintf(FinalProductDebug, "numNodes = %d\n", ArrayOneSize);
     fwrite(&ArrayTwoSize, sizeof(int), 1, FinalProduct);
+    fprintf(FinalProductDebug, "numListFormats = %d\n", ArrayTwoSize);
     fwrite(&ArrayThreeSize, sizeof(int), 1, FinalProduct);
+    fprintf(FinalProductDebug, "numRootWTEOBLs = %d\n", ArrayThreeSize);
     fwrite(&ArrayFourSize, sizeof(int), 1, FinalProduct);
+    fprintf(FinalProductDebug, "numShortWTEOBLs = %d\n", ArrayFourSize);
     fwrite(&ArrayFiveSize, sizeof(int), 1, FinalProduct);
+    fprintf(FinalProductDebug, "numCharWTEOBLs = %d\n", ArrayFiveSize);
     
     fwrite(PartOneArray, sizeof(int), ArrayOneSize, FinalProduct);
+    fprintf(FinalProductDebug, "\nNodes:\n");
+    fprintf(FinalProductDebug, "------------------------------------------------------------\n");
+    fprintf(FinalProductDebug, "  Num |  EOW  List Format        Child       | Child | List \n");
+    fprintf(FinalProductDebug, "------------------------------------------------------------\n");
+    char TheNodeInBinary[32+5+1];
+    for(int i = 0; i < ArrayOneSize; i++) {
+        ConvertIntNodeToBinaryString(PartOneArray[i], TheNodeInBinary);
+        fprintf(FinalProductDebug, "%6d  %s %6d  %6d\n", i, TheNodeInBinary, PartOneArray[i] & CHILD_MASK, (PartOneArray[i] & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT);
+    }
     fwrite(PartTwoArray, sizeof(int), ArrayTwoSize, FinalProduct);
+    fprintf(FinalProductDebug, "\nChildLists:\n");
+    fprintf(FinalProductDebug, "----------------------------------------------------\n");
+    fprintf(FinalProductDebug, "  Num |         z     ChildListBinary    a | Letters\n");
+    fprintf(FinalProductDebug, "----------------------------------------------------\n");
+    char TheChildListInBinary[32+3+1];
+    for(int i = 0; i < ArrayTwoSize; i++) {
+        ConvertChildListIntToBinaryString(PartTwoArray[i], TheChildListInBinary);
+        fprintf(FinalProductDebug, "%6d  %s ", i, TheChildListInBinary);
+        for(int j = NUMBER_OF_ENGLISH_LETTERS - 1; j >= 0; j--) {
+            if(PowersOfTwo[j] & PartTwoArray[i]) {
+                fprintf(FinalProductDebug, "%c", j + 'a');
+            }
+        }
+        fprintf(FinalProductDebug, "\n");
+    }
     fwrite(PartThreeArray, sizeof(int), ArrayThreeSize, FinalProduct);
     fwrite(PartFourArray, sizeof(short int), ArrayFourSize, FinalProduct);
     fwrite(PartFiveArray, sizeof(unsigned char), ArrayFiveSize, FinalProduct);
     
+    fclose(FinalProductDebug);
     fclose(FinalProduct);
     
     printf("\n  The new CWG is ready to use.\n\n");

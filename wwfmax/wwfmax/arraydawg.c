@@ -98,18 +98,18 @@ char ArrayDnodeEndOfWordFlag(ArrayDnodePtr ThisArrayDnode) {
 }
 
 int ArrayDnodeNumberOfChildrenPlusString(ArrayDnodePtr DoggieDog, int Index, char* FillThisString) {
-    if((DoggieDog[Index]).Child == 0) {
+    if(DoggieDog[Index].Child == 0) {
         FillThisString[0] = '\0';
         return 0;
     }
-    int CurrentArrayPosition = (DoggieDog[Index]).Child;
+    int CurrentArrayPosition = DoggieDog[Index].Child;
     for(int i = 0; i < NUMBER_OF_ENGLISH_LETTERS; i++) {
-        FillThisString[i] = (DoggieDog[CurrentArrayPosition]).Letter;
-        if ( (DoggieDog[CurrentArrayPosition]).Next == 0 ) {
+        FillThisString[i] = DoggieDog[CurrentArrayPosition].Letter;
+        if(DoggieDog[CurrentArrayPosition].Next == 0) {
             FillThisString[i + 1] = '\0';
-            return (i + 1);
+            return i + 1;
         }
-        CurrentArrayPosition += 1;
+        CurrentArrayPosition++;
     }
     return 0;
 }
@@ -418,15 +418,12 @@ ArrayDawgPtr ArrayDawgInit(char **Dictionary, int *SegmentLenghts, int MaxString
     FILE *Secondary = fopen(DIRECT_GRAPH_DATA_PART_TWO,"wb");
     
     // The following variables will be used when setting up the child-List-Format integer values.
-    int CurrentNumberOfChildren = 0;
-    
     char CurrentChildLetterString[NUMBER_OF_ENGLISH_LETTERS + 1];
     CurrentChildLetterString[0] = '\0';
     char TheNodeInBinary[32+5+1];
     char TheChildListInBinary[32+3+1];
     TheNodeInBinary[0] = '\0';
     
-    int CompleteChildList;
     int CurrentOffsetNumberIndex;
     int CompleteThirtyTwoBitNode;
     fwrite(&NumberOfLivingNodes, 4, 1, Main);
@@ -439,8 +436,6 @@ ArrayDawgPtr ArrayDawgInit(char **Dictionary, int *SegmentLenghts, int MaxString
     // Set up an array to hold all of the unique child strings for the reduced lexicon DAWG.  The empty placeholder will be all zeds.
     int NumberOfUniqueChildStrings = 0;
     int InsertionPoint = 0;
-    bool IsSheUnique = true;
-    char *TempHolder;
     char **HolderOfUniqueChildStrings = (char**)malloc(NumberOfLivingNodes * sizeof(char*));
     for(int i = 0; i < NumberOfLivingNodes; i++) {
         HolderOfUniqueChildStrings[i] = (char*)malloc((NUMBER_OF_ENGLISH_LETTERS + 1) * sizeof(char));
@@ -451,26 +446,27 @@ ArrayDawgPtr ArrayDawgInit(char **Dictionary, int *SegmentLenghts, int MaxString
     // Also, we need to count the number of unique list structures, and calculate the number of bits required to store index values for them.
     // The idea is that there are a small number of actual values that these 26 bits will hold due to patterns in the English Language.
     for(int i = 1; i <= NumberOfLivingNodes; i++) {
-        CurrentNumberOfChildren = ArrayDnodeNumberOfChildrenPlusString(Result->DawgArray, i, CurrentChildLetterString);
+        ArrayDnodeNumberOfChildrenPlusString(Result->DawgArray, i, CurrentChildLetterString);
         // Insert the "CurrentChildLetterString" into the "HolderOfUniqueChildStrings" if, and only if, it is unique.
-        for(int j = 0; j <= NumberOfUniqueChildStrings; j++) {
+        bool IsSheUnique = true;
+        for(int j = 0; j < NumberOfUniqueChildStrings; j++) {
             if(strcmp(CurrentChildLetterString, HolderOfUniqueChildStrings[j]) == 0) {
                 IsSheUnique = false;
                 InsertionPoint = 0;
                 break;
             }
-            if(strcmp(CurrentChildLetterString, HolderOfUniqueChildStrings[j]) < 0 ) {
+            if(strcmp(CurrentChildLetterString, HolderOfUniqueChildStrings[j]) < 0) {
                 IsSheUnique = true;
                 InsertionPoint = j;
                 break;
             }
         }
         if(IsSheUnique) {
-            TempHolder = HolderOfUniqueChildStrings[NumberOfUniqueChildStrings];
+            char *TempHolder = HolderOfUniqueChildStrings[NumberOfUniqueChildStrings];
             strcpy(TempHolder, CurrentChildLetterString);
             memmove(HolderOfUniqueChildStrings + InsertionPoint + 1, HolderOfUniqueChildStrings + InsertionPoint, (NumberOfUniqueChildStrings - InsertionPoint)*sizeof(char*));
             HolderOfUniqueChildStrings[InsertionPoint] = TempHolder;
-            NumberOfUniqueChildStrings += 1;
+            NumberOfUniqueChildStrings++;
         }
     }
     
@@ -481,8 +477,8 @@ ArrayDawgPtr ArrayDawgInit(char **Dictionary, int *SegmentLenghts, int MaxString
     // Encode the unique child strings as "int"s, so that each corresponding bit is popped.
     for(int i = 0; i < NumberOfUniqueChildStrings; i++) {
         strcpy(CurrentChildLetterString, HolderOfUniqueChildStrings[i]);
-        CurrentNumberOfChildren = strlen(CurrentChildLetterString);
-        CompleteChildList = 0;
+        int CurrentNumberOfChildren = (int)strlen(CurrentChildLetterString);
+        int CompleteChildList = 0;
         for(int j = 0; j < CurrentNumberOfChildren; j++) {
             CompleteChildList += PowersOfTwo[CurrentChildLetterString[j] - 'a'];
         }
@@ -490,17 +486,17 @@ ArrayDawgPtr ArrayDawgInit(char **Dictionary, int *SegmentLenghts, int MaxString
     }
     
     fprintf(Text, "Behold, the |%d| graph nodes are decoded below.\n\n", NumberOfLivingNodes);
-    fprintf(Text, "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+    fprintf(Text, "--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
     fprintf(Text, "  Num | EOW   List Format     Children          | NodeVal  | Level |char|EOW| Next| Child |NumChilds |    CurrChildLetterStrs    |         z     ChildListBinary    a | ChildVal\n");
-    fprintf(Text, "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+    fprintf(Text, "--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
     
     // We are now ready to output to the text file, and the "Main" intermediate binary data file.
     for(int i = 1; i <= NumberOfLivingNodes; i++) {
-        CurrentNumberOfChildren = ArrayDnodeNumberOfChildrenPlusString(Result->DawgArray, i, CurrentChildLetterString);
+        int CurrentNumberOfChildren = ArrayDnodeNumberOfChildrenPlusString(Result->DawgArray, i, CurrentChildLetterString);
         
         // Get the correct offset index to store into the current node
         for(int j = 0; j < NumberOfUniqueChildStrings; j++ ) {
-            if(strcmp(CurrentChildLetterString, HolderOfUniqueChildStrings[j]) == 0 ) {
+            if(strcmp(CurrentChildLetterString, HolderOfUniqueChildStrings[j]) == 0) {
                 CurrentOffsetNumberIndex = j;
                 break;
             }
@@ -525,6 +521,10 @@ ArrayDawgPtr ArrayDawgInit(char **Dictionary, int *SegmentLenghts, int MaxString
         fprintf(Text, " %s  %8d\n", TheChildListInBinary, ChildListValues[CurrentOffsetNumberIndex] );
         if(CompleteThirtyTwoBitNode == 0) {
             printf("\n  Error in node encoding process.\n");
+            assert(false);
+        }
+        if(CurrentNumberOfChildren == 1) {
+            assert(PowersOfTwo[CurrentChildLetterString[0] - 'a'] == ChildListValues[CurrentOffsetNumberIndex]);
         }
     }
     fclose(Main);

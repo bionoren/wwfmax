@@ -46,6 +46,9 @@ typedef struct arraydawg ArrayDawg;
 typedef ArrayDawg* ArrayDawgPtr;
 
 void ConvertIntNodeToBinaryString(int TheNode, char *BinaryNode);
+void ConvertChildListIntToBinaryString(int TheChildList, char *BinaryChildList);
+
+void ConvertIntNodeToBinaryString(int TheNode, char *BinaryNode);
 void ArrayDnodeInit(ArrayDnodePtr ThisArrayDnode, char Chap, int Nextt, int Childd, char EndingFlag, char Breadth);
 void ArrayDnodeTnodeTranspose(ArrayDnodePtr ThisArrayDnode, TnodePtr ThisTnode);
 int ArrayDnodeNumberOfChildrenPlusString(ArrayDnodePtr DoggieDog, int Index, char* FillThisString);

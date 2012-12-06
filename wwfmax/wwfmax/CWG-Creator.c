@@ -17,12 +17,7 @@
 #include "breadthqueue.h"
 #include "arraydawg.h"
 #include "assert.h"
-
-// General high-level program constants.
-#define INPUT_LIMIT 30
-#define CHILD_MASK 0X0001FFFF
-#define LIST_FORMAT_INDEX_MASK 0X3FFE0000
-#define LIST_FORMAT_BIT_SHIFT 17
+#include <math.h>
 
 // The complete "CWG" graph is stored here.
 #define CWG_DATA "/Volumes/Users/Users/bion/Downloads/CWG_Data_For_Word-List.dat"
@@ -58,11 +53,53 @@ int TraverseTheDawgArrayRecurse(int *TheDawg, int *ListFormats, int *OnIt, int C
     return WhatsBelowMe;
 }
 
-void TraverseTheDawgArray(int *TheDawg, int *TheListFormats, int *BelowingMe, bool PrintToScreen) {
+int TraverseTheDawgArrayRecurseFinal(int *TheDawg, int *ListFormats, int *OnIt, int CurrentIndex, char *TheWordSoFar, int FillThisPosition, char CurrentLetter, int *WordCounter, bool PrintMe) {
+    assert(FillThisPosition <= MAX);
+    int CurrentChild;
+    int WhatsBelowMe = 0;
+    TheWordSoFar[FillThisPosition] = CurrentLetter;
+    if(TheDawg[CurrentIndex] & EOW_FLAG) {
+        (*WordCounter)++;
+        TheWordSoFar[FillThisPosition + 1] = '\0';
+        if(PrintMe) {
+            printf("#|%d| - |%s|\n", *WordCounter, TheWordSoFar);
+        }
+        WhatsBelowMe++;
+    }
+    if((CurrentChild = (TheDawg[CurrentIndex] & CHILD_MASK))) {
+        int listIndex = (TheDawg[CurrentIndex] & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT;
+        bool extendedList = false;
+        if(listIndex >= PowersOfTwo[12]) {
+            listIndex -= PowersOfTwo[12];
+            extendedList = true;
+        }
+        int ChildListFormat = ListFormats[listIndex];
+        if(extendedList) {
+            ChildListFormat |= 1 << ((ChildListFormat >> NUMBER_OF_ENGLISH_LETTERS) - 1);
+        }
+        for(char i = 0; i < NUMBER_OF_ENGLISH_LETTERS; i++) {
+            // Verify if the i'th letter exists in the Child-List.
+            if(ChildListFormat & PowersOfTwo[i]) {
+                // Because the i'th letter exists, run "ListFormatPopCount", to extract the "CorrectOffset".
+                int CorrectOffset = ListFormatPopCount(ChildListFormat, i) - 1;
+                WhatsBelowMe += TraverseTheDawgArrayRecurseFinal(TheDawg, ListFormats, OnIt, CurrentChild + CorrectOffset, TheWordSoFar, FillThisPosition + 1, i + 'a', WordCounter, PrintMe);
+            }
+        }
+    }
+    // Because CWG is a compressed graph, many values of the "OnIt" array will be updated multiple times with the same values.
+    OnIt[CurrentIndex] = WhatsBelowMe;
+    return WhatsBelowMe;
+}
+
+void TraverseTheDawgArray(int *TheDawg, int *TheListFormats, int *BelowingMe, bool PrintToScreen, bool final) {
     int TheCounter = 0;
     char RunningWord[MAX + 1];
     for(char i = 0; i < NUMBER_OF_ENGLISH_LETTERS; i++) {
-        TraverseTheDawgArrayRecurse(TheDawg, TheListFormats, BelowingMe, i + 1, RunningWord, 0, 'a' + i, &TheCounter, PrintToScreen);
+        if(!final) {
+            TraverseTheDawgArrayRecurse(TheDawg, TheListFormats, BelowingMe, i + 1, RunningWord, 0, 'a' + i, &TheCounter, PrintToScreen);
+        } else {
+            TraverseTheDawgArrayRecurseFinal(TheDawg, TheListFormats, BelowingMe, i + 1, RunningWord, 0, 'a' + i, &TheCounter, PrintToScreen);
+        }
     }
 }
 
@@ -116,7 +153,7 @@ int createDataStructure(const WordInfo *info) {
     
     printf("\n  Begin Creator init function.\n\n");
     
-    ArrayDawgInit(AllWordsInEnglish, DictionarySizeIndex, MAX);
+    //ArrayDawgInit(AllWordsInEnglish, DictionarySizeIndex, MAX);
     
     //-----------------------------------------------------------------------------------
     // Begin tabulation of "NumberOfWordsToEndOfBranchList" array.
@@ -126,14 +163,13 @@ int createDataStructure(const WordInfo *info) {
     int NumberOfPartOneNodes;
     int NumberOfPartTwoNodes;
     int NumberOfFinalNodes;
-    int CurrentFinalNodeIndex;
     int CurrentCount;
     
     fread(&NumberOfPartOneNodes, sizeof(int), 1, PartOne);
     fread(&NumberOfPartTwoNodes, sizeof(int), 1, PartTwo);
     fread(&NumberOfFinalNodes, sizeof(int), 1, ListE);
     int *PartOneArray = (int *)malloc((NumberOfPartOneNodes + 1)*sizeof(int));
-    int *PartTwoArray = (int *)malloc(NumberOfPartTwoNodes*sizeof(int));
+    int *PartTwoArray = (int *)calloc(NumberOfPartTwoNodes, sizeof(int));
     int *FinalNodeLocations = (int *)malloc(NumberOfFinalNodes*sizeof(int));
     
     fread(PartOneArray + 1, sizeof(int), NumberOfPartOneNodes, PartOne);
@@ -162,14 +198,13 @@ int createDataStructure(const WordInfo *info) {
     printf("\nStep 19 - Traverse the DawgArray to fill the NumberOfWordsBelowMe array.\n");
     
     // This function is run to fill the "NumberOfWordsBelowMe" array.
-    TraverseTheDawgArray(PartOneArray, PartTwoArray, NumberOfWordsBelowMe, false);
+    TraverseTheDawgArray(PartOneArray, PartTwoArray, NumberOfWordsBelowMe, false, false);
     
     printf("\nStep 20 - Use FinalNodeLocations and NumberOfWordsBelowMe to fill the NumberOfWordsToEndOfBranchList array.\n");
     
     // This little piece of code compiles the "NumberOfWordsToEndOfBranchList" array.
     // The requirements are the "NumberOfWordsBelowMe" array and the "FinalNodeLocations" array.
-    CurrentFinalNodeIndex = 0;
-    for(int i = 1; i <= NumberOfPartOneNodes; i++ ) {
+    for(int i = 1, CurrentFinalNodeIndex = 0; i <= NumberOfPartOneNodes; i++ ) {
         CurrentCount = 0;
         for(int j = i; j <= FinalNodeLocations[CurrentFinalNodeIndex]; j++) {
             CurrentCount += NumberOfWordsBelowMe[j];
@@ -200,11 +235,11 @@ int createDataStructure(const WordInfo *info) {
     printf("\n  All corresponding node data and End-Of-List data must also be shifted around.\n");
     
     // This code is responsible for rearranging the node lists inside of the CWG int array so the word-heavy lists filter to the front.
-    CurrentFinalNodeIndex = 0;
-    for(int i = 1; i <= NumberOfPartOneNodes; i++) {
+    for(int i = 1, CurrentFinalNodeIndex = 0; i <= NumberOfPartOneNodes; i++) {
         bool AreWeInBigList = false;
         if(NumberOfWordsToEndOfBranchList[i] > 255) {
             AreWeInBigList = true;
+            assert(i <= NUMBER_OF_ENGLISH_LETTERS || NumberOfWordsToEndOfBranchList[i] < 65536);
         }
         if(i == EndOfCurrentList) {
             ListSizeCounter[SizeOfCurrentList]++;
@@ -292,7 +327,7 @@ int createDataStructure(const WordInfo *info) {
     }
     
     // The two arrays are now identical, so as a final precaution, traverse the rearranged array.
-    TraverseTheDawgArray(PartOneRearrangedArray, PartTwoArray, NumberOfWordsBelowMe, false);
+    TraverseTheDawgArray(PartOneRearrangedArray, PartTwoArray, NumberOfWordsBelowMe, false, false);
     
     // Check for duplicate lists.  It is now highly likely that there are some duplicates.
     // Lists of size X, can be replaced with partial lists of size X+n.  Make sure to check for this case.
@@ -316,10 +351,9 @@ int createDataStructure(const WordInfo *info) {
     // We are now required to fill the "NodeListsBySize" array.  Simply copy over the correct "FinalNode" information.
     // Note that the "FinalNode" information reflects the readjustment that just took place.
     
-    CurrentFinalNodeIndex = 0;
     EndOfCurrentList = FinalNodeLocations[0];
     SizeOfCurrentList = FinalNodeLocations[0];
-    for(int i = 0; i < NumberOfFinalNodes; i++) {
+    for(int i = 0, CurrentFinalNodeIndex = 0; i < NumberOfFinalNodes; i++) {
         NodeListsBySize[SizeOfCurrentList][WhereWeAt[SizeOfCurrentList]] = EndOfCurrentList;
         WhereWeAt[SizeOfCurrentList]++;
         CurrentFinalNodeIndex++;
@@ -489,52 +523,132 @@ int createDataStructure(const WordInfo *info) {
     }
     
     printf("\nCompacting child lists...\n");
+    
+    typedef struct indexedFlag {
+        int index;
+        bool flag;
+    } indexedFlag;
+    
+    int indexMapLen = NumberOfPartTwoNodes;
+    indexedFlag *indexMap = malloc(NumberOfPartTwoNodes * sizeof(indexedFlag));
+    for(int i = 0; i < NumberOfPartTwoNodes; i++) {
+        indexMap[i].index = i;
+        indexMap[i].flag = false;
+    }
+    
+    //remove duplicates
     int killedChildLists = 0;
     for(int i = 0; i < NumberOfPartTwoNodes; i++) {
         for(int j = i + 1; j < NumberOfPartTwoNodes; j++) {
             //if there's a duplicate...
             if(PartTwoArray[i] == PartTwoArray[j]) {
                 //...remove the duplicate
-                for(int k = 1; k <= CurrentNumberOfPartOneNodes; k++) {
-                    int node = PartOneArray[k];
-                    if(((node & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT) == j) {
-                        int next = node & CHILD_MASK;
-                        node -= node & LIST_FORMAT_INDEX_MASK;
-                        node += i << LIST_FORMAT_BIT_SHIFT;
-                        PartOneArray[k] = node;
-                        assert(next == (node & CHILD_MASK));
+                for(int k = 0; k < indexMapLen; k++) {
+                    if(indexMap[k].index == j) {
+                        indexMap[k].index = i;
+                    } else if(indexMap[k].index > j) {
+                        indexMap[k].index--;
                     }
                 }
                 //...compact the lists
                 for(int k = j + 1; k < NumberOfPartTwoNodes; k++) {
                     PartTwoArray[k - 1] = PartTwoArray[k];
-                    for(int l = 1; l <= CurrentNumberOfPartOneNodes; l++) {
-                        int node = PartOneArray[l];
-                        if(((node & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT) == k) {
-                            node -= node & LIST_FORMAT_INDEX_MASK;
-                            node += (k - 1) << LIST_FORMAT_BIT_SHIFT;
-                            PartOneArray[l] = node;
-                        }
-                    }
                 }
                 NumberOfPartTwoNodes--;
                 killedChildLists++;
             }
         }
     }
+    
+    //I should really be doing xor masking instead of this +1 crap. But first get this working
+    
+    //"+1" compaction. Note that it *matters* what ordering you try compaction in
+    for(int len = NUMBER_OF_ENGLISH_LETTERS - 1; len >= 0; len--) {
+        for(int i = 0; i < NumberOfPartTwoNodes; i++) {
+            for(int k = 0; k < indexMapLen; k++) {
+                if(indexMap[k].index == i && indexMap[k].flag) {
+                    goto COMPACT_FAIL;
+                }
+            }
+            if(__builtin_popcount(PartTwoArray[i]) == len) {
+                for(int j = 0; j < NumberOfPartTwoNodes; j++) {
+                    //use extra 5 bits to compact "+1" lists
+                    int xor = PartTwoArray[i] ^ PartTwoArray[j];
+                    if(xor && !moreThanOneBitSet(xor) && !(xor & PartTwoArray[i])) {
+                        assert(i != j);
+                        for(int k = 0; k < indexMapLen; k++) {
+                            if(indexMap[k].index == j && indexMap[k].flag) {
+                                goto COMPACT_FAIL2;
+                            }
+                        }
+                        
+                        //add in the "+1" letter
+                        int bit = __builtin_ffs(xor);
+                        assert(bit && bit <= NUMBER_OF_ENGLISH_LETTERS);
+                        PartTwoArray[i] |= bit << NUMBER_OF_ENGLISH_LETTERS;
+                        assert(PartTwoArray[i] >> NUMBER_OF_ENGLISH_LETTERS);
+                        
+                        //compact the lists
+                        for(int k = j + 1; k < NumberOfPartTwoNodes; k++) {
+                            PartTwoArray[k - 1] = PartTwoArray[k];
+                        }
+                        i -= j < i; // if we just moved the list back on ourselves, back up
+                        
+                        //fix the indexes
+                        for(int k = 0; k < indexMapLen; k++) {
+                            if(indexMap[k].index == j) {
+                                assert(!indexMap[k].flag);
+                                indexMap[k].index = i;
+                                indexMap[k].flag = true;
+                            } else if(indexMap[k].index > j) {
+                                indexMap[k].index--;
+                            }
+                        }
+
+                        NumberOfPartTwoNodes--;
+                        killedChildLists++;
+                        break;
+                    }
+                COMPACT_FAIL2:
+                    ;
+                }
+            }
+        COMPACT_FAIL:
+            ;
+        }
+    }
+    for(int i = 0; i < indexMapLen; i++) {
+        assert(!indexMap[i].flag || PartTwoArray[indexMap[i].index] >> NUMBER_OF_ENGLISH_LETTERS);
+    }
+    assert(NumberOfPartTwoNodes < PowersOfTwo[12]);
+    
+    //fix the node links
+    for(int i = 1; i <= CurrentNumberOfPartOneNodes; i++) {
+        int node = PartOneArray[i];
+        int oldIndex = (node & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT;
+        node -= node & LIST_FORMAT_INDEX_MASK;
+        int newIndex = indexMap[oldIndex].index | (indexMap[oldIndex].flag << 12);
+        node += newIndex << LIST_FORMAT_BIT_SHIFT;
+        PartOneArray[i] = node;
+    }
+    
+    free(indexMap);
     printf("Killed %d child lists\n", killedChildLists);
-        
+    
+    /**
+     for putting nodes closer together, Drew recommends a breadth first sort with "force based" insertion.
+     */
+    
     printf("\n  The FinalNodeLocations array is now compiled and tested for obvious errors.\n");
     
     printf("\nStep 26 - Recompile WTEOBL array by graph traversal, and test equivalence with the one modified during list-killing.\n");
     
     // Compile "RearrangedNumberOfWordsToEndOfBranchList", and verify that it is the same as "NumberOfWordsToEndOfBranchList".
-    TraverseTheDawgArray(PartOneArray, PartTwoArray, NumberOfWordsBelowMe, false);
+    TraverseTheDawgArray(PartOneArray, PartTwoArray, NumberOfWordsBelowMe, false, true);
     
     // This little piece of code compiles the "RearrangedNumberOfWordsToEndOfBranchList" array.
     // The requirements are the "NumberOfWordsBelowMe" array and the "FinalNodeLocations" array.
-    CurrentFinalNodeIndex = 0;
-    for(int i = 1; i <= CurrentNumberOfPartOneNodes; i++ ) {
+    for(int i = 1, CurrentFinalNodeIndex = 0; i <= CurrentNumberOfPartOneNodes; i++ ) {
         CurrentCount = 0;
         for(int j = i; j <= FinalNodeLocations[CurrentFinalNodeIndex]; j++) {
             CurrentCount += NumberOfWordsBelowMe[j];
@@ -606,6 +720,7 @@ int createDataStructure(const WordInfo *info) {
     }
     for(int i = ArrayThreeSize; i < ArrayFourSize; i++) {
         PartFourArray[i] = (short)RearrangedNumberOfWordsToEndOfBranchList[i];
+        //assert(PartFourArray[i] > 255);
     }
     for(int i = 0; i < ArrayFiveSize; i++) {
         PartFiveArray[i] = (char)RearrangedNumberOfWordsToEndOfBranchList[ArrayFourSize + i];
@@ -615,7 +730,7 @@ int createDataStructure(const WordInfo *info) {
     char *tempDebugName = malloc((strlen(CWG_DATA) + 4) * sizeof(char));
     strcpy(tempDebugName, CWG_DATA);
     strcat(tempDebugName, ".txt");
-    printf("name = %s", tempDebugName);
+    printf("name = %s\n", tempDebugName);
     FILE* FinalProductDebug = fopen(tempDebugName, "w");
     
     fwrite(&numWords, sizeof(int), 1, FinalProduct);
@@ -633,27 +748,61 @@ int createDataStructure(const WordInfo *info) {
     
     fwrite(PartOneArray, sizeof(int), ArrayOneSize, FinalProduct);
     fprintf(FinalProductDebug, "\nNodes:\n");
-    fprintf(FinalProductDebug, "------------------------------------------------------------\n");
-    fprintf(FinalProductDebug, "  Num |  EOW  List Format        Child       | Child | List \n");
-    fprintf(FinalProductDebug, "------------------------------------------------------------\n");
+    fprintf(FinalProductDebug, "-----------------------------------------------------------------------------\n");
+    fprintf(FinalProductDebug, "  Num |  EOW  List Format        Child       | Child ( dist ) | List | WTEOBL\n");
+    fprintf(FinalProductDebug, "-----------------------------------------------------------------------------\n");
     char TheNodeInBinary[32+5+1];
+    int maxJump = 0;
+    int zeroNodes = 0;
+    int maxZeroNodes = 0;
+    int maxZeroIndex = 0;
     for(int i = 0; i < ArrayOneSize; i++) {
         ConvertIntNodeToBinaryString(PartOneArray[i], TheNodeInBinary);
-        fprintf(FinalProductDebug, "%6d  %s %6d  %6d\n", i, TheNodeInBinary, PartOneArray[i] & CHILD_MASK, (PartOneArray[i] & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT);
+        int wtebol = 0;
+        if(i <= NUMBER_OF_ENGLISH_LETTERS) {
+            wtebol = PartThreeArray[i];
+        } else if(i <= ArrayFourSize) {
+            wtebol = PartFourArray[i];
+        } else {
+            wtebol = PartFiveArray[i];
+        }
+        int dist = abs((PartOneArray[i] & CHILD_MASK) - i);
+        if((PartOneArray[i] & CHILD_MASK) == 0) {
+            dist = 0;
+            zeroNodes++;
+        } else {
+            if(zeroNodes > maxZeroNodes) {
+                maxZeroNodes = zeroNodes;
+                maxZeroIndex = i - 1;
+            }
+            zeroNodes = 0;
+        }
+        fprintf(FinalProductDebug, "%6d  %s %6d (%6d)  %6d  %6d\n", i, TheNodeInBinary, PartOneArray[i] & CHILD_MASK, dist, (PartOneArray[i] & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT, wtebol);
+        if(dist > 65536) {
+            maxJump++;
+        }
     }
+    printf("Max jumps = %d\n", maxJump);
+    printf("Max consecutive zero nodes = %d (index %d)\n", maxZeroNodes, maxZeroIndex);
     fwrite(PartTwoArray, sizeof(int), ArrayTwoSize, FinalProduct);
     fprintf(FinalProductDebug, "\nChildLists:\n");
-    fprintf(FinalProductDebug, "----------------------------------------------------\n");
-    fprintf(FinalProductDebug, "  Num |         z     ChildListBinary    a | Letters\n");
-    fprintf(FinalProductDebug, "----------------------------------------------------\n");
-    char TheChildListInBinary[32+3+1];
+    fprintf(FinalProductDebug, "------------------------------------------------------------------------\n");
+    fprintf(FinalProductDebug, "  Num |  +letter z     ChildListBinary    a | Letters [ + letter]       \n");
+    fprintf(FinalProductDebug, "------------------------------------------------------------------------\n");
+    char TheChildListInBinary[32+4+1];
     for(int i = 0; i < ArrayTwoSize; i++) {
         ConvertChildListIntToBinaryString(PartTwoArray[i], TheChildListInBinary);
         fprintf(FinalProductDebug, "%6d  %s ", i, TheChildListInBinary);
+        int numLetters = 0;
         for(int j = NUMBER_OF_ENGLISH_LETTERS - 1; j >= 0; j--) {
             if(PowersOfTwo[j] & PartTwoArray[i]) {
                 fprintf(FinalProductDebug, "%c", j + 'a');
+                numLetters++;
             }
+        }
+        assert(!(PartTwoArray[i] & 0x80000000));
+        if(PartTwoArray[i] >> NUMBER_OF_ENGLISH_LETTERS) {
+            fprintf(FinalProductDebug, " + %c", '`' + (PartTwoArray[i] >> NUMBER_OF_ENGLISH_LETTERS));
         }
         fprintf(FinalProductDebug, "\n");
     }
@@ -665,6 +814,11 @@ int createDataStructure(const WordInfo *info) {
     fclose(FinalProduct);
     
     printf("\n  The new CWG is ready to use.\n\n");
+    
+    int dawgSize = 2 * sizeof(int) + ArrayOneSize * sizeof(int) + ArrayTwoSize * sizeof(int);
+    int CWGSize = 4 * sizeof(int) + ArrayThreeSize * sizeof(int) + ArrayFourSize * sizeof(short int) + ArrayFiveSize * sizeof(unsigned char);
+    int totalSize = dawgSize + CWGSize;
+    printf("Size = %d kb (%d + %d bytes)\n", (int)round(totalSize / 1000.0), dawgSize, CWGSize);
     
     return 0;
 }

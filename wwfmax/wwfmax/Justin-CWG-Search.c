@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include "CWGLib.h"
 #include "assert.h"
+#include "arraydawg.h"
 
 #define GRAPH_DATA "/Volumes/Users/Users/bion/Downloads/CWG_Data_For_Word-List.dat"
 #define OUT_LIST "/Volumes/Users/Users/bion/Downloads/Numbered-Word-List.txt"
@@ -15,11 +16,6 @@
 #define INPUT_BUFFER_SIZE 100
 #define ESCAPE_SEQUENCE "999"
 #define TWO_UP_EIGHT 256
-
-#define EOW_FLAG 1073741824
-#define LIST_FORMAT_INDEX_MASK 0X3FFE0000
-#define LIST_FORMAT_BIT_SHIFT 17
-#define CHILD_MASK 0X0001FFFF
 
 // Tests the capitalized user input string for valid length and valid characters.
 // Returns "true" for valid, and "false" for invalid.
@@ -119,16 +115,18 @@ void Print_CWG_Word_ListRecurse(int ThisIndex, int FillThisPlace, char ThisLette
     int TheChildIndex = node & CHILD_MASK;
     
     WorkingWord[FillThisPlace] = ThisLetter;
+    
     if(node & EOW_FLAG) {
         WorkingWord[FillThisPlace + 1] = '\0';
         CurrentHashMarker--;
         int HashCheck = (IndexCorrection - CurrentHashMarker);
         //fprintf(WordDump, "%d [color=blue, style=bold];\n", ThisIndex);
-        fprintf(WordDump, "[%d]-|%s|\r\n", HashCheck, WorkingWord);
+        //fprintf(WordDump, "[%6d]-|%15s| - %6d (%d)\n", HashCheck, WorkingWord, (shortList?TheShort_WTEOBL_Array[TheChildIndex]:TheUnsignedChar_WTEOBL_Array[TheChildIndex - WTEOBL_Transition]), shortList);
         assert(HashCheck == ++LastPosition);
     }
     if(TheChildIndex) {
-        int TheChildListFormat = TheListFormatArray[(node & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT];
+        int TheChildListFormatIndex = (node & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT;
+        int TheChildListFormat = TheListFormatArray[TheChildListFormatIndex];
         const bool shortList = TheChildIndex < WTEOBL_Transition;
         int hashconst = CurrentHashMarker - (shortList?TheShort_WTEOBL_Array[TheChildIndex]:TheUnsignedChar_WTEOBL_Array[TheChildIndex - WTEOBL_Transition]);
         for(char i = 0; i < NUMBER_OF_ENGLISH_LETTERS; i++) {
@@ -150,6 +148,7 @@ void Print_CWG_Word_List() {
         //fprintf(WordDump, "%d [color=red, style=bold, label=\"%c(%d)\"];\n", i, i + '`', i);
         Print_CWG_Word_ListRecurse(i, 0, i + '`', MessWithMe, TheRoot_WTEOBL_Array[i]);
     }
+    
     //fprintf(WordDump, "}");
     fclose(WordDump);
 }

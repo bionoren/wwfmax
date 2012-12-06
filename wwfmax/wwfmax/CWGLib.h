@@ -13,12 +13,15 @@
 #define INT_BITS 32
 #define LOWER_IT 32
 
+#define LIST_FORMAT_INDEX_MASK 0X3FFE0000
+#define LIST_FORMAT_BIT_SHIFT 17
+#define CHILD_MASK 0X0001FFFF
+
 // Lookup tables used for node encoding and number-string decoding.
-static const unsigned int PowersOfTwo[INT_BITS - 1] = { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384,
+static const unsigned int PowersOfTwo[INT_BITS] = {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384,
     32768, 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728,
-    268435456, 536870912, 1073741824 };
-static const unsigned int PowersOfTen[10] = { 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000 };
-// Lookup tables used to extract child-offset values.
+    268435456, 536870912, 1073741824, 2147483648};
+// Lookup tables used to extract child-offset values. This maps the value of an unsigned char to the number of bits set for that number
 static const unsigned char PopCountTable[256] = { 0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4,
     3, 4, 4, 5, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 1, 2, 2, 3, 2, 3,
     3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
@@ -30,7 +33,6 @@ static const int ChildListMasks[NUMBER_OF_ENGLISH_LETTERS] = { 0X1, 0X3, 0X7, 0X
     0X1FFF, 0X3FFF, 0X7FFF, 0XFFFF, 0X1FFFF, 0X3FFFF, 0X7FFFF, 0XFFFFF, 0X1FFFFF, 0X3FFFFF, 0X7FFFFF, 0XFFFFFF, 0X1FFFFFF, 0X3FFFFFF };
 
 int ListFormatPopCount(int CompleteChildList, int LetterPosition);
-void CutOffExtraChars(char *ThisLine);
-void MakeMeAllCapital(char *RawWord);
+bool moreThanOneBitSet(int i);
 
 #endif

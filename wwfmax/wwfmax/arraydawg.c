@@ -45,16 +45,17 @@ void ConvertIntNodeToBinaryString(int TheNode, char *BinaryNode) {
 // The "BinaryChildList" string must be at least 32 + 3 + 1 bytes in length.  Space for the bits, the seperation pipes, and the end of string char.
 void ConvertChildListIntToBinaryString(int TheChildList, char *BinaryChildList) {
     BinaryChildList[0] = '[';
-    // Bit 31 to bit 26 remain unused in a "ChildList".
-    for(int i = 1; i <= 6; i++ ) {
-        BinaryChildList[i] = '_';
+    BinaryChildList[1] = '_';
+    BinaryChildList[2] = '|';
+    for(int i = 3, Bit = 30; i <= 7; i++, Bit--) {
+        BinaryChildList[i] = (TheChildList & PowersOfTwo[Bit])?'1':'0';;
     }
-    BinaryChildList[7] = '|';
-    for(int i = 8, Bit = 25; i <= 33; i++, Bit--) {
+    BinaryChildList[8] = '|';
+    for(int i = 9, Bit = 25; i <= 34; i++, Bit--) {
         BinaryChildList[i] = (TheChildList & PowersOfTwo[Bit])?'1':'0';
     }
-    BinaryChildList[34] = ']';
-    BinaryChildList[35] = '\0';
+    BinaryChildList[35] = ']';
+    BinaryChildList[36] = '\0';
 }
 
 void ArrayDnodeInit(ArrayDnodePtr ThisArrayDnode, char Chap, int Nextt, int Childd, char EndingFlag, char Breadth) {
@@ -421,7 +422,7 @@ ArrayDawgPtr ArrayDawgInit(char **Dictionary, int *SegmentLenghts, int MaxString
     char CurrentChildLetterString[NUMBER_OF_ENGLISH_LETTERS + 1];
     CurrentChildLetterString[0] = '\0';
     char TheNodeInBinary[32+5+1];
-    char TheChildListInBinary[32+3+1];
+    char TheChildListInBinary[32+4+1];
     TheNodeInBinary[0] = '\0';
     
     int CurrentOffsetNumberIndex;
@@ -472,7 +473,7 @@ ArrayDawgPtr ArrayDawgInit(char **Dictionary, int *SegmentLenghts, int MaxString
     
     printf("\nStep 15 - NumberOfUniqueChildStrings = |%d|.\n", NumberOfUniqueChildStrings);
     
-    int *ChildListValues = (int*)malloc(NumberOfUniqueChildStrings*sizeof(int));
+    int *ChildListValues = (int*)calloc(NumberOfUniqueChildStrings, sizeof(int));
     
     // Encode the unique child strings as "int"s, so that each corresponding bit is popped.
     for(int i = 0; i < NumberOfUniqueChildStrings; i++) {

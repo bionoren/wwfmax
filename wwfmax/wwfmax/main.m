@@ -81,6 +81,7 @@ int main(int argc, const char * argv[]) {
         
         createDataStructure(&info);
         debug();
+        return 0;
         
         __block Solution sol;
         sol.maxScore = 0;

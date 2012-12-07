@@ -55,7 +55,6 @@ int TraverseTheDawgArrayRecurse(int *TheDawg, int *ListFormats, int *OnIt, int C
 
 int TraverseTheDawgArrayRecurseFinal(int *TheDawg, int *ListFormats, int *OnIt, int CurrentIndex, char *TheWordSoFar, int FillThisPosition, char CurrentLetter, int *WordCounter, bool PrintMe) {
     assert(FillThisPosition <= MAX);
-    int CurrentChild;
     int WhatsBelowMe = 0;
     TheWordSoFar[FillThisPosition] = CurrentLetter;
     if(TheDawg[CurrentIndex] & EOW_FLAG) {
@@ -66,22 +65,20 @@ int TraverseTheDawgArrayRecurseFinal(int *TheDawg, int *ListFormats, int *OnIt, 
         }
         WhatsBelowMe++;
     }
+    int CurrentChild;
     if((CurrentChild = (TheDawg[CurrentIndex] & CHILD_MASK))) {
+        CurrentChild--;
         int listIndex = (TheDawg[CurrentIndex] & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT;
-        bool extendedList = false;
-        if(listIndex >= PowersOfTwo[12]) {
-            listIndex -= PowersOfTwo[12];
-            extendedList = true;
-        }
+        bool extendedList = listIndex & PowersOfTwo[12];
+        listIndex -= extendedList * PowersOfTwo[12];
         int ChildListFormat = ListFormats[listIndex];
-        if(extendedList) {
-            ChildListFormat |= 1 << ((ChildListFormat >> NUMBER_OF_ENGLISH_LETTERS) - 1);
-        }
+        ChildListFormat |= extendedList << (ChildListFormat >> NUMBER_OF_ENGLISH_LETTERS);
+        
         for(char i = 0; i < NUMBER_OF_ENGLISH_LETTERS; i++) {
             // Verify if the i'th letter exists in the Child-List.
             if(ChildListFormat & PowersOfTwo[i]) {
                 // Because the i'th letter exists, run "ListFormatPopCount", to extract the "CorrectOffset".
-                int CorrectOffset = ListFormatPopCount(ChildListFormat, i) - 1;
+                int CorrectOffset = ListFormatPopCount(ChildListFormat, i);
                 WhatsBelowMe += TraverseTheDawgArrayRecurseFinal(TheDawg, ListFormats, OnIt, CurrentChild + CorrectOffset, TheWordSoFar, FillThisPosition + 1, i + 'a', WordCounter, PrintMe);
             }
         }
@@ -560,8 +557,6 @@ int createDataStructure(const WordInfo *info) {
         }
     }
     
-    //I should really be doing xor masking instead of this +1 crap. But first get this working
-    
     //"+1" compaction. Note that it *matters* what ordering you try compaction in
     for(int len = NUMBER_OF_ENGLISH_LETTERS - 1; len >= 0; len--) {
         for(int i = 0; i < NumberOfPartTwoNodes; i++) {
@@ -583,10 +578,10 @@ int createDataStructure(const WordInfo *info) {
                         }
                         
                         //add in the "+1" letter
-                        int bit = __builtin_ffs(xor);
-                        assert(bit && bit <= NUMBER_OF_ENGLISH_LETTERS);
+                        int bit = __builtin_ffs(xor) - 1; //-1 here lets us avoid the subtraction when we walk the graph later, but it makes this section harder to validate
+                        //assert(bit && bit <= NUMBER_OF_ENGLISH_LETTERS);
                         PartTwoArray[i] |= bit << NUMBER_OF_ENGLISH_LETTERS;
-                        assert(PartTwoArray[i] >> NUMBER_OF_ENGLISH_LETTERS);
+                        //assert(PartTwoArray[i] >> NUMBER_OF_ENGLISH_LETTERS);
                         
                         //compact the lists
                         for(int k = j + 1; k < NumberOfPartTwoNodes; k++) {
@@ -618,7 +613,7 @@ int createDataStructure(const WordInfo *info) {
         }
     }
     for(int i = 0; i < indexMapLen; i++) {
-        assert(!indexMap[i].flag || PartTwoArray[indexMap[i].index] >> NUMBER_OF_ENGLISH_LETTERS);
+        //assert(!indexMap[i].flag || PartTwoArray[indexMap[i].index] >> NUMBER_OF_ENGLISH_LETTERS);
     }
     assert(NumberOfPartTwoNodes < PowersOfTwo[12]);
     

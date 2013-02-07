@@ -12,7 +12,6 @@
 #include "tnode.h"
 
 #define BIT_COUNT_FOR_CHILD_INDEX 17
-#define EOW_FLAG 0X40000000
 
 // This program will create "5" binary-data files for use, and "1" text-data file for inspection.
 #define TRADITIONAL_DAWG_DATA "Traditional_Dawg_For_Word-List.dat"

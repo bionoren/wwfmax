@@ -11,6 +11,7 @@
 #import "functions.h"
 #import "CWG-Creator.h"
 #import "Justin-CWG-Search.h"
+#import "DictionaryManager.h"
 
 #define NUM_THREADS 1
 
@@ -35,61 +36,56 @@ int main(int argc, const char * argv[]) {
         assert(prescores);
         
         FILE *wordFile = fopen("dict.txt", "r");
-        if(wordFile) {
-            char buffer[40];
-            int i = 0;
-            char *word = words;
-            while(fgets(buffer, 40, wordFile)) {
-                int len = (int)strlen(buffer);
-                if(buffer[len - 1] == '\n') {
-                    --len;
-                }
-                if(len <= BOARD_LENGTH) {
-                    strncpy(word, buffer, len);
-                    wordLengths[i++] = len;
-                    assert(i < numWords);
-                    word += BOARD_LENGTH * sizeof(char);
-                }
+        assert(wordFile);
+        char buffer[40];
+        int i = 0;
+        char *word = words;
+        while(fgets(buffer, 40, wordFile)) {
+            int len = (int)strlen(buffer);
+            if(buffer[len - 1] == '\n') {
+                --len;
             }
-            numWords = i;
+            if(len <= BOARD_LENGTH) {
+                strncpy(word, buffer, len);
+                wordLengths[i++] = len;
+                assert(i < numWords);
+                word += BOARD_LENGTH * sizeof(char);
+            }
         }
+        numWords = i;
         
         NSLog(@"evaluating %d words", numWords);
         
         const WordInfo info = {.words = words, .numWords = numWords, .lengths = wordLengths, .prescores = prescores};
         
-        dispatch_group_t dispatchGroup = dispatch_group_create();
-        for(int i = 0; i < NUM_THREADS; ++i) {
-            dispatch_group_async(dispatchGroup, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                for(int i = nextWord(numWords); i >= 0; i = nextWord(numWords)) {
-                    char *word = &(words[i * BOARD_LENGTH]);
-                    const int length = wordLengths[i];
-                    
-                    if(!playable(word, length, &info)) {
-                        words[i * BOARD_LENGTH] = 0;
-                        wordLengths[i] = 0;
-                        continue;
-                    }
-                    
-                    prescores[i] = prescoreWord(word, length);
-                }
-            });
+        for(int i = 0; i < numWords; i++) {
+            char *word = &(words[i * BOARD_LENGTH]);
+            const int length = wordLengths[i];
+            
+            if(!playable(word, length, &info)) {
+                words[i * BOARD_LENGTH] = 0;
+                wordLengths[i] = 0;
+                continue;
+            }
+            
+            prescores[i] = prescoreWord(word, length);
         }
-        dispatch_group_wait(dispatchGroup, DISPATCH_TIME_FOREVER);
         
-        resetWords();
-        
-        createDataStructure(&info);
+        //createDataStructure(&info);
+        free(words);
+        free(wordLengths);
         debug();
-        return 0;
+        
+        createDictManager();
         
         __block Solution sol;
         sol.maxScore = 0;
         NSLock *lock = [[NSLock alloc] init];
+        dispatch_group_t dispatchGroup = dispatch_group_create();
         for(int i = 0; i < NUM_THREADS; ++i) {
             dispatch_group_async(dispatchGroup, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                 Board *board = [[Board alloc] init];
-                Solution temp = [board solve:&info];
+                Solution temp = [board solve:prescores];
                 if([lock lockBeforeDate:[NSDate distantFuture]]) {
                     if(temp.maxScore > sol.maxScore) {
                         sol = temp;
@@ -102,8 +98,7 @@ int main(int argc, const char * argv[]) {
         dispatch_group_wait(dispatchGroup, DISPATCH_TIME_FOREVER);
         printSolution(sol);
         
-        free(words);
-        free(wordLengths);
+        destructDictManager();
         free(prescores);
     }
     return 0;

@@ -72,7 +72,7 @@ int TraverseTheDawgArrayRecurseFinal(int *TheDawg, int *ListFormats, int *OnIt, 
         bool extendedList = listIndex & PowersOfTwo[12];
         listIndex -= extendedList * PowersOfTwo[12];
         int ChildListFormat = ListFormats[listIndex];
-        ChildListFormat |= extendedList << (ChildListFormat >> NUMBER_OF_ENGLISH_LETTERS);
+        ChildListFormat += extendedList << (ChildListFormat >> NUMBER_OF_ENGLISH_LETTERS);
         
         for(char i = 0; i < NUMBER_OF_ENGLISH_LETTERS; i++) {
             // Verify if the i'th letter exists in the Child-List.
@@ -728,8 +728,7 @@ int createDataStructure(const WordInfo *info) {
     printf("name = %s\n", tempDebugName);
     FILE* FinalProductDebug = fopen(tempDebugName, "w");
     
-    fwrite(&numWords, sizeof(int), 1, FinalProduct);
-    fprintf(FinalProductDebug, "numWords = %d\n", numWords);
+    fprintf(FinalProductDebug, "numWords = %d\n", PartThreeArray[0]);
     fwrite(&ArrayOneSize, sizeof(int), 1, FinalProduct);
     fprintf(FinalProductDebug, "numNodes = %d\n", ArrayOneSize);
     fwrite(&ArrayTwoSize, sizeof(int), 1, FinalProduct);
@@ -810,7 +809,7 @@ int createDataStructure(const WordInfo *info) {
     
     printf("\n  The new CWG is ready to use.\n\n");
     
-    int dawgSize = 2 * sizeof(int) + ArrayOneSize * sizeof(int) + ArrayTwoSize * sizeof(int);
+    int dawgSize = 1 * sizeof(int) + ArrayOneSize * sizeof(int) + ArrayTwoSize * sizeof(int);
     int CWGSize = 4 * sizeof(int) + ArrayThreeSize * sizeof(int) + ArrayFourSize * sizeof(short int) + ArrayFiveSize * sizeof(unsigned char);
     int totalSize = dawgSize + CWGSize;
     printf("Size = %d kb (%d + %d bytes)\n", (int)round(totalSize / 1000.0), dawgSize, CWGSize);

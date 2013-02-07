@@ -41,18 +41,16 @@ unsigned char *TheUnsignedChar_WTEOBL_Array;
 
 // These two values are needed for the CWG Hash-Function.
 int WTEOBL_Transition;
-int IndexCorrection;
 
 // Use the first two CWG arrays to return a boolean value indicating if "TheCandidate" word is in the lexicon.
 bool SingleWordSearchboolean(char *TheCandidate, size_t CandidateLength) {
     int CurrentLetterPosition = TheCandidate[0] - 'a';
     int CurrentNodeIndex = CurrentLetterPosition + 1;
-    int CurrentChildListFormat;
     for(int X = 1; X < CandidateLength; X++) {
         if(!(TheNodeArray[CurrentNodeIndex] & CHILD_MASK)) {
             return false;
         }
-        CurrentChildListFormat = TheListFormatArray[(TheNodeArray[CurrentNodeIndex] & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT];
+        int CurrentChildListFormat = TheListFormatArray[(TheNodeArray[CurrentNodeIndex] & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT];
         CurrentLetterPosition = TheCandidate[X] - 'a';
         if(!(CurrentChildListFormat & PowersOfTwo[CurrentLetterPosition])) {
             return false;
@@ -60,10 +58,7 @@ bool SingleWordSearchboolean(char *TheCandidate, size_t CandidateLength) {
             CurrentNodeIndex = (TheNodeArray[CurrentNodeIndex] & CHILD_MASK) + ListFormatPopCount(CurrentChildListFormat, CurrentLetterPosition);
         }
     }
-    if(TheNodeArray[CurrentNodeIndex] & EOW_FLAG) {
-        return true;
-    }
-    return false;
+    return TheNodeArray[CurrentNodeIndex] & EOW_FLAG;
 }
 
 // Using a novel graph mark-up scheme, this function returns the hash index of "TheCandidate", and "0" if it does not exist.
@@ -71,13 +66,12 @@ bool SingleWordSearchboolean(char *TheCandidate, size_t CandidateLength) {
 int SingleWordHashFunction(char *TheCandidate, size_t CandidateLength) {
     int CurrentLetterPosition = TheCandidate[0] - 'a';
     int CurrentNodeIndex = CurrentLetterPosition + 1;
-    int CurrentChildListFormat;
     int CurrentHashMarker = TheRoot_WTEOBL_Array[CurrentNodeIndex];
     for(int i = 1; i < CandidateLength; i++) {
         if(!(TheNodeArray[CurrentNodeIndex] & CHILD_MASK)) {
             return 0;
         }
-        CurrentChildListFormat = TheListFormatArray[(TheNodeArray[CurrentNodeIndex] & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT];
+        int CurrentChildListFormat = TheListFormatArray[(TheNodeArray[CurrentNodeIndex] & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT];
         CurrentLetterPosition = TheCandidate[i] - 'a';
         if(!(CurrentChildListFormat & PowersOfTwo[CurrentLetterPosition])) {
             return 0;
@@ -98,10 +92,7 @@ int SingleWordHashFunction(char *TheCandidate, size_t CandidateLength) {
             }
         }
     }
-    if(TheNodeArray[CurrentNodeIndex] & EOW_FLAG) {
-        return IndexCorrection - CurrentHashMarker;
-    }
-    return 0;
+    return (TheNodeArray[CurrentNodeIndex] & EOW_FLAG) * (TheRoot_WTEOBL_Array[1] - CurrentHashMarker);
 }
 
 // List output variables.
@@ -119,20 +110,25 @@ void Print_CWG_Word_ListRecurse(int ThisIndex, int FillThisPlace, char ThisLette
     if(node & EOW_FLAG) {
         WorkingWord[FillThisPlace + 1] = '\0';
         CurrentHashMarker--;
-        int HashCheck = (IndexCorrection - CurrentHashMarker);
+        int HashCheck = (TheRoot_WTEOBL_Array[1] - CurrentHashMarker);
         //fprintf(WordDump, "%d [color=blue, style=bold];\n", ThisIndex);
         //fprintf(WordDump, "[%6d]-|%15s| - %6d (%d)\n", HashCheck, WorkingWord, (shortList?TheShort_WTEOBL_Array[TheChildIndex]:TheUnsignedChar_WTEOBL_Array[TheChildIndex - WTEOBL_Transition]), shortList);
         assert(HashCheck == ++LastPosition);
     }
     if(TheChildIndex) {
         int TheChildListFormatIndex = (node & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT;
+        bool extendedList = TheChildListFormatIndex & PowersOfTwo[12];
+        TheChildListFormatIndex -= extendedList * PowersOfTwo[12];
         int TheChildListFormat = TheListFormatArray[TheChildListFormatIndex];
+        TheChildListFormat += extendedList << (TheChildListFormat >> NUMBER_OF_ENGLISH_LETTERS);
+        
         const bool shortList = TheChildIndex < WTEOBL_Transition;
         int hashconst = CurrentHashMarker - (shortList?TheShort_WTEOBL_Array[TheChildIndex]:TheUnsignedChar_WTEOBL_Array[TheChildIndex - WTEOBL_Transition]);
+        FillThisPlace++;
         for(char i = 0; i < NUMBER_OF_ENGLISH_LETTERS; i++) {
             if(TheChildListFormat & PowersOfTwo[i]) {
                 //fprintf(WordDump, "%d -> %d [label=\"%c\"];\n", ThisIndex, TheChildIndex, i + 'a');
-                Print_CWG_Word_ListRecurse(TheChildIndex, FillThisPlace + 1, i + 'a', WorkingWord, hashconst + (shortList?TheShort_WTEOBL_Array[TheChildIndex]:TheUnsignedChar_WTEOBL_Array[TheChildIndex - WTEOBL_Transition]));
+                Print_CWG_Word_ListRecurse(TheChildIndex, FillThisPlace, i + 'a', WorkingWord, hashconst + (shortList?TheShort_WTEOBL_Array[TheChildIndex]:TheUnsignedChar_WTEOBL_Array[TheChildIndex - WTEOBL_Transition]));
                 TheChildIndex++;
             }
         }
@@ -144,9 +140,9 @@ void Print_CWG_Word_List() {
     char MessWithMe[BOARD_LENGTH + 1];
     WordDump = fopen(OUT_LIST, "w");
     //fprintf(WordDump, "digraph CWG {\n");
-    for(char i = 1; i <= NUMBER_OF_ENGLISH_LETTERS; i++) {
+    for(char i = 0; i < NUMBER_OF_ENGLISH_LETTERS; i++) {
         //fprintf(WordDump, "%d [color=red, style=bold, label=\"%c(%d)\"];\n", i, i + '`', i);
-        Print_CWG_Word_ListRecurse(i, 0, i + '`', MessWithMe, TheRoot_WTEOBL_Array[i]);
+        Print_CWG_Word_ListRecurse(i + 1, 0, i + 'a', MessWithMe, TheRoot_WTEOBL_Array[i + 1]);
     }
     
     //fprintf(WordDump, "}");
@@ -155,7 +151,6 @@ void Print_CWG_Word_List() {
 
 int debug() {
     // Array size variables.
-    int TotalNumberOfWords;
     int NodeArraySize;
     int ListFormatArraySize;
     int Root_WTEOBL_ArraySize;
@@ -166,7 +161,6 @@ int debug() {
     FILE *Data = fopen(GRAPH_DATA, "rb");
     
     // Read the array sizes.
-    fread(&TotalNumberOfWords, sizeof(int), 1, Data);
     fread(&NodeArraySize, sizeof(int), 1, Data);
     fread(&ListFormatArraySize, sizeof(int), 1, Data);
     fread(&Root_WTEOBL_ArraySize, sizeof(int), 1, Data);
@@ -190,11 +184,10 @@ int debug() {
     fclose(Data);
     
     // Make the proper assignments and adjustments to use the CWG.
-    IndexCorrection = TotalNumberOfWords;
     WTEOBL_Transition = Short_WTEOBL_ArraySize;
     
     printf("The CWG data-structure is in memory and ready to use.\n\n");
-    printf("CWG Header Values = |%7d |%7d |%5d |%3d |%5d |%7d |\n", TotalNumberOfWords, NodeArraySize, ListFormatArraySize,
+    printf("CWG Header Values = |%7d |%7d |%5d |%3d |%5d |%7d |\n", TheRoot_WTEOBL_Array[1], NodeArraySize, ListFormatArraySize,
     Root_WTEOBL_ArraySize, Short_WTEOBL_ArraySize, UnsignedChar_WTEOBL_ArraySize);
     
     Print_CWG_Word_List();

@@ -10,23 +10,7 @@
 #define FUNCTIONS_WWFMAX
 
 #import "WordStructure.h"
-
-#pragma mark - Threading
-
-//threadsafe
-static int wordIndex = -1;
-int nextWord(int numWords) {
-    OSAtomicIncrement64((int64_t*)&wordIndex);
-    if(wordIndex < numWords) {
-        return wordIndex;
-    } else {
-        return -1;
-    }
-}
-
-void resetWords() {
-    wordIndex = -1;
-}
+#import "DictionaryManager.h"
 
 #pragma mark - Debugging
 
@@ -234,7 +218,7 @@ BOOL validate(const char *word, const int length, const WordInfo *info) {
     }
 }
 
-void subwordsAtLocation(NSMutableSet **ret, char *word, const int length, const WordInfo *info) {
+void subwordsAtLocation(NSMutableSet **ret, char *word, const int length) {
     if(length <= NUM_LETTERS_TURN) {
         return [*ret addObject:[WordStructure wordAsLetters:word length:length]];
     }
@@ -246,7 +230,7 @@ void subwordsAtLocation(NSMutableSet **ret, char *word, const int length, const 
         const int tmpLength = MIN(i + NUM_LETTERS_TURN, length - 1);
         for(int j = i + 2; j < tmpLength; ++j) {
             const char *subword = &word[i];
-            if(validate(subword, j - i, info)) {
+            if(isValidWord(subword, j - i)) {
                 Subword sub = {.start = i, .end = j};
                 subwords[numSubwords++] = sub;
                 assert(numSubwords <= 25);
@@ -274,7 +258,7 @@ void subwordsAtLocation(NSMutableSet **ret, char *word, const int length, const 
             }
         }
         wordStruct = [[WordStructure alloc] initWithWord:word length:length];
-        if([wordStruct validateSubwords:comboSubwords length:comboSubwordsLength info:info]) {
+        if([wordStruct validateSubwords:comboSubwords length:comboSubwordsLength]) {
             [*ret addObject:wordStruct];
         }
     OVERLAP:
@@ -328,7 +312,7 @@ BOOL playable(char *word, const int length, const WordInfo *info) {
             }
         }
         wordStruct = [[WordStructure alloc] initWithWord:word length:length];
-        if([wordStruct validateSubwords:comboSubwords length:comboSubwordsLength info:info]) {
+        if([wordStruct validateSubwords:comboSubwords length:comboSubwordsLength]) {
             return YES;
         }
     OVERLAP:

@@ -11,12 +11,6 @@
 
 #import "WordStructure.h"
 
-#pragma mark - Threading
-
-//threadsafe
-int nextWord(int numWords);
-void resetWords();
-
 #pragma mark - Debugging
 
 void printSubwords(char* word, int length, Subword *subwords, int numSubwords);
@@ -45,7 +39,7 @@ int scoreLettersWithPrescore(const int prescore, const int length, char *chars, 
 
 BOOL validate(const char *word, const int length, const WordInfo *info);
 
-void subwordsAtLocation(NSMutableSet **ret, const char *word, const int length, const WordInfo *info);
+void subwordsAtLocation(NSMutableSet **ret, const char *word, const int length);
 
 BOOL playable(char *word, const int length, const WordInfo *info);
 

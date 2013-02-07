@@ -21,7 +21,7 @@ typedef struct {
 
 @interface Board : NSObject
 
--(Solution)solve:(const WordInfo*)info;
+-(Solution)solve:(const int*)prescores;
 +(NSString*)debugBoard:(char*)board;
 
 @end

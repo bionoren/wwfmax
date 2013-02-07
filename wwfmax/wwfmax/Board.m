@@ -8,6 +8,7 @@
 
 #import "Board.h"
 #import "functions.h"
+#import "DictionaryManager.h"
 
 #define NUM_LETTERS 27
 #define DEFAULT_CHAR '.'
@@ -76,23 +77,18 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
 /**
  I'm strictly interested in the top half of the board and horizontal words because of bonus tile symetry.
  */
--(Solution)solve:(const WordInfo*)info {
-    assert(validate("jezebel", 7, info));
-    
+-(Solution)solve:(const int*)prescores {
     Solution ret;
     ret.maxScore = 0;
     
     NSMutableSet *playableWords = [NSMutableSet set];
-    for(int i = nextWord(info->numWords); i >= 0; i = nextWord(info->numWords)) {
+    char word[15];
+    int length;
+    while((length = nextWord(word))) {
         @autoreleasepool {
-            const int length = info->lengths[i];
-            if(length == 0) {
-                continue;
-            }
-            const char *word = &(info->words[i * BOARD_LENGTH]);
-            const int prescore = info->prescores[i];
+            const int prescore = prescores[hashWord(word, length)];
 
-            subwordsAtLocation(&playableWords, word, length, info);
+            subwordsAtLocation(&playableWords, word, length);
             if(playableWords.count == 0) {
                 continue;
             }

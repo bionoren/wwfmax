@@ -20,7 +20,7 @@
 #include <math.h>
 
 // The complete "CWG" graph is stored here.
-#define CWG_DATA "/Volumes/Users/Users/bion/Downloads/CWG_Data_For_Word-List.dat"
+#define CWG_DATA "/Users/bion/Downloads/CWG_Data_For_Word-List.dat"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -727,6 +727,7 @@ int createDataStructure(const WordInfo *info) {
     strcat(tempDebugName, ".txt");
     printf("name = %s\n", tempDebugName);
     FILE* FinalProductDebug = fopen(tempDebugName, "w");
+    assert(FinalProductDebug);
     
     fprintf(FinalProductDebug, "numWords = %d\n", PartThreeArray[0]);
     fwrite(&ArrayOneSize, sizeof(int), 1, FinalProduct);

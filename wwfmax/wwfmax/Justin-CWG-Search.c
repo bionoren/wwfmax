@@ -44,18 +44,23 @@ int WTEOBL_Transition;
 
 // Use the first two CWG arrays to return a boolean value indicating if "TheCandidate" word is in the lexicon.
 bool SingleWordSearchboolean(char *TheCandidate, size_t CandidateLength) {
-    int CurrentLetterPosition = TheCandidate[0] - 'a';
-    int CurrentNodeIndex = CurrentLetterPosition + 1;
-    for(int X = 1; X < CandidateLength; X++) {
+    int CurrentNodeIndex = TheCandidate[0] - 'a' + 1;
+    for(int i = 1; i < CandidateLength; i++) {
         if(!(TheNodeArray[CurrentNodeIndex] & CHILD_MASK)) {
             return false;
         }
-        int CurrentChildListFormat = TheListFormatArray[(TheNodeArray[CurrentNodeIndex] & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT];
-        CurrentLetterPosition = TheCandidate[X] - 'a';
+
+        int TheChildListFormatIndex = (TheNodeArray[CurrentNodeIndex] & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT;
+        bool extendedList = TheChildListFormatIndex & PowersOfTwo[12];
+        TheChildListFormatIndex -= extendedList * PowersOfTwo[12];
+        int CurrentChildListFormat = TheListFormatArray[TheChildListFormatIndex];
+        CurrentChildListFormat += extendedList << (CurrentChildListFormat >> NUMBER_OF_ENGLISH_LETTERS);
+        
+        int CurrentLetterPosition = TheCandidate[i] - 'a';
         if(!(CurrentChildListFormat & PowersOfTwo[CurrentLetterPosition])) {
             return false;
         } else {
-            CurrentNodeIndex = (TheNodeArray[CurrentNodeIndex] & CHILD_MASK) + ListFormatPopCount(CurrentChildListFormat, CurrentLetterPosition);
+            CurrentNodeIndex = (TheNodeArray[CurrentNodeIndex] & CHILD_MASK) + ListFormatPopCount(CurrentChildListFormat, CurrentLetterPosition) - 1;
         }
     }
     return TheNodeArray[CurrentNodeIndex] & EOW_FLAG;
@@ -64,8 +69,7 @@ bool SingleWordSearchboolean(char *TheCandidate, size_t CandidateLength) {
 // Using a novel graph mark-up scheme, this function returns the hash index of "TheCandidate", and "0" if it does not exist.
 // This function uses the additional 3 WTEOBL arrays.
 int SingleWordHashFunction(char *TheCandidate, size_t CandidateLength) {
-    int CurrentLetterPosition = TheCandidate[0] - 'a';
-    int CurrentNodeIndex = CurrentLetterPosition + 1;
+    int CurrentNodeIndex = TheCandidate[0] - 'a' + 1;
     int CurrentHashMarker = TheRoot_WTEOBL_Array[CurrentNodeIndex];
     for(int i = 1; i < CandidateLength; i++) {
         if(!(TheNodeArray[CurrentNodeIndex] & CHILD_MASK)) {
@@ -78,19 +82,20 @@ int SingleWordHashFunction(char *TheCandidate, size_t CandidateLength) {
         int CurrentChildListFormat = TheListFormatArray[TheChildListFormatIndex];
         CurrentChildListFormat += extendedList << (CurrentChildListFormat >> NUMBER_OF_ENGLISH_LETTERS);
 
-        CurrentLetterPosition = TheCandidate[i] - 'a';
+        int CurrentLetterPosition = TheCandidate[i] - 'a';
         if(!(CurrentChildListFormat & PowersOfTwo[CurrentLetterPosition])) {
             return 0;
         } else {
             CurrentNodeIndex = TheNodeArray[CurrentNodeIndex] & CHILD_MASK;
             // Use "TheShort_WTEOBL_Array".
+            int popCount = ListFormatPopCount(CurrentChildListFormat, CurrentLetterPosition) - 1;
             if(CurrentNodeIndex < WTEOBL_Transition) {
                 CurrentHashMarker -= TheShort_WTEOBL_Array[CurrentNodeIndex];
-                CurrentNodeIndex += ListFormatPopCount(CurrentChildListFormat, CurrentLetterPosition);
+                CurrentNodeIndex += popCount;
                 CurrentHashMarker += TheShort_WTEOBL_Array[CurrentNodeIndex];
             } else { // Use "TheUnsignedChar_WTEOBL_Array".
                 CurrentHashMarker -= TheUnsignedChar_WTEOBL_Array[CurrentNodeIndex - WTEOBL_Transition];
-                CurrentNodeIndex += ListFormatPopCount(CurrentChildListFormat, CurrentLetterPosition);
+                CurrentNodeIndex += popCount;
                 CurrentHashMarker += TheUnsignedChar_WTEOBL_Array[CurrentNodeIndex - WTEOBL_Transition];
             }
             if(TheNodeArray[CurrentNodeIndex] & EOW_FLAG) {
@@ -98,7 +103,10 @@ int SingleWordHashFunction(char *TheCandidate, size_t CandidateLength) {
             }
         }
     }
-    return (TheNodeArray[CurrentNodeIndex] & EOW_FLAG) * (TheRoot_WTEOBL_Array[1] - CurrentHashMarker);
+    if(TheNodeArray[CurrentNodeIndex] & EOW_FLAG) {
+        return TheRoot_WTEOBL_Array[1] - CurrentHashMarker;
+    }
+    return 0;
 }
 
 // List output variables.
@@ -121,6 +129,7 @@ void Print_CWG_Word_ListRecurse(int ThisIndex, int FillThisPlace, char ThisLette
         //fprintf(WordDump, "[%6d]-|%15s| - %6d (%d)\n", HashCheck, WorkingWord, (shortList?TheShort_WTEOBL_Array[TheChildIndex]:TheUnsignedChar_WTEOBL_Array[TheChildIndex - WTEOBL_Transition]), shortList);
         assert(HashCheck == ++LastPosition);
         assert(HashCheck == SingleWordHashFunction(WorkingWord, strlen(WorkingWord)));
+        assert(SingleWordSearchboolean(WorkingWord, strlen(WorkingWord)));
     }
     if(TheChildIndex) {
         int TheChildListFormatIndex = (node & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT;

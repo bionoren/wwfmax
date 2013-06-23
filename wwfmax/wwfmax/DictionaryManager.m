@@ -24,18 +24,24 @@ static int WTEOBL_Transition;
 
 // Use the first two CWG arrays to return a boolean value indicating if "TheCandidate" word is in the lexicon.
 bool isValidWord(const char *TheCandidate, int CandidateLength) {
-    int CurrentLetterPosition = TheCandidate[0] - 'a';
-    int CurrentNodeIndex = CurrentLetterPosition + 1;
-    for(int X = 1; X < CandidateLength; X++) {
-        if(!(nodeArray[CurrentNodeIndex] & CHILD_MASK)) {
+    int CurrentNodeIndex = TheCandidate[0] - 'a' + 1;
+    for(int i = 1; i < CandidateLength; i++) {
+        int node = nodeArray[CurrentNodeIndex];
+        if(!(node & CHILD_MASK)) {
             return false;
         }
-        int CurrentChildListFormat = listFormatArray[(nodeArray[CurrentNodeIndex] & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT];
-        CurrentLetterPosition = TheCandidate[X] - 'a';
+
+        int TheChildListFormatIndex = (node & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT;
+        bool extendedList = TheChildListFormatIndex & PowersOfTwo[12];
+        TheChildListFormatIndex -= extendedList * PowersOfTwo[12];
+        int CurrentChildListFormat = listFormatArray[TheChildListFormatIndex];
+        CurrentChildListFormat += extendedList << (CurrentChildListFormat >> NUMBER_OF_ENGLISH_LETTERS);
+
+        int CurrentLetterPosition = TheCandidate[i] - 'a';
         if(!(CurrentChildListFormat & PowersOfTwo[CurrentLetterPosition])) {
             return false;
         } else {
-            CurrentNodeIndex = (nodeArray[CurrentNodeIndex] & CHILD_MASK) + ListFormatPopCount(CurrentChildListFormat, CurrentLetterPosition);
+            CurrentNodeIndex = (node & CHILD_MASK) + ListFormatPopCount(CurrentChildListFormat, CurrentLetterPosition) - 1;
         }
     }
     return nodeArray[CurrentNodeIndex] & EOW_FLAG;
@@ -64,14 +70,15 @@ int hashWord(const char *TheCandidate, const int CandidateLength) {
             return 0;
         } else {
             CurrentNodeIndex = node & CHILD_MASK;
+            int popCount = ListFormatPopCount(CurrentChildListFormat, CurrentLetterPosition) - 1;
             // Use "TheShort_WTEOBL_Array".
             if(CurrentNodeIndex < WTEOBL_Transition) {
                 CurrentHashMarker -= short_WTEOBL_Array[CurrentNodeIndex];
-                CurrentNodeIndex += ListFormatPopCount(CurrentChildListFormat, CurrentLetterPosition);
+                CurrentNodeIndex += popCount;
                 CurrentHashMarker += short_WTEOBL_Array[CurrentNodeIndex];
             } else { // Use "TheUnsignedChar_WTEOBL_Array".
                 CurrentHashMarker -= unsignedChar_WTEOBL_Array[CurrentNodeIndex - WTEOBL_Transition];
-                CurrentNodeIndex += ListFormatPopCount(CurrentChildListFormat, CurrentLetterPosition);
+                CurrentNodeIndex += popCount;
                 CurrentHashMarker += unsignedChar_WTEOBL_Array[CurrentNodeIndex - WTEOBL_Transition];
             }
             if(nodeArray[CurrentNodeIndex] & EOW_FLAG) {
@@ -79,7 +86,10 @@ int hashWord(const char *TheCandidate, const int CandidateLength) {
             }
         }
     }
-    return (nodeArray[CurrentNodeIndex] & EOW_FLAG) * (root_WTEOBL_Array[1] - CurrentHashMarker);
+    if(nodeArray[CurrentNodeIndex] & EOW_FLAG) {
+        return root_WTEOBL_Array[1] - CurrentHashMarker;
+    }
+    return 0;
 }
 
 static NSObject *syncObject;
@@ -177,6 +187,7 @@ int nextWord(char *outWord) {
     }
 #if HASH_DEBUG
     assert(hashWord(outWord, length) == ++lastHash);
+    assert(isValidWord(outWord, length));
 #endif
     return length;
 }
@@ -217,7 +228,6 @@ void createDictManager() {
     // Read the 5 arrays into memory.
     fread(nodeArray, sizeof(int), NodeArraySize, data);
     fread(listFormatArray, sizeof(int), ListFormatArraySize, data);
-    printf("list format array = %p\n", listFormatArray);
     fread(root_WTEOBL_Array, sizeof(int), Root_WTEOBL_ArraySize, data);
     fread(short_WTEOBL_Array, sizeof(short int), Short_WTEOBL_ArraySize, data);
     fread(unsignedChar_WTEOBL_Array, sizeof(unsigned char), UnsignedChar_WTEOBL_ArraySize, data);

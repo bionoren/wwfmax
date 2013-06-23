@@ -72,7 +72,9 @@ int main(int argc, const char * argv[]) {
         //createDataStructure(&info);
         free(words);
         free(wordLengths);
+#ifdef DEBUG
         debug();
+#endif
         
         createDictManager();
         

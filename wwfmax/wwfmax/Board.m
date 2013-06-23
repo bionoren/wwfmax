@@ -85,6 +85,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
     char word[15];
     int length;
     while((length = nextWord(word))) {
+        continue;
         @autoreleasepool {
             const int prescore = prescores[hashWord(word, length)];
 

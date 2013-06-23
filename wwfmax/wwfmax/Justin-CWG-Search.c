@@ -10,8 +10,8 @@
 #include "assert.h"
 #include "arraydawg.h"
 
-#define GRAPH_DATA "/Volumes/Users/Users/bion/Downloads/CWG_Data_For_Word-List.dat"
-#define OUT_LIST "/Volumes/Users/Users/bion/Downloads/Numbered-Word-List.txt"
+#define GRAPH_DATA "/Users/bion/Downloads/CWG_Data_For_Word-List.dat"
+#define OUT_LIST "/Users/bion/Downloads/Numbered-Word-List.txt"
 
 #define INPUT_BUFFER_SIZE 100
 #define ESCAPE_SEQUENCE "999"
@@ -71,7 +71,13 @@ int SingleWordHashFunction(char *TheCandidate, size_t CandidateLength) {
         if(!(TheNodeArray[CurrentNodeIndex] & CHILD_MASK)) {
             return 0;
         }
-        int CurrentChildListFormat = TheListFormatArray[(TheNodeArray[CurrentNodeIndex] & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT];
+
+        int TheChildListFormatIndex = (TheNodeArray[CurrentNodeIndex] & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT;
+        bool extendedList = TheChildListFormatIndex & PowersOfTwo[12];
+        TheChildListFormatIndex -= extendedList * PowersOfTwo[12];
+        int CurrentChildListFormat = TheListFormatArray[TheChildListFormatIndex];
+        CurrentChildListFormat += extendedList << (CurrentChildListFormat >> NUMBER_OF_ENGLISH_LETTERS);
+
         CurrentLetterPosition = TheCandidate[i] - 'a';
         if(!(CurrentChildListFormat & PowersOfTwo[CurrentLetterPosition])) {
             return 0;
@@ -114,6 +120,7 @@ void Print_CWG_Word_ListRecurse(int ThisIndex, int FillThisPlace, char ThisLette
         //fprintf(WordDump, "%d [color=blue, style=bold];\n", ThisIndex);
         //fprintf(WordDump, "[%6d]-|%15s| - %6d (%d)\n", HashCheck, WorkingWord, (shortList?TheShort_WTEOBL_Array[TheChildIndex]:TheUnsignedChar_WTEOBL_Array[TheChildIndex - WTEOBL_Transition]), shortList);
         assert(HashCheck == ++LastPosition);
+        assert(HashCheck == SingleWordHashFunction(WorkingWord, strlen(WorkingWord)));
     }
     if(TheChildIndex) {
         int TheChildListFormatIndex = (node & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT;
@@ -159,6 +166,7 @@ int debug() {
     
     // Read the CWG graph, from the "GRAPH_DATA" file, into the global arrays.
     FILE *Data = fopen(GRAPH_DATA, "rb");
+    assert(Data);
     
     // Read the array sizes.
     fread(&NodeArraySize, sizeof(int), 1, Data);

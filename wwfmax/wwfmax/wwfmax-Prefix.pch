@@ -6,6 +6,8 @@
     #import <Foundation/Foundation.h>
 #endif
 
+#define NUM_THREADS 1
+
 #define NUM_LETTERS_TURN 7
 #define BOARD_LENGTH 15
 #define LETTER_OFFSET_LC 97

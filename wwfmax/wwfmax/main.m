@@ -13,8 +13,6 @@
 #import "Justin-CWG-Search.h"
 #import "DictionaryManager.h"
 
-#define NUM_THREADS 1
-
 //anecdotally, ~2.5% of the shipped dictionary is unplayable, mostly because the words are too long for the board, but also because there aren't enough of the required letters and because some words can't be broken down into sufficiently small subwords
 
 int main(int argc, const char * argv[]) {

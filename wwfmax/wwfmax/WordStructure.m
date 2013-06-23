@@ -23,6 +23,7 @@
         char c = ret->_word[i];
         assert(c <= 'z');
         Letter l = HASH(i, c);
+        assert(l >= 16);
         ret->_letters[i] = l;
     }
     
@@ -60,6 +61,7 @@
                 char c = _word[i];
                 assert(c <= 'z');
                 Letter l = HASH(i, c);
+                assert(l >= 16);
                 _letters[_numLetters++] = l;
             } else {
                 return NO;

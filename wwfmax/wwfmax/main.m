@@ -85,6 +85,7 @@ int main(int argc, const char * argv[]) {
         while((length = nextWord(word))) {
             prescores[hashWord(word, length)] = prescoreWord(word, length);
         }
+        resetDictionary();
         
         __block Solution sol;
         sol.maxScore = 0;

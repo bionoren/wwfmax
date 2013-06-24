@@ -94,32 +94,35 @@ int hashWord(const char *TheCandidate, const int CandidateLength) {
 
 static NSObject *syncObject;
 
-#define HASH_DEBUG DEBUG && NUM_THREADS == 1
+#define HASH_DEBUG (defined DEBUG && (NUM_THREADS == 1))
 
 #if HASH_DEBUG
 static int lastHash = 0;
 #endif
 
+typedef struct dictStack {
+    //current node list. This will get you a node, which lets you go down a level.
+    int index; //index into the start of a child group in the nodeArray
+    int childLetterIndexOffset; //offset into the child group
+                                //from parent. This will get you a letter at this stack level (by updating childLetterIndexOffset)
+    char childLetterFormatOffset; //english letter offset into the child group (a=0 to z)
+    int childListFormat; //z-a bitstring (NOT index into the childLists table)
+} dictStack;
+
+static dictStack stack[BOARD_LENGTH] = {{.index = 1, .childLetterIndexOffset = 0, .childLetterFormatOffset = 0, .childListFormat = 0xFFFFFFFF}, {0}};
+
+//word we've currently built / are building
+static char tmpWord[BOARD_LENGTH] = {'\0'};
+//position in all of the above stacks
+static int stackDepth = 0;
+
 //cf. Justin-CWG-Search.c:104ff
 int nextWord(char *outWord) {
-    typedef struct dictStack {
-        //current node list. This will get you a node, which lets you go down a level.
-        int index; //index into the start of a child group in the nodeArray
-        int childLetterIndexOffset; //offset into the child group
-        //from parent. This will get you a letter at this stack level (by updating childLetterIndexOffset)
-        char childLetterFormatOffset; //english letter offset into the child group (a=0 to z)
-        int childListFormat; //z-a bitstring (NOT index into the childLists table)
-    } dictStack;
-    
-    static dictStack stack[BOARD_LENGTH] = {{.index = 1, .childLetterIndexOffset = 0, .childLetterFormatOffset = 0, .childListFormat = 0xFFFFFFFF}, {0}};
-    
-    //word we've currently built / are building
-    static char tmpWord[BOARD_LENGTH] = {'\0'};
-    //position in all of the above stacks
-    static int stackDepth = 0;
-
     int length = 0;
     @synchronized(syncObject) {
+        if(stackDepth < 0) {
+            return 0;
+        }
         //1. go down as far as you can
         //2. go up 1 AND over 1 - childLetterIndexOffset++ (via childLetterFormatOffset += from childListFormat)
         //3. goto 1
@@ -130,7 +133,6 @@ int nextWord(char *outWord) {
         //load state
         dictStack *item = &(stack[stackDepth]);
         int node = nodeArray[item->index + item->childLetterIndexOffset];
-        int childIndex = node & CHILD_MASK;
         
         //if there are unexplored children
         //else drop back until there are unexplored children
@@ -144,18 +146,6 @@ int nextWord(char *outWord) {
                 }
                 item = &(stack[--stackDepth]);
                 if(stackDepth < 0) {
-                    //this is the end, so reset
-#ifdef DEBUG
-                    printf("Reseting dictionary iterator...\n");
-#endif
-                    stack[0].index = 1;
-                    stack[0].childLetterIndexOffset = 0;
-                    stack[0].childLetterFormatOffset = 0;
-                    stack[0].childListFormat = 0xFFFFFFFF;
-                    stackDepth = 0;
-#if HASH_DEBUG
-                    lastHash = 0;
-#endif
                     return 0;
                 }
             }
@@ -166,7 +156,7 @@ int nextWord(char *outWord) {
         do {
             //get the node
             node = nodeArray[item->index + item->childLetterIndexOffset];
-            childIndex = node & CHILD_MASK;
+            int childIndex = node & CHILD_MASK;
 
             //store the letter and go down
             tmpWord[stackDepth++] = 'a' + item->childLetterFormatOffset;
@@ -208,9 +198,23 @@ int numWords() {
     return root_WTEOBL_Array[1];
 }
 
+void resetDictionary() {
+#ifdef DEBUG
+    printf("Reseting dictionary iterator...\n");
+#endif
+    stack[0].index = 1;
+    stack[0].childLetterIndexOffset = 0;
+    stack[0].childLetterFormatOffset = 0;
+    stack[0].childListFormat = 0xFFFFFFFF;
+    stackDepth = 0;
+#if HASH_DEBUG
+    lastHash = 0;
+#endif
+}
+
 void createDictManager() {
     syncObject = [[NSObject alloc] init];
-    
+
     // Array size variables.
     int NodeArraySize;
     int ListFormatArraySize;

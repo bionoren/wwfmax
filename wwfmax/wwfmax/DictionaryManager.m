@@ -31,10 +31,8 @@ bool isValidWord(const char *TheCandidate, int CandidateLength) {
             return false;
         }
 
-        int TheChildListFormatIndex = (node & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT;
-        bool extendedList = TheChildListFormatIndex & PowersOfTwo[12];
-        TheChildListFormatIndex -= extendedList * PowersOfTwo[12];
-        int CurrentChildListFormat = listFormatArray[TheChildListFormatIndex];
+        bool extendedList = node & EXTENDED_LIST_FLAG;
+        int CurrentChildListFormat = listFormatArray[(node & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT];
         CurrentChildListFormat += extendedList << (CurrentChildListFormat >> NUMBER_OF_ENGLISH_LETTERS);
 
         int CurrentLetterPosition = TheCandidate[i] - 'a';
@@ -59,10 +57,8 @@ int hashWord(const char *TheCandidate, const int CandidateLength) {
             return 0;
         }
 
-        int TheChildListFormatIndex = (node & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT;
-        bool extendedList = TheChildListFormatIndex & PowersOfTwo[12];
-        TheChildListFormatIndex -= extendedList * PowersOfTwo[12];
-        int CurrentChildListFormat = listFormatArray[TheChildListFormatIndex];
+        bool extendedList = node & EXTENDED_LIST_FLAG;
+        int CurrentChildListFormat = listFormatArray[(node & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT];
         CurrentChildListFormat += extendedList << (CurrentChildListFormat >> NUMBER_OF_ENGLISH_LETTERS);
 
         CurrentLetterPosition = TheCandidate[i] - 'a';
@@ -166,10 +162,8 @@ LOOP_END:;
         item->childLetterIndexOffset = 0;
         item->childLetterFormatOffset = 0;
 
-        int childListFormatIndex = (node & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT;
-        bool extendedList = childListFormatIndex & PowersOfTwo[12];
-        childListFormatIndex -= extendedList * PowersOfTwo[12];
-        int childListFormat = listFormatArray[childListFormatIndex];
+        bool extendedList = node & EXTENDED_LIST_FLAG;
+        int childListFormat = listFormatArray[(node & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT];
         childListFormat += extendedList << (childListFormat >> NUMBER_OF_ENGLISH_LETTERS);
         item->childListFormat = childListFormat;
 

@@ -50,10 +50,8 @@ bool SingleWordSearchboolean(char *TheCandidate, size_t CandidateLength) {
             return false;
         }
 
-        int TheChildListFormatIndex = (TheNodeArray[CurrentNodeIndex] & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT;
-        bool extendedList = TheChildListFormatIndex & PowersOfTwo[12];
-        TheChildListFormatIndex -= extendedList * PowersOfTwo[12];
-        int CurrentChildListFormat = TheListFormatArray[TheChildListFormatIndex];
+        bool extendedList = TheNodeArray[CurrentNodeIndex] & EXTENDED_LIST_FLAG;
+        int CurrentChildListFormat = TheListFormatArray[(TheNodeArray[CurrentNodeIndex] & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT];
         CurrentChildListFormat += extendedList << (CurrentChildListFormat >> NUMBER_OF_ENGLISH_LETTERS);
         
         int CurrentLetterPosition = TheCandidate[i] - 'a';
@@ -76,10 +74,8 @@ int SingleWordHashFunction(char *TheCandidate, size_t CandidateLength) {
             return 0;
         }
 
-        int TheChildListFormatIndex = (TheNodeArray[CurrentNodeIndex] & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT;
-        bool extendedList = TheChildListFormatIndex & PowersOfTwo[12];
-        TheChildListFormatIndex -= extendedList * PowersOfTwo[12];
-        int CurrentChildListFormat = TheListFormatArray[TheChildListFormatIndex];
+        bool extendedList = TheNodeArray[CurrentNodeIndex] & EXTENDED_LIST_FLAG;
+        int CurrentChildListFormat = TheListFormatArray[(TheNodeArray[CurrentNodeIndex] & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT];
         CurrentChildListFormat += extendedList << (CurrentChildListFormat >> NUMBER_OF_ENGLISH_LETTERS);
 
         int CurrentLetterPosition = TheCandidate[i] - 'a';
@@ -132,10 +128,8 @@ void Print_CWG_Word_ListRecurse(int ThisIndex, int FillThisPlace, char ThisLette
         assert(SingleWordSearchboolean(WorkingWord, strlen(WorkingWord)));
     }
     if(TheChildIndex) {
-        int TheChildListFormatIndex = (node & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT;
-        bool extendedList = TheChildListFormatIndex & PowersOfTwo[12];
-        TheChildListFormatIndex -= extendedList * PowersOfTwo[12];
-        int TheChildListFormat = TheListFormatArray[TheChildListFormatIndex];
+        bool extendedList = node & EXTENDED_LIST_FLAG;
+        int TheChildListFormat = TheListFormatArray[(node & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT];
         TheChildListFormat += extendedList << (TheChildListFormat >> NUMBER_OF_ENGLISH_LETTERS);
         
         const bool shortList = TheChildIndex < WTEOBL_Transition;

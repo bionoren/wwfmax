@@ -38,7 +38,7 @@ int TraverseTheDawgArrayRecurse(int *TheDawg, int *ListFormats, int *OnIt, int C
         WhatsBelowMe++;
     }
     if((CurrentChild = (TheDawg[CurrentIndex] & CHILD_MASK))) {
-        int ChildListFormat = ListFormats[(TheDawg[CurrentIndex] & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT];
+        int ChildListFormat = ListFormats[(TheDawg[CurrentIndex] & INTERNAL_LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT];
         for(char i = 0; i < NUMBER_OF_ENGLISH_LETTERS; i++) {
             // Verify if the i'th letter exists in the Child-List.
             if(ChildListFormat & PowersOfTwo[i]) {
@@ -68,7 +68,7 @@ int TraverseTheDawgArrayRecurseFinal(int *TheDawg, int *ListFormats, int *OnIt, 
     int CurrentChild;
     if((CurrentChild = (TheDawg[CurrentIndex] & CHILD_MASK))) {
         CurrentChild--;
-        int listIndex = (TheDawg[CurrentIndex] & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT;
+        int listIndex = (TheDawg[CurrentIndex] & INTERNAL_LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT;
         bool extendedList = listIndex & PowersOfTwo[12];
         listIndex -= extendedList * PowersOfTwo[12];
         int ChildListFormat = ListFormats[listIndex];
@@ -190,7 +190,7 @@ int createDataStructure(const WordInfo *info) {
     printf("  %s - CHILD_MASK\n", Something);
     
     ConvertIntNodeToBinaryString(LIST_FORMAT_INDEX_MASK, Something);
-    printf("  %s - LIST_FORMAT_INDEX_MASK\n", Something);
+    printf("  %s - INTERNAL_LIST_FORMAT_INDEX_MASK\n", Something);
     
     printf("\nStep 19 - Traverse the DawgArray to fill the NumberOfWordsBelowMe array.\n");
     
@@ -620,8 +620,8 @@ int createDataStructure(const WordInfo *info) {
     //fix the node links
     for(int i = 1; i <= CurrentNumberOfPartOneNodes; i++) {
         int node = PartOneArray[i];
-        int oldIndex = (node & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT;
-        node -= node & LIST_FORMAT_INDEX_MASK;
+        int oldIndex = (node & INTERNAL_LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT;
+        node -= node & INTERNAL_LIST_FORMAT_INDEX_MASK;
         int newIndex = indexMap[oldIndex].index | (indexMap[oldIndex].flag << 12);
         node += newIndex << LIST_FORMAT_BIT_SHIFT;
         PartOneArray[i] = node;
@@ -772,7 +772,7 @@ int createDataStructure(const WordInfo *info) {
             }
             zeroNodes = 0;
         }
-        fprintf(FinalProductDebug, "%6d  %s %6d (%6d)  %6d  %6d\n", i, TheNodeInBinary, PartOneArray[i] & CHILD_MASK, dist, (PartOneArray[i] & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT, wtebol);
+        fprintf(FinalProductDebug, "%6d  %s %6d (%6d)  %6d  %6d\n", i, TheNodeInBinary, PartOneArray[i] & CHILD_MASK, dist, (PartOneArray[i] & INTERNAL_LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT, wtebol);
         if(dist > 65536) {
             maxJump++;
         }

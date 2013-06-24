@@ -9,6 +9,8 @@
 #ifndef wwfmax_CWGLib_h
 #define wwfmax_CWGLib_h
 
+#include <stdbool.h>
+
 #define NUMBER_OF_ENGLISH_LETTERS 26
 #define INT_BITS 32
 #define LOWER_IT 32

@@ -11,13 +11,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <math.h>
+#include "CWG-Creator.h"
 #include "CWGLib.h"
 #include "tnode.h"
 #include "dawg.h"
 #include "breadthqueue.h"
 #include "arraydawg.h"
 #include "assert.h"
-#include <math.h>
 
 // The complete "CWG" graph is stored here.
 #define CWG_DATA "/Users/bion/Downloads/CWG_Data_For_Word-List.dat"

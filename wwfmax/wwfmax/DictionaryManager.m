@@ -7,8 +7,10 @@
 //
 
 #import "DictionaryManager.h"
-
-#import "CWGLib.h"
+#import <string.h>
+#import <stdio.h>
+#import <stdlib.h>
+#import "assert.h"
 
 #define GRAPH_DATA "/Users/bion/Downloads/CWG_Data_For_Word-List.dat"
 

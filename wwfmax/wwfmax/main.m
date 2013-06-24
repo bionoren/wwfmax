@@ -78,16 +78,16 @@ int main(int argc, const char * argv[]) {
         debug();
 #endif
         
-        createDictManager();
+        DictionaryManager *mgr = createDictManager();
 
         int *prescores = malloc(numWords() * sizeof(int));
         assert(prescores);
         char word[BOARD_LENGTH];
         int length;
-        while((length = nextWord(word))) {
+        while((length = nextWord(mgr, word))) {
             prescores[hashWord(word, length)] = prescoreWord(word, length);
         }
-        resetDictionary();
+        resetManager(mgr);
         
         __block Solution sol;
         sol.maxScore = 0;
@@ -96,7 +96,7 @@ int main(int argc, const char * argv[]) {
         for(int i = 0; i < NUM_THREADS; ++i) {
             dispatch_group_async(dispatchGroup, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                 Board *board = [[Board alloc] init];
-                Solution temp = [board solve:prescores];
+                Solution temp = [board solve:prescores dictionary:mgr];
                 if([lock lockBeforeDate:[NSDate distantFuture]]) {
                     if(temp.maxScore > sol.maxScore) {
                         sol = temp;
@@ -108,7 +108,8 @@ int main(int argc, const char * argv[]) {
         
         dispatch_group_wait(dispatchGroup, DISPATCH_TIME_FOREVER);
         printSolution(sol);
-        
+
+        freeDictManager(mgr);
         destructDictManager();
         free(prescores);
     }

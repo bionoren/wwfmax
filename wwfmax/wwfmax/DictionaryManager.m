@@ -88,35 +88,11 @@ int hashWord(const char *TheCandidate, const int CandidateLength) {
     return 0;
 }
 
-#define HASH_DEBUG (defined DEBUG && (NUM_THREADS == 1))
-
-#if HASH_DEBUG
-static int lastHash = 0;
-#endif
-
-typedef struct dictStack {
-    //current node list. This will get you a node, which lets you go down a level.
-    int index; //index into the start of a child group in the nodeArray
-    char childLetterIndexOffset; //offset into the child group
-                                //from parent. This will get you a letter at this stack level (by updating childLetterIndexOffset)
-    char childLetterFormatOffset; //english letter offset into the child group (a=0 to z)
-    int childListFormat; //z-a bitstring (NOT index into the childLists table)
-} dictStack;
-
-static dictStack stack[BOARD_LENGTH] = {{.index = 1, .childLetterIndexOffset = 0, .childLetterFormatOffset = 0, .childListFormat = 0xFFFFFFFF}, {0}};
-
-//word we've currently built / are building
-static char tmpWord[BOARD_LENGTH] = {'\0'};
-//position in all of the above stacks
-static int stackDepth = 0;
-
-static OSSpinLock lock = OS_SPINLOCK_INIT;
-
-//cf. Justin-CWG-Search.c:104ff
-int nextWord(char *outWord) {
-    OSSpinLockLock(&lock);
-    if(stackDepth < 0) {
-        OSSpinLockUnlock(&lock);
+//cf. Justin-CWG-Search.c
+int nextWord(DictionaryManager *mgr, char *outWord) {
+    OSSpinLockLock(&mgr->lock);
+    if(mgr->stackDepth < 0) {
+        OSSpinLockUnlock(&mgr->lock);
         return 0;
     }
     //1. go down as far as you can
@@ -125,9 +101,9 @@ int nextWord(char *outWord) {
     //stop if you've gone up past 0
     //break if you hit EOW
 
-    assert(stackDepth >= 0 && stackDepth <= BOARD_LENGTH);
+    assert(mgr->stackDepth >= 0 && mgr->stackDepth <= BOARD_LENGTH);
     //load state
-    dictStack *item = &(stack[stackDepth]);
+    dictStack *item = &(mgr->stack[mgr->stackDepth]);
     
     //if there are unexplored children
     //else drop back until there are unexplored children
@@ -140,8 +116,8 @@ int nextWord(char *outWord) {
                 }
             }
             item--;
-        } while(--stackDepth >= 0);
-        OSSpinLockUnlock(&lock);
+        } while(--(mgr->stackDepth) >= 0);
+        OSSpinLockUnlock(&mgr->lock);
         return 0;
     }
 LOOP_END:;
@@ -153,8 +129,8 @@ LOOP_END:;
         node = nodeArray[item->index + item->childLetterIndexOffset];
 
         //store the letter and go down
-        tmpWord[stackDepth++] = 'a' + item->childLetterFormatOffset;
-        assert(stackDepth <= BOARD_LENGTH);
+        mgr->tmpWord[(mgr->stackDepth)++] = 'a' + item->childLetterFormatOffset;
+        assert(mgr->stackDepth <= BOARD_LENGTH);
 
         //setup the next node
         item++;
@@ -171,16 +147,16 @@ LOOP_END:;
         for(; item->childLetterFormatOffset < NUMBER_OF_ENGLISH_LETTERS && !(item->childListFormat & PowersOfTwo[item->childLetterFormatOffset]); item->childLetterFormatOffset++);
     } while(!(node & EOW_FLAG));
     
-    assert(stackDepth > 1 && stackDepth <= BOARD_LENGTH);
-    strncpy(outWord, tmpWord, stackDepth);
+    assert(mgr->stackDepth > 1 && mgr->stackDepth <= BOARD_LENGTH);
+    strncpy(outWord, mgr->tmpWord, mgr->stackDepth);
     //NSLog(@"Evaluating %.*s", length, tmpWord);
 
 #if HASH_DEBUG
-    assert(hashWord(outWord, stackDepth) == ++lastHash);
-    assert(isValidWord(outWord, stackDepth));
+    assert(hashWord(outWord, mgr->stackDepth) == ++(mgr->lastHash));
+    assert(isValidWord(outWord, mgr->stackDepth));
 #endif
-    int ret = stackDepth;
-    OSSpinLockUnlock(&lock);
+    int ret = mgr->stackDepth;
+    OSSpinLockUnlock(&mgr->lock);
     return ret;
 }
 
@@ -188,62 +164,74 @@ int numWords() {
     return root_WTEOBL_Array[1];
 }
 
-void resetDictionary() {
+void resetManager(DictionaryManager *mgr) {
 #ifdef DEBUG
     printf("Reseting dictionary iterator...\n");
 #endif
-    stack[0].index = 1;
-    stack[0].childLetterIndexOffset = 0;
-    stack[0].childLetterFormatOffset = 0;
-    stack[0].childListFormat = 0xFFFFFFFF;
-    stackDepth = 0;
+    mgr->stack[0].index = 1;
+    mgr->stack[0].childLetterIndexOffset = 0;
+    mgr->stack[0].childLetterFormatOffset = 0;
+    mgr->stack[0].childListFormat = 0xFFFFFFFF;
+    mgr->stackDepth = 0;
 #if HASH_DEBUG
-    lastHash = 0;
+    mgr->lastHash = 0;
 #endif
 }
 
-void createDictManager() {
-    // Array size variables.
-    int NodeArraySize;
-    int ListFormatArraySize;
-    int Root_WTEOBL_ArraySize;
-    int Short_WTEOBL_ArraySize;
-    int UnsignedChar_WTEOBL_ArraySize;
-    
-    // Read the CWG graph, from the "GRAPH_DATA" file, into the global arrays.
-    FILE *data = fopen(GRAPH_DATA, "rb");
-    assert(data);
-    
-    // Read the array sizes.
-    fread(&NodeArraySize, sizeof(int), 1, data);
-    assert(NodeArraySize > 0);
-    fread(&ListFormatArraySize, sizeof(int), 1, data);
-    assert(ListFormatArraySize > 0);
-    fread(&Root_WTEOBL_ArraySize, sizeof(int), 1, data);
-    assert(Root_WTEOBL_ArraySize > 0);
-    fread(&Short_WTEOBL_ArraySize, sizeof(int), 1, data);
-    assert(Short_WTEOBL_ArraySize > 0);
-    fread(&UnsignedChar_WTEOBL_ArraySize, sizeof(int), 1, data);
-    assert(UnsignedChar_WTEOBL_ArraySize > 0);
-    
-    // Allocate memory to hold the arrays.
-    nodeArray = (int *)malloc(NodeArraySize*sizeof(int));
-    listFormatArray = (int *)malloc(ListFormatArraySize*sizeof(int));
-    root_WTEOBL_Array = (int *)malloc(Root_WTEOBL_ArraySize*sizeof(int));
-    short_WTEOBL_Array = (short int *)malloc(Short_WTEOBL_ArraySize*sizeof(short int));
-    unsignedChar_WTEOBL_Array = (unsigned char *)malloc(UnsignedChar_WTEOBL_ArraySize*sizeof(unsigned char));
-    
-    // Read the 5 arrays into memory.
-    fread(nodeArray, sizeof(int), NodeArraySize, data);
-    fread(listFormatArray, sizeof(int), ListFormatArraySize, data);
-    fread(root_WTEOBL_Array, sizeof(int), Root_WTEOBL_ArraySize, data);
-    fread(short_WTEOBL_Array, sizeof(short int), Short_WTEOBL_ArraySize, data);
-    fread(unsignedChar_WTEOBL_Array, sizeof(unsigned char), UnsignedChar_WTEOBL_ArraySize, data);
-    
-    fclose(data);
-    
-    // Make the proper assignments and adjustments to use the CWG.
-    WTEOBL_Transition = Short_WTEOBL_ArraySize;
+DictionaryManager *createDictManager() {
+    if(!nodeArray) {
+        // Array size variables.
+        int NodeArraySize;
+        int ListFormatArraySize;
+        int Root_WTEOBL_ArraySize;
+        int Short_WTEOBL_ArraySize;
+        int UnsignedChar_WTEOBL_ArraySize;
+        
+        // Read the CWG graph, from the "GRAPH_DATA" file, into the global arrays.
+        FILE *data = fopen(GRAPH_DATA, "rb");
+        assert(data);
+        
+        // Read the array sizes.
+        fread(&NodeArraySize, sizeof(int), 1, data);
+        assert(NodeArraySize > 0);
+        fread(&ListFormatArraySize, sizeof(int), 1, data);
+        assert(ListFormatArraySize > 0);
+        fread(&Root_WTEOBL_ArraySize, sizeof(int), 1, data);
+        assert(Root_WTEOBL_ArraySize > 0);
+        fread(&Short_WTEOBL_ArraySize, sizeof(int), 1, data);
+        assert(Short_WTEOBL_ArraySize > 0);
+        fread(&UnsignedChar_WTEOBL_ArraySize, sizeof(int), 1, data);
+        assert(UnsignedChar_WTEOBL_ArraySize > 0);
+        
+        // Allocate memory to hold the arrays.
+        nodeArray = (int *)malloc(NodeArraySize*sizeof(int));
+        listFormatArray = (int *)malloc(ListFormatArraySize*sizeof(int));
+        root_WTEOBL_Array = (int *)malloc(Root_WTEOBL_ArraySize*sizeof(int));
+        short_WTEOBL_Array = (short int *)malloc(Short_WTEOBL_ArraySize*sizeof(short int));
+        unsignedChar_WTEOBL_Array = (unsigned char *)malloc(UnsignedChar_WTEOBL_ArraySize*sizeof(unsigned char));
+        
+        // Read the 5 arrays into memory.
+        fread(nodeArray, sizeof(int), NodeArraySize, data);
+        fread(listFormatArray, sizeof(int), ListFormatArraySize, data);
+        fread(root_WTEOBL_Array, sizeof(int), Root_WTEOBL_ArraySize, data);
+        fread(short_WTEOBL_Array, sizeof(short int), Short_WTEOBL_ArraySize, data);
+        fread(unsignedChar_WTEOBL_Array, sizeof(unsigned char), UnsignedChar_WTEOBL_ArraySize, data);
+        
+        fclose(data);
+        
+        // Make the proper assignments and adjustments to use the CWG.
+        WTEOBL_Transition = Short_WTEOBL_ArraySize;
+    }
+
+    DictionaryManager *ret = malloc(sizeof(DictionaryManager));
+    resetManager(ret);
+    ret->lock = OS_SPINLOCK_INIT;
+
+    return ret;
+}
+
+void freeDictManager(DictionaryManager *mgr) {
+    free(mgr);
 }
 
 void destructDictManager() {

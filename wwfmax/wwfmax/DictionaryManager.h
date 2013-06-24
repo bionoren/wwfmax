@@ -8,11 +8,35 @@
 
 #import <Foundation/Foundation.h>
 
+#define HASH_DEBUG (defined DEBUG && (NUM_THREADS == 1))
+
+typedef struct dictStack {
+    //current node list. This will get you a node, which lets you go down a level.
+    int index; //index into the start of a child group in the nodeArray
+    char childLetterIndexOffset; //offset into the child group
+                                 //from parent. This will get you a letter at this stack level (by updating childLetterIndexOffset)
+    char childLetterFormatOffset; //english letter offset into the child group (a=0 to z)
+    int childListFormat; //z-a bitstring (NOT index into the childLists table)
+} dictStack;
+
+typedef struct DictionaryManager {
+    dictStack stack[BOARD_LENGTH + 1];
+    //word we've currently built / are building
+    char tmpWord[BOARD_LENGTH];
+    //position in all of the above stacks
+    int stackDepth;
+    OSSpinLock lock;
+#if HASH_DEBUG
+    int lastHash;
+#endif
+} DictionaryManager;
+
 bool isValidWord(const char *TheCandidate, int CandidateLength);
 int hashWord(const char *TheCandidate, const int CandidateLength);
-int nextWord(char *outWord);
+int nextWord(DictionaryManager *mgr, char *outWord);
 int numWords();
-void resetDictionary();
+void resetManager(DictionaryManager *mgr);
 
-void createDictManager();
+DictionaryManager *createDictManager();
+void freeDictManager(DictionaryManager *mgr);
 void destructDictManager();

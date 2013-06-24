@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "DictionaryManager.h"
 
 typedef struct {
     NSUInteger maxScore;
@@ -21,7 +22,7 @@ typedef struct {
 
 @interface Board : NSObject
 
--(Solution)solve:(const int*)prescores;
+-(Solution)solve:(const int*)prescores dictionary:(DictionaryManager*)mgr;
 +(NSString*)debugBoard:(char*)board;
 
 @end

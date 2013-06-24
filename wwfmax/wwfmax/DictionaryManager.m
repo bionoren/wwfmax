@@ -8,6 +8,7 @@
 
 #import "DictionaryManager.h"
 
+#import <pthread.h>
 #import "CWGLib.h"
 
 #define GRAPH_DATA "/Users/bion/Downloads/CWG_Data_For_Word-List.dat"
@@ -92,8 +93,6 @@ int hashWord(const char *TheCandidate, const int CandidateLength) {
     return 0;
 }
 
-static NSObject *syncObject;
-
 #define HASH_DEBUG (defined DEBUG && (NUM_THREADS == 1))
 
 #if HASH_DEBUG
@@ -103,7 +102,7 @@ static int lastHash = 0;
 typedef struct dictStack {
     //current node list. This will get you a node, which lets you go down a level.
     int index; //index into the start of a child group in the nodeArray
-    int childLetterIndexOffset; //offset into the child group
+    char childLetterIndexOffset; //offset into the child group
                                 //from parent. This will get you a letter at this stack level (by updating childLetterIndexOffset)
     char childLetterFormatOffset; //english letter offset into the child group (a=0 to z)
     int childListFormat; //z-a bitstring (NOT index into the childLists table)
@@ -116,82 +115,80 @@ static char tmpWord[BOARD_LENGTH] = {'\0'};
 //position in all of the above stacks
 static int stackDepth = 0;
 
+static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+
 //cf. Justin-CWG-Search.c:104ff
 int nextWord(char *outWord) {
-    int length = 0;
-    @synchronized(syncObject) {
-        if(stackDepth < 0) {
-            return 0;
-        }
-        //1. go down as far as you can
-        //2. go up 1 AND over 1 - childLetterIndexOffset++ (via childLetterFormatOffset += from childListFormat)
-        //3. goto 1
-        //stop if you've gone up past 0
-        //break if you hit EOW
-
-        assert(stackDepth >= 0 && stackDepth <= BOARD_LENGTH);
-        //load state
-        dictStack *item = &(stack[stackDepth]);
-        int node = nodeArray[item->index + item->childLetterIndexOffset];
-        
-        //if there are unexplored children
-        //else drop back until there are unexplored children
-        if(!node) {
-            while(true) {
-                for(item->childLetterFormatOffset++; item->childLetterFormatOffset < NUMBER_OF_ENGLISH_LETTERS; item->childLetterFormatOffset++) {
-                    if(item->childListFormat & PowersOfTwo[item->childLetterFormatOffset]) {
-                        ++item->childLetterIndexOffset;
-                        goto LOOP_END;
-                    }
-                }
-                item = &(stack[--stackDepth]);
-                if(stackDepth < 0) {
-                    return 0;
-                }
-            }
-        }
-    LOOP_END:
-        
-        //and explore them
-        do {
-            //get the node
-            node = nodeArray[item->index + item->childLetterIndexOffset];
-            int childIndex = node & CHILD_MASK;
-
-            //store the letter and go down
-            tmpWord[stackDepth++] = 'a' + item->childLetterFormatOffset;
-            assert(stackDepth <= BOARD_LENGTH);
-
-            //setup the next node
-            item = &(stack[stackDepth]);
-            item->index = childIndex;
-            item->childLetterIndexOffset = 0;
-            item->childLetterFormatOffset = 0;
-            int childListFormatIndex = (node & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT;
-            bool extendedList = childListFormatIndex & PowersOfTwo[12];
-            childListFormatIndex -= extendedList * PowersOfTwo[12];
-            int childListFormat = listFormatArray[childListFormatIndex];
-            childListFormat += extendedList << (childListFormat >> NUMBER_OF_ENGLISH_LETTERS);
-            item->childListFormat = childListFormat;
-
-            //seek to the first letter in the list
-            for(; item->childLetterFormatOffset < NUMBER_OF_ENGLISH_LETTERS; item->childLetterFormatOffset++) {
-                if(item->childListFormat & PowersOfTwo[item->childLetterFormatOffset]) {
-                    break;
-                }
-            }
-        } while(!(node & EOW_FLAG));
-        
-        length = stackDepth;
-        assert(length > 1 && length <= BOARD_LENGTH);
-        strncpy(outWord, tmpWord, length);
-        //NSLog(@"Evaluating %.*s", length, tmpWord);
+    pthread_mutex_lock(&lock);
+    if(stackDepth < 0) {
+        pthread_mutex_unlock(&lock);
+        return 0;
     }
+    //1. go down as far as you can
+    //2. go up 1 AND over 1 - childLetterIndexOffset++ (via childLetterFormatOffset += from childListFormat)
+    //3. goto 1
+    //stop if you've gone up past 0
+    //break if you hit EOW
+
+    assert(stackDepth >= 0 && stackDepth <= BOARD_LENGTH);
+    //load state
+    dictStack *item = &(stack[stackDepth]);
+    
+    //if there are unexplored children
+    //else drop back until there are unexplored children
+    if(item->index == 0) {
+        do {
+            for(item->childLetterFormatOffset++; item->childLetterFormatOffset < NUMBER_OF_ENGLISH_LETTERS; item->childLetterFormatOffset++) {
+                if(item->childListFormat & PowersOfTwo[item->childLetterFormatOffset]) {
+                    ++item->childLetterIndexOffset;
+                    goto LOOP_END;
+                }
+            }
+            item--;
+        } while(--stackDepth >= 0);
+        pthread_mutex_unlock(&lock);
+        return 0;
+    }
+LOOP_END:;
+    
+    //and explore them
+    int node;
+    do {
+        //get the node
+        node = nodeArray[item->index + item->childLetterIndexOffset];
+
+        //store the letter and go down
+        tmpWord[stackDepth++] = 'a' + item->childLetterFormatOffset;
+        assert(stackDepth <= BOARD_LENGTH);
+
+        //setup the next node
+        item++;
+        item->index = node & CHILD_MASK;
+        item->childLetterIndexOffset = 0;
+        item->childLetterFormatOffset = 0;
+
+        int childListFormatIndex = (node & LIST_FORMAT_INDEX_MASK) >> LIST_FORMAT_BIT_SHIFT;
+        bool extendedList = childListFormatIndex & PowersOfTwo[12];
+        childListFormatIndex -= extendedList * PowersOfTwo[12];
+        int childListFormat = listFormatArray[childListFormatIndex];
+        childListFormat += extendedList << (childListFormat >> NUMBER_OF_ENGLISH_LETTERS);
+        item->childListFormat = childListFormat;
+
+        //seek to the first letter in the list
+        for(; item->childLetterFormatOffset < NUMBER_OF_ENGLISH_LETTERS && !(item->childListFormat & PowersOfTwo[item->childLetterFormatOffset]); item->childLetterFormatOffset++);
+    } while(!(node & EOW_FLAG));
+    
+    assert(stackDepth > 1 && stackDepth <= BOARD_LENGTH);
+    strncpy(outWord, tmpWord, stackDepth);
+    //NSLog(@"Evaluating %.*s", length, tmpWord);
+
 #if HASH_DEBUG
-    assert(hashWord(outWord, length) == ++lastHash);
-    assert(isValidWord(outWord, length));
+    assert(hashWord(outWord, stackDepth) == ++lastHash);
+    assert(isValidWord(outWord, stackDepth));
 #endif
-    return length;
+    int ret = stackDepth;
+    pthread_mutex_unlock(&lock);
+    return ret;
 }
 
 int numWords() {
@@ -213,8 +210,6 @@ void resetDictionary() {
 }
 
 void createDictManager() {
-    syncObject = [[NSObject alloc] init];
-
     // Array size variables.
     int NodeArraySize;
     int ListFormatArraySize;
@@ -264,4 +259,5 @@ void destructDictManager() {
     free(root_WTEOBL_Array);
     free(short_WTEOBL_Array);
     free(unsignedChar_WTEOBL_Array);
+    pthread_mutex_destroy(&lock);
 }

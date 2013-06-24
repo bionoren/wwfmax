@@ -67,24 +67,24 @@ int valuel(char letter) {
 
 int scoreSquarePrescoredHash(char letter, int hash) {
     switch(hash) {
-        case 6: 	    //0,6
-        case 8: 	    //0,8
-        case 51:	    //3,3
-        case 59:	    //3,11
-        case 85:	    //5,5
-        case 89:	    //5,9
-        case 96:	    //6,0
+        case 6: 	//0,6
+        case 8: 	//0,8
+        case 51:	//3,3
+        case 59:	//3,11
+        case 85:	//5,5
+        case 89:	//5,9
+        case 96:	//6,0
         case 110:	//6,14
             return valuel(letter)*2;
-        case 18:	    //1,2
-        case 28:	    //1,12
-        case 33:	    //2,1
-        case 36:	    //2,4
-        case 42:	    //2,10
-        case 45:	    //2,13
-        case 66:	    //4,2
-        case 70:	    //4,6
-        case 72:	    //4,8
+        case 18:	//1,2
+        case 28:	//1,12
+        case 33:	//2,1
+        case 36:	//2,4
+        case 42:	//2,10
+        case 45:	//2,13
+        case 66:	//4,2
+        case 70:	//4,6
+        case 72:	//4,8
         case 76:    //4,12
         case 100:	//6,4
         case 106:	//6,10
@@ -101,24 +101,24 @@ int scoreSquarePrescored(char letter, int x, int y) {
 int scoreSquareHash(char letter, int hash) {
     int ret = valuel(letter);
     switch(hash) {
-        case 6: 	    //0,6
-        case 8: 	    //0,8
-        case 51:	    //3,3
-        case 59:	    //3,11
-        case 85:	    //5,5
-        case 89:	    //5,9
-        case 96:	    //6,0
+        case 6:     //0,6
+        case 8: 	//0,8
+        case 51:	//3,3
+        case 59:	//3,11
+        case 85:	//5,5
+        case 89:	//5,9
+        case 96:	//6,0
         case 110:	//6,14
             return ret*3;
-        case 18:	    //1,2
-        case 28:	    //1,12
-        case 33:	    //2,1
-        case 36:	    //2,4
-        case 42:	    //2,10
-        case 45:	    //2,13
-        case 66:	    //4,2
-        case 70:	    //4,6
-        case 72:	    //4,8
+        case 18:	//1,2
+        case 28:	//1,12
+        case 33:	//2,1
+        case 36:	//2,4
+        case 42:	//2,10
+        case 45:	//2,13
+        case 66:	//4,2
+        case 70:	//4,6
+        case 72:	//4,8
         case 76:    //4,12
         case 100:	//6,4
         case 106:	//6,10
@@ -140,10 +140,10 @@ int wordMultiplierHash(int hash) {
         case 62:    //3,14
             return 3;
         case 21:    //1,5
-        case 25:	    //1,9
-        case 55:	    //1,7
-        case 81:	    //5,1
-        case 93:	    //5,13
+        case 25:	//1,9
+        case 55:	//1,7
+        case 81:	//5,1
+        case 93:	//5,13
         case 115:	//7,3
         case 123:	//7,11
             return 2;

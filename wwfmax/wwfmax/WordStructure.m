@@ -22,7 +22,7 @@
     for(int i = 0; i < ret->_length; i++) {
         char c = ret->_word[i];
         assert(c <= 'z');
-        Letter l = HASH(i, c);
+        Letter l = (typeof(Letter))HASH(i, c);
         assert(l >= 16);
         ret->_letters[i] = l;
     }
@@ -60,7 +60,7 @@
             if(letters-- > 0) {
                 char c = _word[i];
                 assert(c <= 'z');
-                Letter l = HASH(i, c);
+                Letter l = (typeof(Letter))HASH(i, c);
                 assert(l >= 16);
                 _letters[_numLetters++] = l;
             } else {

@@ -117,6 +117,9 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
                     int bonus = (wordStruct->_numLetters == NUM_LETTERS_TURN)?35:0;
                     
                     for(int y = 0; y < BOARD_LENGTH; ++y) {
+                        if(y % 2 == 1 || (y != 0 && y != 14)) { //high scoring plays will involve a word multiplier
+                            continue;
+                        }
                         for(int x = 0; x < BOARD_LENGTH - length; ++x) {
                             int wordScore = scoreLettersWithPrescore(prescore, wordStruct->_numLetters, chars, locs, x, y) + bonus;
                             
@@ -164,7 +167,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
         assert(index > 0);
         if(self.letters[index]-- > 0) {
         } else if(self.letters[0]-- > 0) {
-            letters[i] = HASH(X_FROM_HASH(l), index + LETTER_OFFSET_UC - 1);
+            letters[i] = (typeof(Letter))HASH(X_FROM_HASH(l), index + LETTER_OFFSET_UC - 1);
             assert(Y_FROM_HASH(letters[i]) >= 'A' && Y_FROM_HASH(letters[i]) <= 'Z');
         } else {
             ret = NO;

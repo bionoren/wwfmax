@@ -20,57 +20,59 @@
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
 #if BUILD_DATASTRUCTURES
-        assert(sizeof(short) >= 2);
-        assert(HASH(11, 3) == 59); //3,11
-        Letter hash = HASH(BOARD_LENGTH, 'z');
-        assert(X_FROM_HASH(hash) == BOARD_LENGTH);
-        assert((char)Y_FROM_HASH(hash) == 'z');
-        
-        NSLog(@"%@", [[[NSFileManager alloc] init] currentDirectoryPath]);
-        
-        int numWords = 173101;
-        char *words = calloc(numWords * BOARD_LENGTH, sizeof(char));
-        assert(words);
-        int *wordLengths = malloc(numWords * sizeof(int));
-        assert(wordLengths);
-        
-        FILE *wordFile = fopen("dict.txt", "r");
-        assert(wordFile);
-        char buffer[40];
-        int i = 0;
-        char *word = words;
-        while(fgets(buffer, 40, wordFile)) {
-            int len = (int)strlen(buffer);
-            if(buffer[len - 1] == '\n') {
-                --len;
-            }
-            if(len <= BOARD_LENGTH) {
-                strncpy(word, buffer, len);
-                wordLengths[i++] = len;
-                assert(i < numWords);
-                word += BOARD_LENGTH * sizeof(char);
-            }
-        }
-        numWords = i;
-        
-        NSLog(@"evaluating %d words", numWords);
-        
-        const WordInfo info = {.words = words, .numWords = numWords, .lengths = wordLengths, .prescores = prescores};
-        
-        for(int i = 0; i < numWords; i++) {
-            char *word = &(words[i * BOARD_LENGTH]);
-            const int length = wordLengths[i];
+        {
+            assert(sizeof(short) >= 2);
+            assert(HASH(11, 3) == 59); //3,11
+            Letter hash = HASH(BOARD_LENGTH, 'z');
+            assert(X_FROM_HASH(hash) == BOARD_LENGTH);
+            assert((char)Y_FROM_HASH(hash) == 'z');
             
-            if(!playable(word, length, &info)) {
-                words[i * BOARD_LENGTH] = 0;
-                wordLengths[i] = 0;
-                continue;
+            NSLog(@"%@", [[[NSFileManager alloc] init] currentDirectoryPath]);
+            
+            int numWords = 173101;
+            char *words = calloc(numWords * BOARD_LENGTH, sizeof(char));
+            assert(words);
+            int *wordLengths = malloc(numWords * sizeof(int));
+            assert(wordLengths);
+            
+            FILE *wordFile = fopen("dict.txt", "r");
+            assert(wordFile);
+            char buffer[40];
+            int i = 0;
+            char *word = words;
+            while(fgets(buffer, 40, wordFile)) {
+                int len = (int)strlen(buffer);
+                if(buffer[len - 1] == '\n') {
+                    --len;
+                }
+                if(len <= BOARD_LENGTH) {
+                    strncpy(word, buffer, len);
+                    wordLengths[i++] = len;
+                    assert(i < numWords);
+                    word += BOARD_LENGTH * sizeof(char);
+                }
             }
+            numWords = i;
+            
+            NSLog(@"evaluating %d words", numWords);
+            
+            const WordInfo info = {.words = words, .numWords = numWords, .lengths = wordLengths};
+            
+            for(int i = 0; i < numWords; i++) {
+                char *word = &(words[i * BOARD_LENGTH]);
+                const int length = wordLengths[i];
+                
+                if(!playable(word, length, &info)) {
+                    words[i * BOARD_LENGTH] = 0;
+                    wordLengths[i] = 0;
+                    continue;
+                }
+            }
+            
+            createDataStructure(&info);
+            free(words);
+            free(wordLengths);
         }
-        
-        createDataStructure(&info);
-        free(words);
-        free(wordLengths);
 #endif
 #ifdef DEBUG
         debug();

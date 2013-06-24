@@ -8,7 +8,6 @@
 
 #import "DictionaryManager.h"
 
-#import <pthread.h>
 #import "CWGLib.h"
 
 #define GRAPH_DATA "/Users/bion/Downloads/CWG_Data_For_Word-List.dat"
@@ -115,13 +114,13 @@ static char tmpWord[BOARD_LENGTH] = {'\0'};
 //position in all of the above stacks
 static int stackDepth = 0;
 
-static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+static OSSpinLock lock = OS_SPINLOCK_INIT;
 
 //cf. Justin-CWG-Search.c:104ff
 int nextWord(char *outWord) {
-    pthread_mutex_lock(&lock);
+    OSSpinLockLock(&lock);
     if(stackDepth < 0) {
-        pthread_mutex_unlock(&lock);
+        OSSpinLockUnlock(&lock);
         return 0;
     }
     //1. go down as far as you can
@@ -146,7 +145,7 @@ int nextWord(char *outWord) {
             }
             item--;
         } while(--stackDepth >= 0);
-        pthread_mutex_unlock(&lock);
+        OSSpinLockUnlock(&lock);
         return 0;
     }
 LOOP_END:;
@@ -187,7 +186,7 @@ LOOP_END:;
     assert(isValidWord(outWord, stackDepth));
 #endif
     int ret = stackDepth;
-    pthread_mutex_unlock(&lock);
+    OSSpinLockUnlock(&lock);
     return ret;
 }
 
@@ -259,5 +258,4 @@ void destructDictManager() {
     free(root_WTEOBL_Array);
     free(short_WTEOBL_Array);
     free(unsignedChar_WTEOBL_Array);
-    pthread_mutex_destroy(&lock);
 }

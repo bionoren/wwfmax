@@ -32,5 +32,4 @@ typedef struct {
     char *words;
     int numWords;
     int *lengths;
-    int *prescores;
 } WordInfo;

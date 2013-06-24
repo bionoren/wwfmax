@@ -82,7 +82,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
     ret.maxScore = 0;
     
     NSMutableSet *playableWords = [NSMutableSet set];
-    char word[15];
+    char word[BOARD_LENGTH];
     int length;
     while((length = nextWord(word))) {
         @autoreleasepool {

@@ -144,6 +144,18 @@ int nextWord(char *outWord) {
                 }
                 item = &(stack[--stackDepth]);
                 if(stackDepth < 0) {
+                    //this is the end, so reset
+#ifdef DEBUG
+                    printf("Reseting dictionary iterator...\n");
+#endif
+                    stack[0].index = 1;
+                    stack[0].childLetterIndexOffset = 0;
+                    stack[0].childLetterFormatOffset = 0;
+                    stack[0].childListFormat = 0xFFFFFFFF;
+                    stackDepth = 0;
+#if HASH_DEBUG
+                    lastHash = 0;
+#endif
                     return 0;
                 }
             }
@@ -190,6 +202,10 @@ int nextWord(char *outWord) {
     assert(isValidWord(outWord, length));
 #endif
     return length;
+}
+
+int numWords() {
+    return root_WTEOBL_Array[1];
 }
 
 void createDictManager() {

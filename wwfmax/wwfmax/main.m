@@ -6,6 +6,8 @@
 //  Copyright (c) 2012 Llama Software. All rights reserved.
 //
 
+#define BUILD_DATASTRUCTURES 0
+
 #import <Foundation/Foundation.h>
 #import "Board.h"
 #import "functions.h"
@@ -17,6 +19,7 @@
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
+#if BUILD_DATASTRUCTURES
         assert(sizeof(short) >= 2);
         assert(HASH(11, 3) == 59); //3,11
         Letter hash = HASH(BOARD_LENGTH, 'z');
@@ -30,8 +33,6 @@ int main(int argc, const char * argv[]) {
         assert(words);
         int *wordLengths = malloc(numWords * sizeof(int));
         assert(wordLengths);
-        int *prescores = malloc(numWords * sizeof(int));
-        assert(prescores);
         
         FILE *wordFile = fopen("dict.txt", "r");
         assert(wordFile);
@@ -65,18 +66,25 @@ int main(int argc, const char * argv[]) {
                 wordLengths[i] = 0;
                 continue;
             }
-            
-            prescores[i] = prescoreWord(word, length);
         }
         
-        //createDataStructure(&info);
+        createDataStructure(&info);
         free(words);
         free(wordLengths);
+#endif
 #ifdef DEBUG
         debug();
 #endif
         
         createDictManager();
+
+        int *prescores = malloc(numWords() * sizeof(int));
+        assert(prescores);
+        char word[BOARD_LENGTH];
+        int length;
+        while((length = nextWord(word))) {
+            prescores[hashWord(word, length)] = prescoreWord(word, length);
+        }
         
         __block Solution sol;
         sol.maxScore = 0;

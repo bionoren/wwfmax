@@ -3,8 +3,6 @@ This is a research project. I don't expect this to be useful for anyone, it simp
 
 Speaking of which, this problem is hard. Really hard. There's ongoing discussion amongst my friends on the tractability of this problem. I examine assembly output to verify optimizations I expect - That's the level I'm working at. Don't be surprised when you encounter obtuse code.
 
-Also, people looking for a working version should checkout bdc5680555d96c8949b48457fcd5d9223991fc2c (two commits back). I should have branched, but I didn't.
-
 ### Note on the Dictionary Structure
 I'm using the best data structure I could find - the Caroline Word Graph (blame [this guy](http://www.pathcom.com/~vadco/cwg.html "Title") for the name). Basically, small dictionaries mean less cache thrash which translates into less waiting and more processing. His implementation is broken though, so I fixed it and added some enhancements to further compact the datastructure. It was designed to be iterated recursively, so I'm currently writing a threadsafe iterator.
 

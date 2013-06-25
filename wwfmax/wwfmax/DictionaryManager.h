@@ -14,8 +14,6 @@
 typedef struct dictStack {
     //current node list. This will get you a node, which lets you go down a level.
     int index; //index into the start of a child group in the nodeArray
-    char childLetterIndexOffset; //offset into the child group
-                                 //from parent. This will get you a letter at this stack level (by updating childLetterIndexOffset)
     char childLetterFormatOffset; //english letter offset into the child group (a=0 to z)
     int childListFormat; //z-a bitstring (NOT index into the childLists table)
 } dictStack;

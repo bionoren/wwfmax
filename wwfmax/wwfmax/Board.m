@@ -79,11 +79,16 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
 -(Solution)solve:(const int*)prescores dictionary:(DictionaryManager*)mgr {
     Solution ret;
     ret.maxScore = 0;
-    
+
+    DictionaryManager *verticalMgr = createDictManager();
+    char vword[BOARD_LENGTH];
+    int vlength;
+
     NSMutableSet *playableWords = [NSMutableSet set];
     char word[BOARD_LENGTH];
     int length;
     while((length = nextWord(mgr, word))) {
+        NSLog(@"Evaluating %.*s\n", length, word);
         @autoreleasepool {
             const int prescore = prescores[hashWord(word, length)];
 
@@ -121,6 +126,11 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
                         }
                         for(int x = 0; x < BOARD_LENGTH - length; ++x) {
                             int wordScore = scoreLettersWithPrescore(prescore, wordStruct->_numLetters, chars, locs, x, y) + bonus;
+
+                            for(int j = 0; j < length; j++) {
+                                while((vlength = nextWord(verticalMgr, vword)));
+                                resetManager(verticalMgr);
+                            }
                             
                             if(wordScore > ret.maxScore) {
                                 ret.maxScore = wordScore;
@@ -150,7 +160,6 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
             }
             [playableWords removeAllObjects];
         }
-        //NSLog(@"%.2f%% complete...", i / (float)numWords * 100.0);
     }
     return ret;
 }
@@ -215,6 +224,9 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
     for(int y = 0; y < BOARD_LENGTH; y++) {
         for(int x = 0; x < BOARD_LENGTH; x++) {
             char c = board[BOARD_COORDINATE(x, y)];
+            if(x == BOARD_LENGTH / 2 && y == BOARD_LENGTH / 2 && c == '.') {
+                c = '*';
+            }
             [ret appendFormat:@"%c", c];
         }
         [ret appendString:@"\n"];

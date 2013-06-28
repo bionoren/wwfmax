@@ -10,7 +10,6 @@
 #include "assert.h"
 #include "arraydawg.h"
 
-#define GRAPH_DATA "/Users/bion/Downloads/CWG_Data_For_Word-List.dat"
 #define OUT_LIST "/Users/bion/Downloads/Numbered-Word-List.txt"
 
 #define INPUT_BUFFER_SIZE 100
@@ -159,7 +158,7 @@ void Print_CWG_Word_List() {
     fclose(WordDump);
 }
 
-int debug() {
+int debug(const char *dict) {
     // Array size variables.
     int NodeArraySize;
     int ListFormatArraySize;
@@ -168,7 +167,7 @@ int debug() {
     int UnsignedChar_WTEOBL_ArraySize;
     
     // Read the CWG graph, from the "GRAPH_DATA" file, into the global arrays.
-    FILE *Data = fopen(GRAPH_DATA, "rb");
+    FILE *Data = fopen(dict, "rb");
     assert(Data);
     
     // Read the array sizes.

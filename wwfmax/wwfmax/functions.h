@@ -10,6 +10,7 @@
 #define FUNCTIONS_WWFMAX
 
 #import "WordStructure.h"
+#import "DictionaryManager.h"
 
 #pragma mark - Debugging
 
@@ -39,7 +40,7 @@ int scoreLettersWithPrescore(const int prescore, const int length, char *chars, 
 
 BOOL validate(const char *word, const int length, const WordInfo *info);
 
-void subwordsAtLocation(NSMutableSet **ret, const char *word, const int length);
+void subwordsAtLocation(DictionaryIterator *itr, NSMutableSet **ret, char *word, const int length);
 
 BOOL playable(char *word, const int length, const WordInfo *info);
 

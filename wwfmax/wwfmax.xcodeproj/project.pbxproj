@@ -17,8 +17,8 @@
 		BE5C56E4164F4DDE009835FA /* arraydawg.c in Sources */ = {isa = PBXBuildFile; fileRef = BE5C56E3164F4DDE009835FA /* arraydawg.c */; };
 		BE77EAEB1646F70D00D3943D /* CWG-Creator.c in Sources */ = {isa = PBXBuildFile; fileRef = BE77EAE91646F70D00D3943D /* CWG-Creator.c */; };
 		BE77EAEC1646F70D00D3943D /* Justin-CWG-Search.c in Sources */ = {isa = PBXBuildFile; fileRef = BE77EAEA1646F70D00D3943D /* Justin-CWG-Search.c */; };
-		BE805866167549B80093BB19 /* DictionaryManager.m in Sources */ = {isa = PBXBuildFile; fileRef = BE805865167549B80093BB19 /* DictionaryManager.m */; };
 		BEC0171E161A2FD40078129A /* Board.m in Sources */ = {isa = PBXBuildFile; fileRef = BEC0171D161A2FD40078129A /* Board.m */; };
+		BEC44C62177DEA2700BF6D4F /* DictionaryManager.c in Sources */ = {isa = PBXBuildFile; fileRef = BEC44C61177DEA2700BF6D4F /* DictionaryManager.c */; };
 		BEFE74F71638F8C900FD191F /* functions.m in Sources */ = {isa = PBXBuildFile; fileRef = BEFE74F61638F8C900FD191F /* functions.m */; };
 /* End PBXBuildFile section */
 
@@ -56,11 +56,11 @@
 		BE77EAE91646F70D00D3943D /* CWG-Creator.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "CWG-Creator.c"; sourceTree = "<group>"; };
 		BE77EAEA1646F70D00D3943D /* Justin-CWG-Search.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "Justin-CWG-Search.c"; sourceTree = "<group>"; };
 		BE805864167549B80093BB19 /* DictionaryManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DictionaryManager.h; sourceTree = "<group>"; };
-		BE805865167549B80093BB19 /* DictionaryManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DictionaryManager.m; sourceTree = "<group>"; };
 		BEC0171C161A2FD40078129A /* Board.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Board.h; sourceTree = "<group>"; };
 		BEC0171D161A2FD40078129A /* Board.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Board.m; sourceTree = "<group>"; };
 		BEC01720161A36B60078129A /* dict.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = dict.txt; sourceTree = "<group>"; };
 		BEC01729161A40500078129A /* functions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = functions.h; sourceTree = "<group>"; };
+		BEC44C61177DEA2700BF6D4F /* DictionaryManager.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = DictionaryManager.c; sourceTree = "<group>"; };
 		BEFE74F61638F8C900FD191F /* functions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = functions.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -114,7 +114,7 @@
 				BE39047C161F986100A0A630 /* WordStructure.h */,
 				BE39047D161F986100A0A630 /* WordStructure.m */,
 				BE805864167549B80093BB19 /* DictionaryManager.h */,
-				BE805865167549B80093BB19 /* DictionaryManager.m */,
+				BEC44C61177DEA2700BF6D4F /* DictionaryManager.c */,
 			);
 			path = wwfmax;
 			sourceTree = "<group>";
@@ -211,7 +211,7 @@
 				BE5C56C3164F2DBB009835FA /* dawg.c in Sources */,
 				BE5C56C8164F2FFB009835FA /* breadthqueue.c in Sources */,
 				BE5C56E4164F4DDE009835FA /* arraydawg.c in Sources */,
-				BE805866167549B80093BB19 /* DictionaryManager.m in Sources */,
+				BEC44C62177DEA2700BF6D4F /* DictionaryManager.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -266,6 +266,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = "NDEBUG=1";
 				GCC_UNROLL_LOOPS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;

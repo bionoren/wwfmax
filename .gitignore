@@ -7,3 +7,4 @@ test
 *.txt
 CWG-Creator.c
 Justin-CWG-Search.c
+*.pyc

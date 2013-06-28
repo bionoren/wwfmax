@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "DictionaryManager.h"
 
 @interface WordStructure : NSObject {
     @public
@@ -21,6 +22,6 @@
 +(WordStructure*)wordAsLetters:(char*)word length:(const int)length;
 -(id)initWithWord:(char*)word length:(const int)length;
 
--(BOOL)validateSubwords:(Subword*)subwords length:(int)numSubwords;
+-(BOOL)validateSubwords:(Subword*)subwords length:(int)numSubwords iterator:(DictionaryIterator*)itr wordInfo:(const WordInfo*)info;
 
 @end

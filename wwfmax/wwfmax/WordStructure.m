@@ -8,7 +8,6 @@
 
 #import "WordStructure.h"
 #import "functions.h"
-#import "DictionaryManager.h"
 
 @interface WordStructure ()
 
@@ -46,7 +45,7 @@
     return self;
 }
 
--(BOOL)validateSubwords:(Subword*)subwords length:(int)numSubwords {
+-(BOOL)validateSubwords:(Subword*)subwords length:(int)numSubwords iterator:(DictionaryIterator*)itr wordInfo:(const WordInfo*)info {
     //validate and organize self.parts into an ordered breakdown of the word
     Subword next = subwords[0];
     int letters = NUM_LETTERS_TURN;
@@ -73,8 +72,12 @@
         Subword lastSubword = subwords[0];
         for(int i = 1; i < numSubwords; i++) {
             Subword s = subwords[i];
-            if(lastSubword.end == s.start && !isValidWord(&(self->_word[lastSubword.start]), s.end - lastSubword.start)) {
-                return NO;
+            if(lastSubword.end == s.start) {
+                if(itr && !isValidWord(itr, &(self->_word[lastSubword.start]), s.end - lastSubword.start)) {
+                    return NO;
+                } else if(validate(&(self->_word[lastSubword.start]), s.end - lastSubword.start, info)) {
+                    return NO;
+                }
             }
         }
         memcpy(_subwords, subwords, numSubwords * sizeof(Subword));

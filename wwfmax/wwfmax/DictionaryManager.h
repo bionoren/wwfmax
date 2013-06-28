@@ -6,8 +6,11 @@
 //  Copyright (c) 2012 Llama Software. All rights reserved.
 //
 
-#import "CWGLib.h"
+#ifndef DICTIONARY_MANAGER
+#define DICTIONARY_MANAGER
+
 #import <stdbool.h>
+#include <libkern/OSAtomic.h>
 
 #define HASH_DEBUG (defined DEBUG && (NUM_THREADS == 1))
 
@@ -19,6 +22,19 @@ typedef struct dictStack {
 } dictStack;
 
 typedef struct DictionaryManager {
+    // The CWG basic-type arrays will have global scope to reduce function-argument overhead.
+    int *nodeArray;
+    int *listFormatArray;
+    int *root_WTEOBL_Array;
+    short *short_WTEOBL_Array;
+    unsigned char *unsignedChar_WTEOBL_Array;
+    // Needed for the CWG Hash-Function.
+    int WTEOBL_Transition;
+} DictionaryManager;
+
+typedef struct DictionaryIterator {
+    DictionaryManager *mgr;
+
     dictStack stack[BOARD_LENGTH + 1];
     //word we've currently built / are building
     char tmpWord[BOARD_LENGTH];
@@ -28,14 +44,18 @@ typedef struct DictionaryManager {
 #if HASH_DEBUG
     int lastHash;
 #endif
-} DictionaryManager;
+} DictionaryIterator;
 
-bool isValidWord(const char *TheCandidate, int CandidateLength);
-int hashWord(const char *TheCandidate, const int CandidateLength);
-int nextWord(DictionaryManager *mgr, char *outWord);
-int numWords();
-void resetManager(DictionaryManager *mgr);
+bool isValidWord(DictionaryIterator *itr, const char *TheCandidate, int CandidateLength);
+int hashWord(DictionaryIterator *itr, const char *TheCandidate, const int CandidateLength);
+int nextWord(DictionaryIterator *itr, char *outWord);
+int numWords(DictionaryManager *mgr);
+void resetIterator(DictionaryIterator *itr);
 
-DictionaryManager *createDictManager();
+DictionaryManager *createDictManager(char *dictionary);
+DictionaryIterator *createDictIterator(DictionaryManager *mgr);
+DictionaryIterator *cloneDictIterator(DictionaryIterator *itr);
 void freeDictManager(DictionaryManager *mgr);
-void destructDictManager();
+void freeDictIterator(DictionaryIterator *itr);
+
+#endif

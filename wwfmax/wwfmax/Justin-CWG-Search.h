@@ -9,6 +9,6 @@
 #ifndef wwfmax_Justin_CWG_Search_h
 #define wwfmax_Justin_CWG_Search_h
 
-int debug();
+int debug(const char *dict);
 
 #endif

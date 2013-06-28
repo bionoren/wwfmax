@@ -134,7 +134,8 @@ void printDawgDotRecurse(ArrayDawgPtr dawg, FILE *dawgdot, int parent, int index
 }
 
 void printDawgDot(ArrayDawgPtr dawg, int numNodes) {
-    FILE *dawgdot = fopen("/Volumes/Users/Users/bion/Downloads/dawg.dot", "w");
+    FILE *dawgdot = fopen("/Users/bion/Downloads/dawg.dot", "w");
+    assert(dawgdot);
     fprintf(dawgdot, "digraph dawg {\n");
     
     for(int i = 0; i < numNodes; i++) {
@@ -530,7 +531,7 @@ ArrayDawgPtr ArrayDawgInit(char **Dictionary, int *SegmentLenghts, int MaxString
     }
     fclose(Main);
     
-    printDawgDot(Result, NumberOfLivingNodes);
+    //printDawgDot(Result, NumberOfLivingNodes);
     
     fwrite(&NumberOfUniqueChildStrings, sizeof(int), 1, Secondary);
     fwrite(ChildListValues, sizeof(int), NumberOfUniqueChildStrings, Secondary);

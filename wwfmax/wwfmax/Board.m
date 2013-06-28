@@ -76,23 +76,23 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
 /**
  I'm strictly interested in the top half of the board and horizontal words because of bonus tile symetry.
  */
--(Solution)solve:(const int*)prescores dictionary:(DictionaryManager*)mgr {
+-(Solution)solve:(const int*)prescores dictionary:(DictionaryIterator*)itr {
     Solution ret;
     ret.maxScore = 0;
 
-    DictionaryManager *verticalMgr = createDictManager();
+    DictionaryIterator *verticalItr = cloneDictIterator(itr);
     char vword[BOARD_LENGTH];
     int vlength;
 
     NSMutableSet *playableWords = [NSMutableSet set];
     char word[BOARD_LENGTH];
     int length;
-    while((length = nextWord(mgr, word))) {
-        NSLog(@"Evaluating %.*s\n", length, word);
+    while((length = nextWord(itr, word))) {
+        //NSLog(@"Evaluating %.*s\n", length, word);
         @autoreleasepool {
-            const int prescore = prescores[hashWord(word, length)];
+            const int prescore = prescores[hashWord(itr, word, length)];
 
-            subwordsAtLocation(&playableWords, word, length);
+            subwordsAtLocation(itr, &playableWords, word, length);
             if(playableWords.count == 0) {
                 continue;
             }
@@ -127,10 +127,10 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
                         for(int x = 0; x < BOARD_LENGTH - length; ++x) {
                             int wordScore = scoreLettersWithPrescore(prescore, wordStruct->_numLetters, chars, locs, x, y) + bonus;
 
-                            for(int j = 0; j < length; j++) {
-                                while((vlength = nextWord(verticalMgr, vword)));
-                                resetManager(verticalMgr);
-                            }
+                            /*for(int j = 0; j < length; j++) {
+                                while((vlength = nextWord(verticalItr, vword)));
+                                resetIterator(verticalItr);
+                            }*/
                             
                             if(wordScore > ret.maxScore) {
                                 ret.maxScore = wordScore;

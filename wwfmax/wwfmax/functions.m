@@ -1,16 +1,11 @@
 //
-//  functions.h
+//  functions.m
 //  wwfmax
 //
 //  Created by Bion Oren on 10/1/12.
 //  Copyright (c) 2012 Llama Software. All rights reserved.
 //
-
-#ifndef FUNCTIONS_WWFMAX
-#define FUNCTIONS_WWFMAX
-
-#import "WordStructure.h"
-#import "DictionaryManager.h"
+#import "functions.h"
 
 #pragma mark - Debugging
 
@@ -218,7 +213,7 @@ BOOL validate(const char *word, const int length, const WordInfo *info) {
     }
 }
 
-void subwordsAtLocation(NSMutableSet **ret, char *word, const int length) {
+void subwordsAtLocation(DictionaryIterator *itr, NSMutableSet **ret, char *word, const int length) {
     if(length <= NUM_LETTERS_TURN) {
         return [*ret addObject:[WordStructure wordAsLetters:word length:length]];
     }
@@ -230,7 +225,7 @@ void subwordsAtLocation(NSMutableSet **ret, char *word, const int length) {
         const int tmpLength = MIN(i + NUM_LETTERS_TURN, length - 1);
         for(int j = i + 2; j < tmpLength; ++j) {
             const char *subword = &word[i];
-            if(isValidWord(subword, j - i)) {
+            if(isValidWord(itr, subword, j - i)) {
                 Subword sub = {.start = i, .end = j};
                 subwords[numSubwords++] = sub;
                 assert(numSubwords <= 25);
@@ -258,7 +253,7 @@ void subwordsAtLocation(NSMutableSet **ret, char *word, const int length) {
             }
         }
         wordStruct = [[WordStructure alloc] initWithWord:word length:length];
-        if([wordStruct validateSubwords:comboSubwords length:comboSubwordsLength]) {
+        if([wordStruct validateSubwords:comboSubwords length:comboSubwordsLength iterator:itr wordInfo:NULL]) {
             [*ret addObject:wordStruct];
         }
     OVERLAP:
@@ -312,7 +307,7 @@ BOOL playable(char *word, const int length, const WordInfo *info) {
             }
         }
         wordStruct = [[WordStructure alloc] initWithWord:word length:length];
-        if([wordStruct validateSubwords:comboSubwords length:comboSubwordsLength]) {
+        if([wordStruct validateSubwords:comboSubwords length:comboSubwordsLength iterator:NULL wordInfo:info]) {
             return YES;
         }
     OVERLAP:
@@ -320,5 +315,3 @@ BOOL playable(char *word, const int length, const WordInfo *info) {
     }
     return NO;
 }
-
-#endif

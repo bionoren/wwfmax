@@ -21,7 +21,6 @@
 #include "assert.h"
 
 // The complete "CWG" graph is stored here.
-#define CWG_DATA "/Users/bion/Downloads/CWG_Data_For_Word-List.dat"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -101,7 +100,7 @@ void TraverseTheDawgArray(int *TheDawg, int *TheListFormats, int *BelowingMe, bo
     }
 }
 
-int createDataStructure(const WordInfo *info) {
+int createDataStructure(const WordInfo *info, char *outFile) {
     printf("\n  The 28-Step CWG-Creation-Process has commenced: (Hang in there, it will be over soon.)\n");
     // All of the words of similar length will be stored sequentially in the same array so that there will be (MAX + 1) arrays in total.
     char *AllWordsInEnglish[MAX + 1] = {NULL};
@@ -151,7 +150,7 @@ int createDataStructure(const WordInfo *info) {
     
     printf("\n  Begin Creator init function.\n\n");
     
-    //ArrayDawgInit(AllWordsInEnglish, DictionarySizeIndex, MAX);
+    ArrayDawgInit(AllWordsInEnglish, DictionarySizeIndex, MAX);
     
     //-----------------------------------------------------------------------------------
     // Begin tabulation of "NumberOfWordsToEndOfBranchList" array.
@@ -722,9 +721,9 @@ int createDataStructure(const WordInfo *info) {
         PartFiveArray[i] = (char)RearrangedNumberOfWordsToEndOfBranchList[ArrayFourSize + i];
     }
     
-    FILE* FinalProduct = fopen(CWG_DATA, "wb");
-    char *tempDebugName = malloc((strlen(CWG_DATA) + 4) * sizeof(char));
-    strcpy(tempDebugName, CWG_DATA);
+    FILE* FinalProduct = fopen(outFile, "wb");
+    char *tempDebugName = malloc((strlen(outFile) + 4) * sizeof(char));
+    strcpy(tempDebugName, outFile);
     strcat(tempDebugName, ".txt");
     printf("name = %s\n", tempDebugName);
     FILE* FinalProductDebug = fopen(tempDebugName, "w");

@@ -31,7 +31,7 @@ typedef struct breadthqueue BreadthQueue;
 typedef BreadthQueue* BreadthQueuePtr;
 
 BreadthQueuePtr BreadthQueueInit(void);
-void BreadthQueuePopulateReductionArray(BreadthQueuePtr ThisBreadthQueue, TnodePtr Root, TnodePtr **Holder);
+void BreadthQueuePopulateReductionArray(BreadthQueuePtr ThisBreadthQueue, TnodePtr Root, TnodePtr **Holder, int maxStringLength);
 int BreadthQueueUseToIndex(BreadthQueuePtr ThisBreadthQueue, TnodePtr Root);
 
 #endif

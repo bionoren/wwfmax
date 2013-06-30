@@ -17,9 +17,9 @@
 
 //anecdotally, ~2.5% of the shipped dictionary is unplayable, mostly because the words are too long for the board, but also because there aren't enough of the required letters and because some words can't be broken down into sufficiently small subwords
 
-char *CWGOfDictionaryFile(const char *dictionary, int numWords, BOOL validate) {
+char *CWGOfDictionaryFile(const char *dictionary, int numWords, BOOL validate, CWGOptions options) {
 #if BUILD_DATASTRUCTURES
-    char *words = calloc(numWords * BOARD_LENGTH, sizeof(char));
+    char *words = calloc(numWords * options.maxWordLength, sizeof(char));
     assert(words);
     int *wordLengths = malloc(numWords * sizeof(int));
     assert(wordLengths);
@@ -34,11 +34,11 @@ char *CWGOfDictionaryFile(const char *dictionary, int numWords, BOOL validate) {
         if(buffer[len - 1] == '\n') {
             --len;
         }
-        if(len <= BOARD_LENGTH) {
+        if(len <= options.maxWordLength) {
             strncpy(word, buffer, len);
             assert(i < numWords);
             wordLengths[i++] = len;
-            word += BOARD_LENGTH * sizeof(char);
+            word += options.maxWordLength * sizeof(char);
         }
     }
     fclose(wordFile);
@@ -50,11 +50,11 @@ char *CWGOfDictionaryFile(const char *dictionary, int numWords, BOOL validate) {
 
     if(validate) {
         for(int i = 0; i < numWords; i++) {
-            char *word = &(words[i * BOARD_LENGTH]);
+            char *word = &(words[i * options.maxWordLength]);
             const int length = wordLengths[i];
 
             if(!playable(word, length, &info)) {
-                words[i * BOARD_LENGTH] = 0;
+                words[i * options.maxWordLength] = 0;
                 wordLengths[i] = 0;
                 continue;
             }
@@ -66,7 +66,7 @@ char *CWGOfDictionaryFile(const char *dictionary, int numWords, BOOL validate) {
     strncpy(ret, dictionary, strlen(dictionary) - 4);
     strcat(ret, ".dat");
 #if BUILD_DATASTRUCTURES
-    createDataStructure(&info, ret);
+    createDataStructure(&info, ret, options);
     free(words);
     free(wordLengths);
 #endif
@@ -85,9 +85,12 @@ int main(int argc, const char * argv[]) {
 #endif
         
         NSLog(@"%@", [[[NSFileManager alloc] init] currentDirectoryPath]);
-        char *dictionary = CWGOfDictionaryFile("/Users/bion/projects/objc/wwfmax/dict.txt", 173101, true);
+        CWGOptions options;
+        options.maxWordLength = BOARD_LENGTH;
+        options.compactionMethod = LIST_COMPACTION_ALL;
+        char *dictionary = CWGOfDictionaryFile("/Users/bion/projects/objc/wwfmax/dict.txt", 173101, true, options);
         //char *dictionaryPermuted = CWGOfDictionaryFile("/Users/bion/projects/objc/wwfmax/dictPermuted.txt", 952650, false);
-        //return 0;
+        return 0;
 
 #ifdef DEBUG
         debug(dictionary);

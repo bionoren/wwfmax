@@ -71,9 +71,9 @@ TnodePtr BreadthQueuePop(BreadthQueuePtr ThisBreadthQueue) {
 
 
 // For the "Tnode" "Dangling" process, arrange the "Tnodes" in the "Holder" array, with breadth-first traversal order.
-void BreadthQueuePopulateReductionArray(BreadthQueuePtr ThisBreadthQueue, TnodePtr Root, TnodePtr **Holder) {
-	int Taker[MAX];
-	memset(Taker, 0, MAX*sizeof(int));
+void BreadthQueuePopulateReductionArray(BreadthQueuePtr ThisBreadthQueue, TnodePtr Root, TnodePtr **Holder, int maxStringLength) {
+	int Taker[maxStringLength];
+	memset(Taker, 0, maxStringLength*sizeof(int));
 	TnodePtr Current = Root;
 	// Push the first row onto the queue.
 	while(Current != NULL) {

@@ -184,7 +184,7 @@ ArrayDawgPtr ArrayDawgInit(char **Dictionary, int *SegmentLenghts, int MaxString
     
     // Count up the number of "Tnode"s in the Raw-Trie according to MaxChildDepth.
     printf("\nStep 3 - Count the total number of Tnodes in the Raw-Trie according to MaxChildDepth.\n");
-    DawgGraphTabulate(TemporaryTrie, NodeNumberCounter);
+    DawgGraphTabulate(TemporaryTrie, NodeNumberCounter, MaxStringLength);
     
     printf("\nStep 4 - Initial Tnode counting is complete, so display results:\n\n");
     int TotalNodeSum = 0;
@@ -200,7 +200,7 @@ ArrayDawgPtr ArrayDawgInit(char **Dictionary, int *SegmentLenghts, int MaxString
     
     printf("\nStep 5 - Allocate a 2 dimensional array of Tnode pointers to search for redundant Tnodes.\n");
     TnodePtr ** HolderOfAllTnodePointers = (TnodePtr **)malloc((Result->MaxStringLength)*sizeof(TnodePtr *));
-    for(int i = 0; i < MAX; i++) {
+    for(int i = 0; i < MaxStringLength; i++) {
         HolderOfAllTnodePointers[i] = (TnodePtr*)malloc(NodeNumberCounterInit[i] * sizeof(TnodePtr));
     }
     // A breadth-first traversal is used when populating the final array.
@@ -209,7 +209,7 @@ ArrayDawgPtr ArrayDawgInit(char **Dictionary, int *SegmentLenghts, int MaxString
     printf("\nStep 6 - Populate the 2 dimensional Tnode pointer array.\n");
     // Use a breadth first traversal to populate the "HolderOfAllTnodePointers" array.
     BreadthQueuePtr Populator = BreadthQueueInit();
-    BreadthQueuePopulateReductionArray(Populator, (TemporaryTrie->First)->Child, HolderOfAllTnodePointers);
+    BreadthQueuePopulateReductionArray(Populator, (TemporaryTrie->First)->Child, HolderOfAllTnodePointers, MaxStringLength);
     
     printf("\nStep 7 - Population complete.\n");
     // Flag all of the reduntant "Tnode"s, and store a "ReplaceMeWith" "Tnode" reference inside the "Dangling" "Tnode"s.
@@ -282,12 +282,12 @@ ArrayDawgPtr ArrayDawgInit(char **Dictionary, int *SegmentLenghts, int MaxString
     printf("  |%6d| = Remaining # of Tnodes.\n", NumberOfLivingNodes = TotalNodeSum - TotalDangled);
     
     printf("\nStep 9 - Count the number of living Tnodes by traversing the Raw-Trie to check the Dangling numbers.\n\n");
-    DawgGraphTabulate(TemporaryTrie, NodeNumberCounter);
+    DawgGraphTabulate(TemporaryTrie, NodeNumberCounter, MaxStringLength);
     for(int i = 0; i < Result->MaxStringLength; i++ ) {
         printf("  New count for MaxChildDepth |%2d| Tnodes is |%5d|.  Tnode count was |%6d| in Raw-Trie pre-Dangling.  Killed |%6d| Tnodes.\n", i, NodeNumberCounter[i], NodeNumberCounterInit[i], NodeNumberCounterInit[i] - NodeNumberCounter[i]);
     }
     int TotalDangledCheck = 0;
-    for(int i = 0; i < MAX; i++) {
+    for(int i = 0; i < MaxStringLength; i++) {
         TotalDangledCheck += NodeNumberCounterInit[i] - NodeNumberCounter[i];
     }
     if(TotalDangled == TotalDangledCheck) {
@@ -335,7 +335,7 @@ ArrayDawgPtr ArrayDawgInit(char **Dictionary, int *SegmentLenghts, int MaxString
     BreadthQueuePtr OrderMatters = BreadthQueueInit();
     // The Breadth-First-Queue must assign an index value to each living "Tnode" only once.
     // "HolderOfAllTnodePointers[MAX - 1][0]" becomes the first node in the new DAWG array.
-    int IndexCount = BreadthQueueUseToIndex(OrderMatters, HolderOfAllTnodePointers[MAX - 1][0]);
+    int IndexCount = BreadthQueueUseToIndex(OrderMatters, HolderOfAllTnodePointers[MaxStringLength - 1][0]);
     printf("\n  Index assignment is now complete.\n");
     printf("\n  |%d| = NumberOfLivingNodes from after the Dangling process.\n", NumberOfLivingNodes);
     printf("  |%d| = IndexCount from the breadth-first assignment function.\n", IndexCount);

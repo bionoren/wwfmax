@@ -11,8 +11,6 @@
 
 #import "tnode.h"
 
-#define MAX BOARD_LENGTH
-
 struct dawg {
     int NumberOfTotalWords;
     int NumberOfTotalNodes;
@@ -24,7 +22,7 @@ typedef Dawg* DawgPtr;
 
 DawgPtr DawgInit(void);
 void DawgAddWord(DawgPtr ThisDawg, char * NewWord);
-void DawgGraphTabulate(DawgPtr ThisDawg, int* Count);
+void DawgGraphTabulate(DawgPtr ThisDawg, int* Count, int maxWordLength);
 void DawgLawnMower(DawgPtr ThisDawg);
 
 #endif

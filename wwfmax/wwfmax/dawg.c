@@ -60,14 +60,14 @@ void DawgAddWord(DawgPtr ThisDawg, char *NewWord) {
 }
 
 // Count the "Living" "Tnode"s of each "MaxChildDepth" in "ThisDawg", and store the values in "Count".
-void DawgGraphTabulate(DawgPtr ThisDawg, int* Count) {
-    int Numbers[MAX];
-    for(int i = 0; i < MAX; i++) {
+void DawgGraphTabulate(DawgPtr ThisDawg, int* Count, int maxWordLength) {
+    int Numbers[maxWordLength];
+    for(int i = 0; i < maxWordLength; i++) {
         Numbers[i] = 0;
     }
     if(ThisDawg->NumberOfTotalWords > 0) {
         TnodeGraphTabulateRecurse(ThisDawg->First, 0, Numbers);
-        for(int i = 0; i < MAX; i++) {
+        for(int i = 0; i < maxWordLength; i++) {
             Count[i] = Numbers[i];
         }
     }

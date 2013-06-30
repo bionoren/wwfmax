@@ -9,6 +9,31 @@
 #ifndef wwfmax_CWG_Creator_h
 #define wwfmax_CWG_Creator_h
 
-int createDataStructure(const WordInfo *info, char *outFile);
+#import <stdbool.h>
+
+enum LIST_COMPACTION {
+    LIST_COMPACTION_NONE = 0,
+    LIST_COMPACTION_ADDITIVE = 1,
+    LIST_COMPACTION_SHIFTED = 2,
+    LIST_COMPACTION_ROTATED = 4,
+    LIST_COMPACTION_ALL = LIST_COMPACTION_ADDITIVE | LIST_COMPACTION_SHIFTED | LIST_COMPACTION_ROTATED
+};
+
+typedef struct CWGOptions {
+    int maxWordLength;
+    //specifying multiple compaction methods will use the most space-efficient one
+    int compactionMethod;
+} CWGOptions;
+
+typedef struct CWGStructure {
+    const char *filename;
+    enum LIST_COMPACTION compactionMethod;
+    unsigned int maxWordLength;
+    unsigned int childMask;
+    unsigned int listMask;
+    unsigned int listShift;
+} CWGStructure;
+
+CWGStructure *createDataStructure(const WordInfo *info, char *outFile, CWGOptions options);
 
 #endif

@@ -10,6 +10,7 @@
 #define wwfmax_CWGLib_h
 
 #include <stdbool.h>
+#include <limits.h>
 
 #define NUMBER_OF_ENGLISH_LETTERS 26
 #define INT_BITS 32
@@ -39,5 +40,12 @@ static const int ChildListMasks[NUMBER_OF_ENGLISH_LETTERS] = { 0X1, 0X3, 0X7, 0X
 
 int ListFormatPopCount(int CompleteChildList, int LetterPosition);
 bool moreThanOneBitSet(int i);
+
+static unsigned int _rotl(const unsigned int value, int shift) {
+    return (value << shift) | (value >> (sizeof(value)*CHAR_BIT - shift));
+}
+static unsigned int _rotr(const unsigned int value, int shift) {
+    return (value >> shift) | (value << (sizeof(value)*CHAR_BIT - shift));
+}
 
 #endif

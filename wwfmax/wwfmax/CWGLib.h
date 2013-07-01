@@ -21,7 +21,7 @@
 #define LIST_FORMAT_INDEX_MASK 0X1FFE0000
 #define LIST_FORMAT_BIT_SHIFT 17
 #define CHILD_MASK 0X0001FFFF
-#define EOW_FLAG 0X40000000
+#define EOW_FLAG 0X80000000
 
 // Lookup tables used for node encoding and number-string decoding.
 static const unsigned int PowersOfTwo[INT_BITS] = {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384,

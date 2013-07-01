@@ -23,11 +23,11 @@
 // This function is used to fill the text file used to inspect the graph created in the first segment of the program.
 void ConvertIntNodeToBinaryString(int TheNode, char *BinaryNode) {
     BinaryNode[0] = '[';
-    // Bit 31 is not being used.  It will always be '0'.
-    BinaryNode[1] = '_';
+    // Bit 31 holds the End-Of-Word, EOW_FLAG.
+    BinaryNode[1] = (TheNode & EOW_FLAG)?'1':'0';
     BinaryNode[2] = '|';
-    // Bit 30 holds the End-Of-Word, EOW_FLAG.
-    BinaryNode[3] = (TheNode & PowersOfTwo[30])?'1':'0';
+    // Bit 30 is not being used.  It will always be '0'.
+    BinaryNode[3] = '_';
     BinaryNode[4] = '|';
     // 13 Bits, (29-->17) represent the child-format index.
     for(int i = 5, Bit = 29; i <= 17; i++, Bit--) {

@@ -26,7 +26,7 @@ typedef struct CWGOptions {
 } CWGOptions;
 
 typedef struct CWGStructure {
-    const char *filename;
+    char *filename;
     enum LIST_COMPACTION compactionMethod;
     unsigned int maxWordLength;
     unsigned int childMask;
@@ -34,6 +34,6 @@ typedef struct CWGStructure {
     unsigned int listShift;
 } CWGStructure;
 
-CWGStructure *createDataStructure(const WordInfo *info, char *outFile, CWGOptions options);
+CWGStructure *createDataStructure(const WordInfo *info, const char *outFile, CWGOptions options);
 
 #endif

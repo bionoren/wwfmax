@@ -41,14 +41,17 @@ int nextWord_threadsafe(DictionaryIterator *itr, char *outWord) {
 
     dictStack *item = &(itr->stack[itr->stackDepth]);
     if(!item->index) {
+        item--;
+        itr->stackDepth--;
         do {
-            if(!item->node || item->node & END_OF_LIST_BIT_MASK) {
+            assert(item->node);
+            if(item->node & END_OF_LIST_BIT_MASK) {
                 item--;
             } else {
                 item->node = itr->mgr->nodeArray[++item->index];
                 goto LOOP_END;
             }
-        } while(--(itr->stackDepth) >= 0);
+        } while(itr->stackDepth-- > 0);
         OSSpinLockUnlock(&itr->lock);
         return 0;
     }
@@ -89,18 +92,20 @@ int nextWord(DictionaryIterator *itr, char *outWord) {
 
     dictStack *item = &(itr->stack[itr->stackDepth]);
     if(!item->index) {
+        item--;
+        itr->stackDepth--;
         do {
-            if(!item->node || item->node & END_OF_LIST_BIT_MASK) {
+            assert(item->node);
+            if(item->node & END_OF_LIST_BIT_MASK) {
                 item--;
             } else {
                 item->node = itr->mgr->nodeArray[++item->index];
-                break;
+                goto LOOP_END2;
             }
         } while(itr->stackDepth-- > 0);
-        if(itr->stackDepth < 0) {
-            return 0;
-        }
+        return 0;
     }
+LOOP_END2:;
 
     bool eow;
     int node = item->node;

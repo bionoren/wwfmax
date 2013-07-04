@@ -7,18 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		BE03CD911648718500A5CA9D /* CWGLib.c in Sources */ = {isa = PBXBuildFile; fileRef = BE03CD901648718500A5CA9D /* CWGLib.c */; };
-		BE03CD931648794B00A5CA9D /* tnode.c in Sources */ = {isa = PBXBuildFile; fileRef = BE03CD921648794B00A5CA9D /* tnode.c */; };
 		BE39047E161F986100A0A630 /* WordStructure.m in Sources */ = {isa = PBXBuildFile; fileRef = BE39047D161F986100A0A630 /* WordStructure.m */; };
 		BE50649E161A2DAE003B237A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE50649D161A2DAE003B237A /* Foundation.framework */; };
 		BE5064A1161A2DAE003B237A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = BE5064A0161A2DAE003B237A /* main.m */; };
-		BE5C56C3164F2DBB009835FA /* dawg.c in Sources */ = {isa = PBXBuildFile; fileRef = BE5C56C2164F2DBB009835FA /* dawg.c */; };
-		BE5C56C8164F2FFB009835FA /* breadthqueue.c in Sources */ = {isa = PBXBuildFile; fileRef = BE5C56C7164F2FFB009835FA /* breadthqueue.c */; };
-		BE5C56E4164F4DDE009835FA /* arraydawg.c in Sources */ = {isa = PBXBuildFile; fileRef = BE5C56E3164F4DDE009835FA /* arraydawg.c */; };
-		BE77EAEB1646F70D00D3943D /* CWG-Creator.c in Sources */ = {isa = PBXBuildFile; fileRef = BE77EAE91646F70D00D3943D /* CWG-Creator.c */; };
-		BE77EAEC1646F70D00D3943D /* Justin-CWG-Search.c in Sources */ = {isa = PBXBuildFile; fileRef = BE77EAEA1646F70D00D3943D /* Justin-CWG-Search.c */; };
+		BEBCFBDF178238D70007DB03 /* dawg.c in Sources */ = {isa = PBXBuildFile; fileRef = BEBCFBDE178238950007DB03 /* dawg.c */; };
+		BEBCFBE117823AE40007DB03 /* DictionaryManager.c in Sources */ = {isa = PBXBuildFile; fileRef = BEC44C61177DEA2700BF6D4F /* DictionaryManager.c */; };
 		BEC0171E161A2FD40078129A /* Board.m in Sources */ = {isa = PBXBuildFile; fileRef = BEC0171D161A2FD40078129A /* Board.m */; };
-		BEC44C62177DEA2700BF6D4F /* DictionaryManager.c in Sources */ = {isa = PBXBuildFile; fileRef = BEC44C61177DEA2700BF6D4F /* DictionaryManager.c */; };
 		BEFE74F71638F8C900FD191F /* functions.m in Sources */ = {isa = PBXBuildFile; fileRef = BEFE74F61638F8C900FD191F /* functions.m */; };
 /* End PBXBuildFile section */
 
@@ -35,27 +29,16 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		BE03CD8E1648717B00A5CA9D /* CWGLib.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CWGLib.h; sourceTree = "<group>"; };
-		BE03CD901648718500A5CA9D /* CWGLib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = CWGLib.c; sourceTree = "<group>"; };
-		BE03CD921648794B00A5CA9D /* tnode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tnode.c; sourceTree = "<group>"; };
-		BE03CD941648795300A5CA9D /* tnode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = tnode.h; sourceTree = "<group>"; };
 		BE39047C161F986100A0A630 /* WordStructure.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WordStructure.h; sourceTree = "<group>"; };
 		BE39047D161F986100A0A630 /* WordStructure.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WordStructure.m; sourceTree = "<group>"; };
 		BE506499161A2DAE003B237A /* wwfmax */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = wwfmax; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE50649D161A2DAE003B237A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		BE5064A0161A2DAE003B237A /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		BE5064A3161A2DAE003B237A /* wwfmax-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "wwfmax-Prefix.pch"; sourceTree = "<group>"; };
-		BE5216F8165B1B43004976A1 /* Justin-CWG-Search.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Justin-CWG-Search.h"; sourceTree = "<group>"; };
-		BE5C56C2164F2DBB009835FA /* dawg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = dawg.c; sourceTree = "<group>"; };
-		BE5C56C5164F2DC7009835FA /* dawg.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dawg.h; sourceTree = "<group>"; };
-		BE5C56C6164F2FF2009835FA /* breadthqueue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = breadthqueue.h; sourceTree = "<group>"; };
-		BE5C56C7164F2FFB009835FA /* breadthqueue.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = breadthqueue.c; sourceTree = "<group>"; };
-		BE5C56C9164F3255009835FA /* CWG-Creator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CWG-Creator.h"; sourceTree = "<group>"; };
-		BE5C56E2164F4DD7009835FA /* arraydawg.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = arraydawg.h; sourceTree = "<group>"; };
-		BE5C56E3164F4DDE009835FA /* arraydawg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = arraydawg.c; sourceTree = "<group>"; };
-		BE77EAE91646F70D00D3943D /* CWG-Creator.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "CWG-Creator.c"; sourceTree = "<group>"; };
-		BE77EAEA1646F70D00D3943D /* Justin-CWG-Search.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "Justin-CWG-Search.c"; sourceTree = "<group>"; };
 		BE805864167549B80093BB19 /* DictionaryManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DictionaryManager.h; sourceTree = "<group>"; };
+		BEBCFBDD178238950007DB03 /* CRC-32.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = "CRC-32.dat"; sourceTree = "<group>"; };
+		BEBCFBDE178238950007DB03 /* dawg.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = dawg.c; sourceTree = "<group>"; };
+		BEBCFBE01782390F0007DB03 /* dawg.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dawg.h; sourceTree = "<group>"; };
 		BEC0171C161A2FD40078129A /* Board.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Board.h; sourceTree = "<group>"; };
 		BEC0171D161A2FD40078129A /* Board.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Board.m; sourceTree = "<group>"; };
 		BEC01720161A36B60078129A /* dict.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = dict.txt; sourceTree = "<group>"; };
@@ -104,7 +87,7 @@
 		BE50649F161A2DAE003B237A /* wwfmax */ = {
 			isa = PBXGroup;
 			children = (
-				BE77EAE71646F6FC00D3943D /* CWG */,
+				BEBCFBDC178238610007DB03 /* DAWG */,
 				BE5064A0161A2DAE003B237A /* main.m */,
 				BEC01729161A40500078129A /* functions.h */,
 				BEFE74F61638F8C900FD191F /* functions.m */,
@@ -128,25 +111,14 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
-		BE77EAE71646F6FC00D3943D /* CWG */ = {
+		BEBCFBDC178238610007DB03 /* DAWG */ = {
 			isa = PBXGroup;
 			children = (
-				BE5C56C9164F3255009835FA /* CWG-Creator.h */,
-				BE77EAE91646F70D00D3943D /* CWG-Creator.c */,
-				BE5216F8165B1B43004976A1 /* Justin-CWG-Search.h */,
-				BE77EAEA1646F70D00D3943D /* Justin-CWG-Search.c */,
-				BE03CD8E1648717B00A5CA9D /* CWGLib.h */,
-				BE03CD901648718500A5CA9D /* CWGLib.c */,
-				BE03CD941648795300A5CA9D /* tnode.h */,
-				BE03CD921648794B00A5CA9D /* tnode.c */,
-				BE5C56C5164F2DC7009835FA /* dawg.h */,
-				BE5C56C2164F2DBB009835FA /* dawg.c */,
-				BE5C56C6164F2FF2009835FA /* breadthqueue.h */,
-				BE5C56C7164F2FFB009835FA /* breadthqueue.c */,
-				BE5C56E2164F4DD7009835FA /* arraydawg.h */,
-				BE5C56E3164F4DDE009835FA /* arraydawg.c */,
+				BEBCFBDD178238950007DB03 /* CRC-32.dat */,
+				BEBCFBE01782390F0007DB03 /* dawg.h */,
+				BEBCFBDE178238950007DB03 /* dawg.c */,
 			);
-			name = CWG;
+			name = DAWG;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -204,14 +176,8 @@
 				BEC0171E161A2FD40078129A /* Board.m in Sources */,
 				BE39047E161F986100A0A630 /* WordStructure.m in Sources */,
 				BEFE74F71638F8C900FD191F /* functions.m in Sources */,
-				BE77EAEB1646F70D00D3943D /* CWG-Creator.c in Sources */,
-				BE77EAEC1646F70D00D3943D /* Justin-CWG-Search.c in Sources */,
-				BE03CD911648718500A5CA9D /* CWGLib.c in Sources */,
-				BE03CD931648794B00A5CA9D /* tnode.c in Sources */,
-				BE5C56C3164F2DBB009835FA /* dawg.c in Sources */,
-				BE5C56C8164F2FFB009835FA /* breadthqueue.c in Sources */,
-				BE5C56E4164F4DDE009835FA /* arraydawg.c in Sources */,
-				BEC44C62177DEA2700BF6D4F /* DictionaryManager.c in Sources */,
+				BEBCFBDF178238D70007DB03 /* dawg.c in Sources */,
+				BEBCFBE117823AE40007DB03 /* DictionaryManager.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

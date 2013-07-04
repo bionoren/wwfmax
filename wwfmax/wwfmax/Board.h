@@ -22,7 +22,7 @@ typedef struct {
 
 @interface Board : NSObject
 
--(Solution)solve:(const int*)prescores dictionary:(DictionaryIterator*)itr;
+-(Solution)solve:(DictionaryIterator*)itr;
 +(NSString*)debugBoard:(char*)board;
 
 @end

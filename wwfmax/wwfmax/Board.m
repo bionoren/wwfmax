@@ -76,7 +76,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
 /**
  I'm strictly interested in the top half of the board and horizontal words because of bonus tile symetry.
  */
--(Solution)solve:(const int*)prescores dictionary:(DictionaryIterator*)itr {
+-(Solution)solve:(DictionaryIterator*)itr {
     Solution ret;
     ret.maxScore = 0;
 
@@ -85,12 +85,13 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
     int vlength;
 
     NSMutableSet *playableWords = [NSMutableSet set];
-    char word[BOARD_LENGTH];
+    assert(BOARD_LENGTH + 1 == 16);
+    char word[BOARD_LENGTH + 1];
     int length;
-    while((length = nextWord(itr, word))) {
-        //NSLog(@"Evaluating %.*s\n", length, word);
+    while((length = nextWord_threadsafe(itr, word))) {
+        NSLog(@"Evaluating %.*s\n", length, word);
         @autoreleasepool {
-            const int prescore = prescores[hashWord(itr, word, length)];
+            const int prescore = prescoreWord(word, length);
 
             subwordsAtLocation(itr, &playableWords, word, length);
             if(playableWords.count == 0) {
@@ -127,11 +128,11 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
                         for(int x = 0; x < BOARD_LENGTH - length; ++x) {
                             int wordScore = scoreLettersWithPrescore(prescore, wordStruct->_numLetters, chars, locs, x, y) + bonus;
 
-                            /*for(int j = 0; j < length; j++) {
+                            for(int j = 0; j < length; j++) {
                                 while((vlength = nextWord(verticalItr, vword)));
                                 resetIterator(verticalItr);
-                            }*/
-                            
+                            }
+
                             if(wordScore > ret.maxScore) {
                                 ret.maxScore = wordScore;
                                 

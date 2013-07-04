@@ -6,20 +6,19 @@
 //  Copyright (c) 2012 Llama Software. All rights reserved.
 //
 
-#define BUILD_DATASTRUCTURES 1
+#define BUILD_DATASTRUCTURES 0
 
 #import <Foundation/Foundation.h>
 #import "Board.h"
 #import "functions.h"
-#import "CWG-Creator.h"
-#import "Justin-CWG-Search.h"
 #import "DictionaryManager.h"
+#import "dawg.h"
 
 //anecdotally, ~2.5% of the shipped dictionary is unplayable, mostly because the words are too long for the board, but also because there aren't enough of the required letters and because some words can't be broken down into sufficiently small subwords
 
-char *CWGOfDictionaryFile(const char *dictionary, int numWords, BOOL validate, CWGOptions options) {
+char *CWGOfDictionaryFile(const char *dictionary, int numWords, BOOL validate) {
 #if BUILD_DATASTRUCTURES
-    char *words = calloc(numWords * options.maxWordLength, sizeof(char));
+    char *words = calloc(numWords * BOARD_LENGTH, sizeof(char));
     assert(words);
     int *wordLengths = malloc(numWords * sizeof(int));
     assert(wordLengths);
@@ -34,11 +33,11 @@ char *CWGOfDictionaryFile(const char *dictionary, int numWords, BOOL validate, C
         if(buffer[len - 1] == '\n') {
             --len;
         }
-        if(len <= options.maxWordLength) {
+        if(len <= BOARD_LENGTH) {
             strncpy(word, buffer, len);
             assert(i < numWords);
             wordLengths[i++] = len;
-            word += options.maxWordLength * sizeof(char);
+            word += BOARD_LENGTH * sizeof(char);
         }
     }
     fclose(wordFile);
@@ -50,11 +49,11 @@ char *CWGOfDictionaryFile(const char *dictionary, int numWords, BOOL validate, C
 
     if(validate) {
         for(int i = 0; i < numWords; i++) {
-            char *word = &(words[i * options.maxWordLength]);
+            char *word = &(words[i * BOARD_LENGTH]);
             const int length = wordLengths[i];
 
             if(!playable(word, length, &info)) {
-                words[i * options.maxWordLength] = 0;
+                words[i * BOARD_LENGTH] = 0;
                 wordLengths[i] = 0;
                 continue;
             }
@@ -62,11 +61,11 @@ char *CWGOfDictionaryFile(const char *dictionary, int numWords, BOOL validate, C
     }
 #endif
 
-    char *ret = malloc((strlen(dictionary) + 4) * sizeof(char));
-    strncpy(ret, dictionary, strlen(dictionary) - 4);
+    char *ret = calloc(strlen(dictionary) + 5, sizeof(char));
+    strncpy(ret, dictionary, strlen(dictionary));
     strcat(ret, ".dat");
 #if BUILD_DATASTRUCTURES
-    createDataStructure(&info, ret, options);
+    createDataStructure(&info, ret);
     free(words);
     free(wordLengths);
 #endif
@@ -85,29 +84,11 @@ int main(int argc, const char * argv[]) {
 #endif
         
         NSLog(@"%@", [[[NSFileManager alloc] init] currentDirectoryPath]);
-        CWGOptions options;
-        options.maxWordLength = BOARD_LENGTH;
-        options.compactionMethod = LIST_COMPACTION_ALL;
-        char *dictionary = CWGOfDictionaryFile("/Users/bion/projects/objc/wwfmax/dict.txt", 173101, true, options);
+        char *dictionary = CWGOfDictionaryFile("/Users/bion/projects/objc/wwfmax/dict.txt", 173101, true);
         //char *dictionaryPermuted = CWGOfDictionaryFile("/Users/bion/projects/objc/wwfmax/dictPermuted.txt", 952650, false);
-        return 0;
-
-#ifdef DEBUG
-        debug(dictionary);
-        //debug(dictionaryPermuted);
-#endif
         
         DictionaryManager *mgr = createDictManager(dictionary);
         DictionaryIterator *itr = createDictIterator(mgr);
-
-        int *prescores = malloc(numWords(mgr) * sizeof(int));
-        assert(prescores);
-        char word[BOARD_LENGTH];
-        int length;
-        while((length = nextWord(itr, word))) {
-            prescores[hashWord(itr, word, length)] = prescoreWord(word, length);
-        }
-        resetIterator(itr);
         
         __block Solution sol;
         sol.maxScore = 0;
@@ -116,7 +97,7 @@ int main(int argc, const char * argv[]) {
         for(int i = 0; i < NUM_THREADS; ++i) {
             dispatch_group_async(dispatchGroup, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                 Board *board = [[Board alloc] init];
-                Solution temp = [board solve:prescores dictionary:itr];
+                Solution temp = [board solve:itr];
                 if([lock lockBeforeDate:[NSDate distantFuture]]) {
                     if(temp.maxScore > sol.maxScore) {
                         sol = temp;
@@ -130,7 +111,6 @@ int main(int argc, const char * argv[]) {
         printSolution(sol);
 
         freeDictManager(mgr);
-        free(prescores);
     }
     return 0;
 }

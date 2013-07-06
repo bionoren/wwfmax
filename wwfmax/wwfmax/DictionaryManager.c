@@ -14,15 +14,15 @@
 #import "dawg.h"
 
 // Use the first two CWG arrays to return a boolean value indicating if "TheCandidate" word is in the lexicon.
-bool isValidWord(DictionaryIterator *itr, const char *word, int length) {
-    int *node = &itr->mgr->nodeArray[word[0] - 'a' + 1]; //root node
+bool isValidWord(DictionaryManager *mgr, const char *word, int length) {
+    int *node = &mgr->nodeArray[word[0] - 'a' + 1]; //root node
     for(int i = 1; i < length; i++) {
         if(!(*node & CHILD_INDEX_BIT_MASK)) {
             return false;
         }
 
         int letterIndex = word[i];
-        for(node = &itr->mgr->nodeArray[(*node & CHILD_INDEX_BIT_MASK) >> CHILD_BIT_SHIFT]; !(*node & END_OF_LIST_BIT_MASK) && letterIndex != (*node & LETTER_BIT_MASK); node++);
+        for(node = &mgr->nodeArray[(*node & CHILD_INDEX_BIT_MASK) >> CHILD_BIT_SHIFT]; !(*node & END_OF_LIST_BIT_MASK) && letterIndex != (*node & LETTER_BIT_MASK); node++);
         if(letterIndex != (*node & LETTER_BIT_MASK)) {
             return false;
         }
@@ -30,7 +30,7 @@ bool isValidWord(DictionaryIterator *itr, const char *word, int length) {
     return *node & END_OF_WORD_BIT_MASK;
 }
 
-int nextWord_threadsafe(DictionaryIterator *itr, char *outWord) {
+int nextWord_threadsafe(DictionaryIterator *itr, char *restrict outWord) {
     OSSpinLockLock(&itr->lock);
     if(itr->stackDepth < 0) {
         OSSpinLockUnlock(&itr->lock);
@@ -39,7 +39,7 @@ int nextWord_threadsafe(DictionaryIterator *itr, char *outWord) {
 
     assert(itr->stackDepth >= 0 && itr->stackDepth <= BOARD_LENGTH);
 
-    dictStack *item = &(itr->stack[itr->stackDepth]);
+    dictStack *restrict item = &(itr->stack[itr->stackDepth]);
     if(!item->index) {
         item--;
         itr->stackDepth--;
@@ -75,22 +75,22 @@ LOOP_END:;
     assert(itr->stackDepth > 1 && itr->stackDepth <= BOARD_LENGTH);
     assert(BOARD_LENGTH + 1 == 16);
     for(int i = 0; i < 4; i++) {
-        ((int*)outWord)[i] = ((int*)itr->tmpWord)[i];
+        ((int*restrict)outWord)[i] = ((int*restrict)itr->tmpWord)[i];
     }
     //NSLog(@"Evaluating %.*s", length, tmpWord);
 
 #if DEBUG
-    assert(isValidWord(itr, outWord, itr->stackDepth));
+    assert(isValidWord(itr->mgr, outWord, itr->stackDepth));
 #endif
     int ret = itr->stackDepth;
     OSSpinLockUnlock(&itr->lock);
     return ret;
 }
 
-int nextWord(DictionaryIterator *itr, char *outWord) {
+int nextWord(DictionaryIterator *itr, char *restrict outWord) {
     assert(itr->stackDepth >= 0 && itr->stackDepth <= BOARD_LENGTH);
 
-    dictStack *item = &(itr->stack[itr->stackDepth]);
+    dictStack *restrict item = &(itr->stack[itr->stackDepth]);
     if(!item->index) {
         item--;
         itr->stackDepth--;
@@ -127,7 +127,7 @@ LOOP_END2:;
     //NSLog(@"Evaluating %.*s", length, tmpWord);
 
 #if DEBUG
-    assert(isValidWord(itr, outWord, itr->stackDepth));
+    assert(isValidWord(itr->mgr, outWord, itr->stackDepth));
 #endif
     return itr->stackDepth;
 }

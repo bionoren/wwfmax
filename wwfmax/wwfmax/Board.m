@@ -76,7 +76,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
 /**
  I'm strictly interested in the top half of the board and horizontal words because of bonus tile symetry.
  */
--(Solution)solve:(DictionaryIterator*)itr {
+-(Solution)solve:(DictionaryIterator*)itr permutedDictionary:(DictionaryManager*)validatorMgr {
     Solution ret;
     ret.maxScore = 0;
 
@@ -128,7 +128,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
                         for(int x = 0; x < BOARD_LENGTH - length; ++x) {
                             int wordScore = scoreLettersWithPrescore(prescore, wordStruct->_numLetters, chars, locs, x, y) + bonus;
 
-                            for(int j = 0; j < length; j++) {
+                            for(int j = 0; j < wordStruct->_numLetters; j++) {
                                 while((vlength = nextWord(verticalItr, vword)));
                                 resetIterator(verticalItr);
                             }
@@ -167,7 +167,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
 
 #pragma mark - Validation
 
--(BOOL)validateLetters:(Letter*)letters length:(int)length {
+-(BOOL)validateLetters:(Letter*restrict)letters length:(int)length {
     BOOL ret = YES;
     for(int i = 0; i < length; i++) {
         Letter l = letters[i];
@@ -176,7 +176,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
         assert(index > 0);
         if(self.letters[index]-- > 0) {
         } else if(self.letters[0]-- > 0) {
-            letters[i] = (typeof(Letter))HASH(X_FROM_HASH(l), index + LETTER_OFFSET_UC - 1);
+            letters[i] = (typeof(Letter))HASH(X_FROM_HASH(l), (index + LETTER_OFFSET_UC - 1));
             assert(Y_FROM_HASH(letters[i]) >= 'A' && Y_FROM_HASH(letters[i]) <= 'Z');
         } else {
             ret = NO;
@@ -188,7 +188,7 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
     return ret;
 }
 
--(BOOL)testValidate:(char*)word length:(int)length {
+-(BOOL)testValidate:(char*restrict)word length:(int)length {
     BOOL ret = YES;
     //ensure we have enough letters to spell this word
     for(int i = 0; i < length; i++) {
@@ -209,12 +209,12 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
 
 #pragma mark - Scoring
 
--(void)addSubword:(char*)word length:(int)length board:(char*)board x:(int)x y:(int)y {
+-(void)addSubword:(char*restrict)word length:(int)length board:(char*restrict)board x:(int)x y:(int)y {
     int start = BOARD_COORDINATE(x, y);
     memcpy(&(board[start]), word, length * sizeof(char));
 }
 
--(void)clearBoard:(char*)board {
+-(void)clearBoard:(char*restrict)board {
     memcpy(board, blankBoard, BOARD_LENGTH * BOARD_LENGTH * sizeof(char));
 }
 

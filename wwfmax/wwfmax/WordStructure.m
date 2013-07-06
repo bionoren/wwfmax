@@ -73,7 +73,7 @@
         for(int i = 1; i < numSubwords; i++) {
             Subword s = subwords[i];
             if(lastSubword.end == s.start) {
-                if(itr && !isValidWord(itr, &(self->_word[lastSubword.start]), s.end - lastSubword.start)) {
+                if(itr && !isValidWord(itr->mgr, &(self->_word[lastSubword.start]), s.end - lastSubword.start)) {
                     return NO;
                 } else if(validate(&(self->_word[lastSubword.start]), s.end - lastSubword.start, info)) {
                     return NO;

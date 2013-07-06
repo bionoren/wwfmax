@@ -151,7 +151,7 @@ int wordMultiplier(int x, int y) {
     return wordMultiplierHash(HASH(x, y));
 }
 
-int prescoreWord(const char *word, const int length) {
+int prescoreWord(const char *restrict word, const int length) {
     int ret = 0;
     for(int i = 0; i < length; i++) {
         ret += valuel(word[i]);
@@ -159,7 +159,7 @@ int prescoreWord(const char *word, const int length) {
     return ret;
 }
 
-int scoreLettersWithPrescore(const int prescore, const int length, char *chars, int *offsets, const int x, const int y) {
+int scoreLettersWithPrescore(const int prescore, const int length, char *restrict chars, int *restrict offsets, const int x, const int y) {
     int val = prescore;
     int mult = 1;
     
@@ -176,7 +176,7 @@ int scoreLettersWithPrescore(const int prescore, const int length, char *chars, 
 
 #pragma mark - Validation
 
-BOOL validate(const char *word, const int length, const WordInfo *info) {
+BOOL validate(const char *restrict word, const int length, const WordInfo *info) {
     // inclusive indices
     //   0 <= imin when using truncate toward zero divide
     //     imid = (imin+imax)/2;
@@ -213,7 +213,7 @@ BOOL validate(const char *word, const int length, const WordInfo *info) {
     }
 }
 
-void subwordsAtLocation(DictionaryIterator *itr, NSMutableSet **ret, char *word, const int length) {
+void subwordsAtLocation(DictionaryIterator *itr, NSMutableSet **ret, char *restrict word, const int length) {
     if(length <= NUM_LETTERS_TURN) {
         return [*ret addObject:[WordStructure wordAsLetters:word length:length]];
     }
@@ -225,7 +225,7 @@ void subwordsAtLocation(DictionaryIterator *itr, NSMutableSet **ret, char *word,
         const int tmpLength = MIN(i + NUM_LETTERS_TURN, length - 1);
         for(int j = i + 2; j < tmpLength; ++j) {
             const char *subword = &word[i];
-            if(isValidWord(itr, subword, j - i)) {
+            if(isValidWord(itr->mgr, subword, j - i)) {
                 Subword sub = {.start = i, .end = j};
                 subwords[numSubwords++] = sub;
                 assert(numSubwords <= 25);

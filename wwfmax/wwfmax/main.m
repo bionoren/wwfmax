@@ -85,10 +85,11 @@ int main(int argc, const char * argv[]) {
         
         NSLog(@"%@", [[[NSFileManager alloc] init] currentDirectoryPath]);
         char *dictionary = CWGOfDictionaryFile("/Users/bion/projects/objc/wwfmax/dict.txt", 173101, true);
-        //char *dictionaryPermuted = CWGOfDictionaryFile("/Users/bion/projects/objc/wwfmax/dictPermuted.txt", 952650, false);
+        char *dictionaryPermuted = CWGOfDictionaryFile("/Users/bion/projects/objc/wwfmax/dictPermuted.txt", 952650, false);
         
         DictionaryManager *mgr = createDictManager(dictionary);
         DictionaryIterator *itr = createDictIterator(mgr);
+        DictionaryManager *permutedManager = createDictManager(dictionaryPermuted);
         
         __block Solution sol;
         sol.maxScore = 0;
@@ -97,7 +98,7 @@ int main(int argc, const char * argv[]) {
         for(int i = 0; i < NUM_THREADS; ++i) {
             dispatch_group_async(dispatchGroup, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                 Board *board = [[Board alloc] init];
-                Solution temp = [board solve:itr];
+                Solution temp = [board solve:itr permutedDictionary:permutedManager];
                 if([lock lockBeforeDate:[NSDate distantFuture]]) {
                     if(temp.maxScore > sol.maxScore) {
                         sol = temp;

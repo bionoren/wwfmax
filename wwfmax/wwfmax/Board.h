@@ -22,7 +22,7 @@ typedef struct {
 
 @interface Board : NSObject
 
--(Solution)solve:(DictionaryIterator*)itr;
+-(Solution)solve:(DictionaryIterator*)itr permutedDictionary:(DictionaryManager*)validatorMgr;
 +(NSString*)debugBoard:(char*)board;
 
 @end

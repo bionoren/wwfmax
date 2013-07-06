@@ -14,12 +14,12 @@
 
 typedef struct dictStack {
     //current node list. This will get you a node, which lets you go down a level.
-    unsigned int index; //index into the start of a child group in the nodeArray
+    int index; //index into the start of a child group in the nodeArray
     int node;
 } dictStack;
 
 typedef struct DictionaryManager {
-    int *nodeArray;
+    int *restrict nodeArray;
 } DictionaryManager;
 
 typedef struct DictionaryIterator {
@@ -33,7 +33,7 @@ typedef struct DictionaryIterator {
     OSSpinLock lock;
 } DictionaryIterator;
 
-bool isValidWord(DictionaryIterator *itr, const char *TheCandidate, int CandidateLength);
+bool isValidWord(DictionaryManager *mgr, const char *TheCandidate, int CandidateLength);
 int nextWord_threadsafe(DictionaryIterator *itr, char *outWord);
 int nextWord(DictionaryIterator *itr, char *outWord);
 void resetIterator(DictionaryIterator *itr);

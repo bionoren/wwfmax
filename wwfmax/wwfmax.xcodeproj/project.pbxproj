@@ -10,11 +10,25 @@
 		BE39047E161F986100A0A630 /* WordStructure.m in Sources */ = {isa = PBXBuildFile; fileRef = BE39047D161F986100A0A630 /* WordStructure.m */; };
 		BE50649E161A2DAE003B237A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE50649D161A2DAE003B237A /* Foundation.framework */; };
 		BE5064A1161A2DAE003B237A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = BE5064A0161A2DAE003B237A /* main.m */; };
+		BE5A94DF178DECA6001DD575 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE5A94D7178DEAE4001DD575 /* XCTest.framework */; };
+		BE5A94E5178DECA6001DD575 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = BE5A94E3178DECA6001DD575 /* InfoPlist.strings */; };
+		BE5A94E7178DECA6001DD575 /* wwfmax_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = BE5A94E6178DECA6001DD575 /* wwfmax_Tests.m */; };
+		BE5A94EF178DED5C001DD575 /* DictionaryManager.c in Sources */ = {isa = PBXBuildFile; fileRef = BEC44C61177DEA2700BF6D4F /* DictionaryManager.c */; };
 		BEBCFBDF178238D70007DB03 /* dawg.c in Sources */ = {isa = PBXBuildFile; fileRef = BEBCFBDE178238950007DB03 /* dawg.c */; };
 		BEBCFBE117823AE40007DB03 /* DictionaryManager.c in Sources */ = {isa = PBXBuildFile; fileRef = BEC44C61177DEA2700BF6D4F /* DictionaryManager.c */; };
 		BEC0171E161A2FD40078129A /* Board.m in Sources */ = {isa = PBXBuildFile; fileRef = BEC0171D161A2FD40078129A /* Board.m */; };
 		BEFE74F71638F8C900FD191F /* functions.m in Sources */ = {isa = PBXBuildFile; fileRef = BEFE74F61638F8C900FD191F /* functions.m */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		BE5A94E9178DECA6001DD575 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BE506490161A2DAD003B237A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BE506498161A2DAE003B237A;
+			remoteInfo = wwfmax;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		BE506497161A2DAE003B237A /* CopyFiles */ = {
@@ -35,13 +49,18 @@
 		BE50649D161A2DAE003B237A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		BE5064A0161A2DAE003B237A /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		BE5064A3161A2DAE003B237A /* wwfmax-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "wwfmax-Prefix.pch"; sourceTree = "<group>"; };
+		BE5A94D7178DEAE4001DD575 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
+		BE5A94DE178DECA6001DD575 /* wwfmax Tests.xctest */ = {isa = PBXFileReference; explicitFileType = folder; includeInIndex = 0; path = "wwfmax Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		BE5A94E2178DECA6001DD575 /* wwfmax Tests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "wwfmax Tests-Info.plist"; sourceTree = "<group>"; };
+		BE5A94E4178DECA6001DD575 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		BE5A94E6178DECA6001DD575 /* wwfmax_Tests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = wwfmax_Tests.m; sourceTree = "<group>"; };
+		BE5A94E8178DECA6001DD575 /* wwfmax Tests-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "wwfmax Tests-Prefix.pch"; sourceTree = "<group>"; };
 		BE805864167549B80093BB19 /* DictionaryManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DictionaryManager.h; sourceTree = "<group>"; };
 		BEBCFBDD178238950007DB03 /* CRC-32.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = "CRC-32.dat"; sourceTree = "<group>"; };
 		BEBCFBDE178238950007DB03 /* dawg.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = dawg.c; sourceTree = "<group>"; };
 		BEBCFBE01782390F0007DB03 /* dawg.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dawg.h; sourceTree = "<group>"; };
 		BEC0171C161A2FD40078129A /* Board.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Board.h; sourceTree = "<group>"; };
 		BEC0171D161A2FD40078129A /* Board.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Board.m; sourceTree = "<group>"; };
-		BEC01720161A36B60078129A /* dict.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = dict.txt; sourceTree = "<group>"; };
 		BEC01729161A40500078129A /* functions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = functions.h; sourceTree = "<group>"; };
 		BEC44C61177DEA2700BF6D4F /* DictionaryManager.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = DictionaryManager.c; sourceTree = "<group>"; };
 		BEFE74F61638F8C900FD191F /* functions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = functions.m; sourceTree = "<group>"; };
@@ -56,6 +75,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BE5A94DB178DECA6001DD575 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BE5A94DF178DECA6001DD575 /* XCTest.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -63,6 +90,7 @@
 			isa = PBXGroup;
 			children = (
 				BE50649F161A2DAE003B237A /* wwfmax */,
+				BE5A94E0178DECA6001DD575 /* wwfmax Tests */,
 				BE50649C161A2DAE003B237A /* Frameworks */,
 				BE50649A161A2DAE003B237A /* Products */,
 			);
@@ -72,6 +100,7 @@
 			isa = PBXGroup;
 			children = (
 				BE506499161A2DAE003B237A /* wwfmax */,
+				BE5A94DE178DECA6001DD575 /* wwfmax Tests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -79,6 +108,7 @@
 		BE50649C161A2DAE003B237A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				BE5A94D7178DEAE4001DD575 /* XCTest.framework */,
 				BE50649D161A2DAE003B237A /* Foundation.framework */,
 			);
 			name = Frameworks;
@@ -106,7 +136,25 @@
 			isa = PBXGroup;
 			children = (
 				BE5064A3161A2DAE003B237A /* wwfmax-Prefix.pch */,
-				BEC01720161A36B60078129A /* dict.txt */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		BE5A94E0178DECA6001DD575 /* wwfmax Tests */ = {
+			isa = PBXGroup;
+			children = (
+				BE5A94E6178DECA6001DD575 /* wwfmax_Tests.m */,
+				BE5A94E1178DECA6001DD575 /* Supporting Files */,
+			);
+			path = "wwfmax Tests";
+			sourceTree = "<group>";
+		};
+		BE5A94E1178DECA6001DD575 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				BE5A94E2178DECA6001DD575 /* wwfmax Tests-Info.plist */,
+				BE5A94E3178DECA6001DD575 /* InfoPlist.strings */,
+				BE5A94E8178DECA6001DD575 /* wwfmax Tests-Prefix.pch */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -141,14 +189,37 @@
 			productReference = BE506499161A2DAE003B237A /* wwfmax */;
 			productType = "com.apple.product-type.tool";
 		};
+		BE5A94DD178DECA6001DD575 /* wwfmax Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BE5A94EB178DECA6001DD575 /* Build configuration list for PBXNativeTarget "wwfmax Tests" */;
+			buildPhases = (
+				BE5A94DA178DECA6001DD575 /* Sources */,
+				BE5A94DB178DECA6001DD575 /* Frameworks */,
+				BE5A94DC178DECA6001DD575 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				BE5A94EA178DECA6001DD575 /* PBXTargetDependency */,
+			);
+			name = "wwfmax Tests";
+			productName = "wwfmax Tests";
+			productReference = BE5A94DE178DECA6001DD575 /* wwfmax Tests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		BE506490161A2DAD003B237A /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0450;
+				LastUpgradeCheck = 0500;
 				ORGANIZATIONNAME = "Llama Software";
+				TargetAttributes = {
+					BE5A94DD178DECA6001DD575 = {
+						TestTargetID = BE506498161A2DAE003B237A;
+					};
+				};
 			};
 			buildConfigurationList = BE506493161A2DAE003B237A /* Build configuration list for PBXProject "wwfmax" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -163,9 +234,21 @@
 			projectRoot = "";
 			targets = (
 				BE506498161A2DAE003B237A /* wwfmax */,
+				BE5A94DD178DECA6001DD575 /* wwfmax Tests */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		BE5A94DC178DECA6001DD575 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BE5A94E5178DECA6001DD575 /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		BE506495161A2DAE003B237A /* Sources */ = {
@@ -181,7 +264,35 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BE5A94DA178DECA6001DD575 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BE5A94E7178DECA6001DD575 /* wwfmax_Tests.m in Sources */,
+				BE5A94EF178DED5C001DD575 /* DictionaryManager.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		BE5A94EA178DECA6001DD575 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BE506498161A2DAE003B237A /* wwfmax */;
+			targetProxy = BE5A94E9178DECA6001DD575 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		BE5A94E3178DECA6001DD575 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				BE5A94E4178DECA6001DD575 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		BE5064A6161A2DAE003B237A /* Debug */ = {
@@ -251,6 +362,10 @@
 		BE5064A9161A2DAE003B237A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SYSTEM_APPS_DIR)/Xcode5-DP3.app/Contents/Developer/Library/Frameworks",
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "wwfmax/wwfmax-Prefix.pch";
 				HEADER_SEARCH_PATHS = "";
@@ -265,6 +380,10 @@
 		BE5064AA161A2DAE003B237A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SYSTEM_APPS_DIR)/Xcode5-DP3.app/Contents/Developer/Library/Frameworks",
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "wwfmax/wwfmax-Prefix.pch";
 				LIBRARY_SEARCH_PATHS = (
@@ -272,6 +391,66 @@
 					"\"$(SDKROOT)/usr/lib/system\"",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		BE5A94EC178DECA6001DD575 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+					"$(inherited)",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "wwfmax Tests/wwfmax Tests-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				INFOPLIST_FILE = "wwfmax Tests/wwfmax Tests-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = xctest;
+			};
+			name = Debug;
+		};
+		BE5A94ED178DECA6001DD575 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+					"$(inherited)",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "wwfmax Tests/wwfmax Tests-Prefix.pch";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				INFOPLIST_FILE = "wwfmax Tests/wwfmax Tests-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = xctest;
 			};
 			name = Release;
 		};
@@ -292,6 +471,15 @@
 			buildConfigurations = (
 				BE5064A9161A2DAE003B237A /* Debug */,
 				BE5064AA161A2DAE003B237A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BE5A94EB178DECA6001DD575 /* Build configuration list for PBXNativeTarget "wwfmax Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BE5A94EC178DECA6001DD575 /* Debug */,
+				BE5A94ED178DECA6001DD575 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

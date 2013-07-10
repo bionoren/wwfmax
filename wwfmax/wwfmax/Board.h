@@ -20,9 +20,16 @@ typedef struct {
     int maxy;
 } Solution;
 
+typedef struct {
+    DictionaryIterator *words;
+    DictionaryManager *rwords;
+    DictionaryManager *pwords;
+    DictionaryManager *rpwords;
+} Dictionaries;
+
 @interface Board : NSObject
 
--(Solution)solve:(DictionaryIterator*)itr permutedDictionary:(DictionaryManager*)validatorMgr;
+-(Solution)solve:(Dictionaries)dicts;
 +(NSString*)debugBoard:(char*)board;
 
 @end
@@ -35,4 +42,11 @@ static void printSolution(Solution sol) {
         maxWordLetters[offset] = c;
     }
     NSLog(@"Highest scoring play is %.*s (%.*s) at (%d, %d) on (%@) for %ld points", sol.maxWordLength, maxWordLetters, sol.maxWordLength, sol.maxWord, sol.maxx, sol.maxy, [Board debugBoard:sol.maxBoard], sol.maxScore);
+}
+
+static void freeDictionaries(Dictionaries dicts) {
+    freeDictIterator(dicts.words);
+    freeDictManager(dicts.rwords);
+    freeDictManager(dicts.pwords);
+    freeDictManager(dicts.rpwords);
 }

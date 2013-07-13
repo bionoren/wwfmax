@@ -53,6 +53,10 @@ static const int letterCounts[] = {
 
 static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGTH * BOARD_LENGTH - 1] = DEFAULT_CHAR };
 
+static int maxBaseScore = 0;
+static int maxPrescore = 0;
+static NSMutableDictionary *maxBonusTileScores = nil;
+
 @interface Board ()
 
 @property (nonatomic) int *letters;
@@ -66,6 +70,20 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
         _letters = calloc(NUM_LETTERS, sizeof(int));
         RESET_LETTERS;
         NSAssert(self.letters[1] == 9, @"self.letters[1] = %d, self.letters[4] = %d", self.letters[1], self.letters[4]);
+        if(!maxBonusTileScores) {
+            maxBonusTileScores = [[NSMutableDictionary alloc] initWithCapacity:60];
+            for(int y = 0; y < BOARD_LENGTH; y++) {
+                if(y % 2 == 0 && (y != 0 && y != 14)) { //high scoring plays will involve a word multiplier
+                    continue;
+                }
+                for(int x = 0; x < BOARD_LENGTH; x++) {
+                    int hash = HASH(x, y);
+                    if(isBonusSquareHash(hash)) {
+                        maxBonusTileScores[@(hash)] = [[NSMutableDictionary alloc] initWithCapacity:NUM_LETTERS];
+                    }
+                }
+            }
+        }
     }
     return self;
 }
@@ -75,38 +93,22 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
     _letters = NULL;
 }
 
-/**
- I'm strictly interested in the top half of the board and horizontal words because of bonus tile symetry.
- */
--(Solution)solve:(Dictionaries)dicts; {
-    Solution ret;
-    ret.maxScore = 0;
-
-    DictionaryIterator *verticalItrs[NUM_LETTERS_TURN][3];
-    VerticalState verticalState[NUM_LETTERS_TURN] = {{0, 0}};
-    for(int i = 0; i < NUM_LETTERS_TURN; i++) {
-        verticalItrs[i][0] = createDictIterator(dicts.pwords); //for building the bottom word [fragment]
-        verticalItrs[i][1] = createDictIterator(dicts.rwords); //for completing the bottom fragment
-        verticalItrs[i][2] = createDictIterator(dicts.rwords); //for building the top word
-    }
-    assert(BOARD_LENGTH + 1 == 16 && sizeof(int) == 4);
-    char vwords[NUM_LETTERS_TURN][BOARD_LENGTH + 1];
-    int vlengths[NUM_LETTERS_TURN] = {0};
-
+-(void)preprocess:(Dictionaries)dicts {
     NSMutableSet *playableWords = [NSMutableSet set];
     assert(BOARD_LENGTH + 1 == 16 && sizeof(int) == 4);
     char word[BOARD_LENGTH + 1] = {0};
     int length;
     while((length = nextWord_threadsafe(dicts.words, word))) {
-        NSLog(@"Evaluating %.*s\n", length, word);
+        //NSLog(@"Evaluating %.*s\n", length, word);
         @autoreleasepool {
             const int prescore = prescoreWord(word, length);
+            if(prescore > maxPrescore) {
+                maxPrescore = prescore;
+            }
 
             subwordsAtLocation(dicts.words, &playableWords, word, length);
-            if(playableWords.count == 0) {
-                continue;
-            }
-            
+            assert(playableWords.count > 0);
+
             for(WordStructure *wordStruct in playableWords) {
                 assert(wordStruct->_numLetters > 0);
                 if([self validateLetters:wordStruct->_letters length:wordStruct->_numLetters]) {
@@ -127,7 +129,88 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
                         locs[j] = X_FROM_HASH(l);
                     }
 
-                    int numCharGroups = 0;
+                    int bonus = (wordStruct->_numLetters == NUM_LETTERS_TURN)?35:0;
+
+                    for(int y = 0; y < BOARD_LENGTH; ++y) {
+                        if(y % 2 == 0 && (y != 0 && y != 14)) { //high scoring plays will involve a word multiplier
+                            continue;
+                        }
+                        for(int x = 0; x < BOARD_LENGTH - length + 1; ++x) {
+                            int wordScore = scoreLettersWithPrescore(prescore, wordStruct->_numLetters, chars, locs, x, y) + bonus;
+                            for(int xb = 0; xb < wordStruct->_numLetters; xb++) {
+                                int hash = HASH(locs[xb], y);
+                                if(isBonusSquareHash(hash)) {
+                                    NSNumber *index = @(hash);
+                                    NSNumber *letterIndex = @(chars[xb]);
+                                    int bonusScore = (prescore + scoreSquarePrescoredHash(chars[xb], hash)) * wordMultiplierHash(hash);
+                                    if(bonusScore > [maxBonusTileScores[index][letterIndex] intValue]) {
+                                        maxBonusTileScores[index][letterIndex] = @(bonusScore);
+                                    }
+                                }
+                            }
+
+                            if(wordScore > maxBaseScore) {
+                                maxBaseScore = wordScore;
+                            }
+                        }
+                    }
+                }
+                RESET_LETTERS;
+            }
+            [playableWords removeAllObjects];
+        }
+    }
+
+    printf("Max prescore = %d\n", maxPrescore);
+    printf("Max base score = %d\n", maxBaseScore);
+    NSLog(@"Max bonus tile scores = %@", maxBonusTileScores);
+}
+
+/**
+ I'm strictly interested in horizontal words because of bonus tile symetry.
+ */
+-(Solution)solve:(Dictionaries)dicts {
+    assert(maxPrescore); //need to run preprocess: first
+
+    Solution ret;
+    ret.maxScore = 0;
+
+    /*DictionaryIterator *verticalItrs[NUM_LETTERS_TURN][3];
+    VerticalState verticalState[NUM_LETTERS_TURN] = {{0, 0}};
+    for(int i = 0; i < NUM_LETTERS_TURN; i++) {
+        verticalItrs[i][0] = createDictIterator(dicts.pwords); //for building the bottom word
+        verticalItrs[i][1] = createDictIterator(dicts.rwords); //for extending the bottom word to the top
+        verticalItrs[i][2] = createDictIterator(dicts.rwords); //for building the top word
+    }
+    assert(BOARD_LENGTH + 1 == 16 && sizeof(int) == 4);
+    char vwords[NUM_LETTERS_TURN][BOARD_LENGTH + 1];
+    int vlengths[NUM_LETTERS_TURN] = {0};*/
+
+    NSMutableSet *playableWords = [NSMutableSet set];
+    assert(BOARD_LENGTH + 1 == 16 && sizeof(int) == 4);
+    char word[BOARD_LENGTH + 1] = {0};
+    int length;
+    int temp = 0;
+    while((length = nextWord_threadsafe(dicts.words, word))) {
+        //NSLog(@"Evaluating %.*s\n", length, word);
+        @autoreleasepool {
+            const int prescore = prescoreWord(word, length);
+
+            subwordsAtLocation(dicts.words, &playableWords, word, length);
+            assert(playableWords.count > 0);
+            
+            for(WordStructure *wordStruct in playableWords) {
+                assert(wordStruct->_numLetters > 0);
+                if([self validateLetters:wordStruct->_letters length:wordStruct->_numLetters]) {
+                    char chars[NUM_LETTERS_TURN]; //letters being played
+                    int locs[NUM_LETTERS_TURN]; //offsets of said letters (within the word)
+                    for(int j = 0; j < wordStruct->_numLetters; ++j) {
+                        Letter l = wordStruct->_letters[j];
+                        chars[j] = (char)Y_FROM_HASH(l);
+                        locs[j] = X_FROM_HASH(l);
+                    }
+
+                    /*int numCharGroups = 0;
                     int charGroupSize[NUM_LETTERS_TURN] = {0};
                     char charGroups[NUM_LETTERS_TURN][NUM_LETTERS_TURN] = {'\0'};
                     for(int j = 0; j < wordStruct->_numLetters; j++) {
@@ -136,17 +219,35 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
                             numCharGroups++;
                         }
                     }
-                    assert(numCharGroups > 0);
+                    assert(numCharGroups > 0);*/
                     
                     int bonus = (wordStruct->_numLetters == NUM_LETTERS_TURN)?35:0;
                     
                     for(int y = 0; y < BOARD_LENGTH; ++y) {
-                        if(y % 2 == 1 || (y != 0 && y != 14)) { //high scoring plays will involve a word multiplier
+                        if(y % 2 == 0 && (y != 0 && y != 14)) { //high scoring plays will involve a word multiplier
                             continue;
                         }
-                        for(int x = 0; x < BOARD_LENGTH - length; ++x) {
+                        for(int x = 0; x < BOARD_LENGTH - length + 1; ++x) {
                             int wordScore = scoreLettersWithPrescore(prescore, wordStruct->_numLetters, chars, locs, x, y) + bonus;
+                            int maxTotalWordScore = wordScore;
+                            for(int xb = 0; xb < wordStruct->_numLetters; xb++) {
+                                int hash = HASH(locs[xb], y);
+                                if(isBonusSquareHash(hash)) {
+                                    NSNumber *index = @(hash);
+                                    NSNumber *letterIndex = @(chars[xb]);
+                                    maxTotalWordScore += [maxBonusTileScores[index][letterIndex] intValue];
+                                } else {
+                                    maxTotalWordScore += maxPrescore;
+                                }
+                            }
+                            if(maxTotalWordScore < MAX(maxBaseScore, ret.maxScore)) {
+                                continue;
+                            }
+                            temp++;
 
+                            /*if(wordScore < prescore * 2) {
+                                continue; //we didn't use a word multiplier
+                            }
                             for(int j = 0; j < wordStruct->_numLetters; j++) {
                                 loadPrefix(verticalItrs[j][0], &chars[j], 1);
                                 loadPrefix(verticalItrs[j][2], &chars[j], 1);
@@ -157,17 +258,17 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
                                 while(true) {
                                     //do work here
 
-                                    vlengths[baseIndex] = nextVerticalWord(verticalItrs[baseIndex], verticalState[baseIndex], vwords[baseIndex], y);
+                                    vlengths[baseIndex] = nextVerticalWord(verticalItrs[baseIndex], &verticalState[baseIndex], vwords[baseIndex], y, dicts.words->mgr);
                                     for(int k = 0; !vlengths[baseIndex + k];) {
                                         //nextVerticalWord handles its own resetting
                                         k++;
                                         //this exits the loop
                                         if(k == charGroupSize[j]) goto PERMUTATION_END;
-                                        vlengths[baseIndex + k] = nextVerticalWord(verticalItrs[baseIndex + k], verticalState[baseIndex + k], vwords[baseIndex + k], y);
+                                        vlengths[baseIndex + k] = nextVerticalWord(verticalItrs[baseIndex + k], &verticalState[baseIndex + k], vwords[baseIndex + k], y, dicts.words->mgr);
                                     }
                                 }
                             PERMUTATION_END:;
-                            }
+                            }*/
 
                             if(wordScore > ret.maxScore) {
                                 ret.maxScore = wordScore;
@@ -197,6 +298,9 @@ static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGT
             [playableWords removeAllObjects];
         }
     }
+
+    printf("%d viable candidates\n", temp);
+
     return ret;
 }
 
@@ -217,62 +321,67 @@ typedef struct {
 
  This will cover all the bottom words and top/bottom combo words, leaving just the top-only scenario
  */
-int nextVerticalWord(DictionaryIterator *restrict*restrict iterators, VerticalState state, char *word, int y) {
+
+#define STR_REV_IN_PLACE(word, len) for(int z = 0; z < len / 2; ++z) { \
+    word[z] ^= word[len - 1 - z];\
+    word[len - 1 - z] ^= word[z];\
+    word[z] ^= word[len - 1 - z];\
+}
+#define STR_REV(dst, src, len) for(int z = 0; z < len; ++z) { \
+    dst[z] = src[len - z - 1];\
+}
+
+int nextVerticalWord(DictionaryIterator *restrict*restrict iterators, VerticalState *state, char *word, int y, DictionaryManager *wordMgr) {
     int ret = 0;
-    switch(state.state) {
+    switch(state->state) {
         case 0:
             if(BOARD_LENGTH - (y + 1) >= 2) {
-                //TODO: Handle the bottom/top combo case
-                if(state.prefixLength) {
+                if(state->prefixLength) {
                 COMPLETE_WORD:;
                     do {
-                        ret = nextWordWithPrefix(iterators[1], word, y + state.prefixLength);
-                    } while(ret && ret - state.prefixLength <= y - 1);
+                        ret = nextWordWithPrefix(iterators[1], word, y + state->prefixLength);
+                    } while(ret && !isValidWord(iterators[1]->mgr, word + state->prefixLength, ret - state->prefixLength));
                     if(ret) {
+                        STR_REV_IN_PLACE(word, ret);
                         return ret;
                     }
                 }
 
+            BOTTOM_WORD:;
                 ret = nextWordWithPrefix(iterators[0], word, BOARD_LENGTH - (y + 1));
-                if(!ret) {
-                    resetIteratorToPrefix(iterators[0]);
-                    state.state++;
-                    state.prefixLength = 0;
-                } else {
+                if(ret) {
                     assert(isValidWord(iterators[0]->mgr, word, ret));
                     assert(ret <= BOARD_LENGTH - (y + 1));
-                    for(int i = 0; i < ret / 2; ++i) { //strrev in place
-                        word[i] ^= word[ret - 1 - i];
-                        word[ret - 1 - i] ^= word[i];
-                        word[i] ^= word[ret - 1 - i];
+                    if(y > 2) {
+                        state->prefixLength = ret;
+                        char revword[BOARD_LENGTH + 1];
+                        STR_REV(revword, word, ret);
+                        loadPrefix(iterators[1], revword, ret);
                     }
-                    state.prefixLength = ret;
-                    bool success = loadPrefix(iterators[1], word, ret);
-                    assert(success);
-                    if(isValidWord(iterators[1]->mgr, word, ret)) {
-                        return ret;
-                    } else {
-                        goto COMPLETE_WORD;
-                    }
+                    return ret;
+                } else {
+                    resetIteratorToPrefix(iterators[0]);
+                    state->state++;
+                    state->prefixLength = 0;
                 }
             } else {
-                state.state++;
+                state->state++;
             }
         case 1:
             if(y - 1 >= 2) {
                 ret = nextWordWithPrefix(iterators[2], word, y - 1);
-                if(!ret) {
-                    resetIteratorToPrefix(iterators[2]);
-                    state.state++;
-                } else {
+                if(ret) {
                     assert(ret <= y - 1);
                     return ret;
+                } else {
+                    resetIteratorToPrefix(iterators[2]);
+                    state->state++;
                 }
             } else {
-                state.state++;
+                state->state++;
             }
         case 2:
-            state.state = 0;
+            state->state = 0;
             return ret;
         default:
             return -1;

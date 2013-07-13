@@ -36,6 +36,10 @@ int prescoreWord(const char *word, const int length);
 
 int scoreLettersWithPrescore(const int prescore, const int length, char *chars, int *offsets, const int x, const int y);
 
+bool isBonusSquareHash(int hash);
+
+bool isBonusSquare(int x, int y);
+
 #pragma mark - Validation
 
 BOOL validate(const char *word, const int length, const WordInfo *info);

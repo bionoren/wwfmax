@@ -14,6 +14,63 @@
 
 //anecdotally, ~2.5% of the shipped dictionary is unplayable, mostly because the words are too long for the board, but also because there aren't enough of the required letters and because some words can't be broken down into sufficiently small subwords
 
+char *CWGOfDictionaryFile(const char *dictionary, int numWords, bool validate) {
+#if BUILD_DATASTRUCTURES
+    char *words = calloc(numWords * BOARD_LENGTH, sizeof(char));
+    assert(words);
+    int *wordLengths = malloc(numWords * sizeof(int));
+    assert(wordLengths);
+
+    FILE *wordFile = fopen(dictionary, "r");
+    assert(wordFile);
+    char buffer[40];
+    int i = 0;
+    char *word = words;
+    while(fgets(buffer, 40, wordFile)) {
+        int len = (int)strlen(buffer);
+        if(buffer[len - 1] == '\n') {
+            --len;
+        }
+        if(len <= BOARD_LENGTH) {
+            strncpy(word, buffer, len);
+            assert(i < numWords);
+            wordLengths[i++] = len;
+            word += BOARD_LENGTH * sizeof(char);
+        }
+    }
+    fclose(wordFile);
+    numWords = i;
+
+    printf("evaluating %d words\n", numWords);
+
+    const WordInfo info = {.words = words, .numWords = numWords, .lengths = wordLengths};
+
+    if(validate) {
+        for(int i = 0; i < numWords; i++) {
+            char *word = &(words[i * BOARD_LENGTH]);
+            const int length = wordLengths[i];
+
+            if(!playable(word, length, &info)) {
+                words[i * BOARD_LENGTH] = 0;
+                wordLengths[i] = 0;
+                continue;
+            }
+        }
+    }
+#endif
+
+    char *ret = calloc(strlen(dictionary) + 5, sizeof(char));
+    strncpy(ret, dictionary, strlen(dictionary));
+    strcat(ret, ".dat");
+#if BUILD_DATASTRUCTURES
+    createDataStructure(&info, ret);
+    free(words);
+    free(wordLengths);
+#endif
+    
+    return ret;
+}
+
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
 #if DEBUG
@@ -39,6 +96,10 @@ int main(int argc, const char * argv[]) {
         dicts.pwords = createDictManager(dictionaryPermuted);
         dicts.rwords = createDictManager(dictionaryReversed);
         dicts.rpwords = createDictManager(dictionaryPermutedReversed);
+
+        [[[Board alloc] init] preprocess:dicts];
+        NSLog(@"Preprocessing complete");
+        resetIterator(dicts.words);
         
         __block Solution sol;
         sol.maxScore = 0;

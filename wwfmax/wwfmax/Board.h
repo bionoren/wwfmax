@@ -29,6 +29,7 @@ typedef struct {
 
 @interface Board : NSObject
 
+-(void)preprocess:(Dictionaries)dicts;
 -(Solution)solve:(Dictionaries)dicts;
 +(NSString*)debugBoard:(char*)board;
 

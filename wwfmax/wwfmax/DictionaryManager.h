@@ -36,19 +36,19 @@ typedef struct DictionaryIterator {
 } DictionaryIterator;
 
 bool isValidWord(DictionaryManager *mgr, const char *TheCandidate, int CandidateLength);
-/** Returns -1 if the prefix is invalid, 0 if the prefix is valid, and 1 if the prefix is also a word. */
-int isValidPrefix(DictionaryManager *mgr, const char *word, int length);
+bool isValidPrefix(DictionaryManager *mgr, const char *word, int length);
+/** Returns true if the prefix is also a word, false otherwise (assumes 'word' is a valid prefix) */
+bool isPrefixWord(DictionaryManager *mgr, const char *word, int length);
 int nextWord_threadsafe(DictionaryIterator *itr, char *outWord);
-int nextWord(DictionaryIterator *itr, char **outWord);
+int nextWord(DictionaryIterator *itr, char *outWord);
 int nextPrefix(DictionaryIterator *itr, char **outWord);
 //NOTE: Resets the iterator
-bool loadPrefix(DictionaryIterator *itr, const char *prefix, int length);
+bool loadPrefix(DictionaryIterator *itr, const char *prefix, const int length);
 //WARNING: Using this function with maxDepth < BOARD_LENGTH is UNDEFINED. Therefore, only use this method with maxDepth < BOARD_LENGTH on permutation dictionaries.
 int nextWordWithPrefix(DictionaryIterator *itr, char *outWord, int maxDepth);
 void resetIterator(DictionaryIterator *itr);
 void resetIteratorToPrefix(DictionaryIterator *itr);
 
-char *CWGOfDictionaryFile(const char *dictionary, int numWords, bool validate);
 DictionaryManager *createDictManager(char *dictionary);
 DictionaryIterator *createDictIterator(DictionaryManager *mgr);
 DictionaryIterator *cloneDictIterator(DictionaryIterator *itr);

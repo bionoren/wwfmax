@@ -29,20 +29,32 @@ bool isValidWord(DictionaryManager *mgr, const char *word, int length) {
     return *node & END_OF_WORD_BIT_MASK;
 }
 
-int isValidPrefix(DictionaryManager *mgr, const char *word, int length) {
+bool isValidPrefix(DictionaryManager *mgr, const char *word, int length) {
     int *node = &mgr->nodeArray[word[0] - 'a' + 1]; //root node
-    for(int i = 1; i < length; i++) {
+    for(int i = 1; i < length; ++i) {
         if(!(*node & CHILD_INDEX_BIT_MASK)) {
-            return -1;
+            return false;
         }
 
         int letterIndex = word[i];
-        for(node = &mgr->nodeArray[(*node & CHILD_INDEX_BIT_MASK) >> CHILD_BIT_SHIFT]; !(*node & END_OF_LIST_BIT_MASK) && letterIndex != (*node & LETTER_BIT_MASK); node++);
+        for(node = &mgr->nodeArray[(*node & CHILD_INDEX_BIT_MASK) >> CHILD_BIT_SHIFT]; letterIndex != (*node & LETTER_BIT_MASK); ++node);
         if(letterIndex != (*node & LETTER_BIT_MASK)) {
-            return -1;
+            return false;
         }
     }
-    return *node & END_OF_WORD_BIT_MASK;
+    return true;
+}
+
+bool isPrefixWord(DictionaryManager *mgr, const char *word, int length) {
+    int *node = &mgr->nodeArray[word[0] - 'a' + 1]; //root node
+    for(int i = 1; i < length; ++i) {
+        assert(*node & CHILD_INDEX_BIT_MASK);
+
+        int letterIndex = word[i];
+        for(node = &mgr->nodeArray[(*node & CHILD_INDEX_BIT_MASK) >> CHILD_BIT_SHIFT]; letterIndex != (*node & LETTER_BIT_MASK); ++node);
+        assert(letterIndex == (*node & LETTER_BIT_MASK));
+    }
+    return (*node & END_OF_WORD_BIT_MASK);
 }
 
 int nextWord_threadsafe(DictionaryIterator *itr, char *outWord) {
@@ -100,7 +112,7 @@ LOOP_END:;
     return ret;
 }
 
-int nextWord(DictionaryIterator *itr, char **outWord) {
+int nextWord(DictionaryIterator *itr, char *outWord) {
     assert(itr->stackDepth >= 0 && itr->stackDepth <= BOARD_LENGTH);
 
     dictStack *restrict item = &(itr->stack[itr->stackDepth]);
@@ -136,10 +148,13 @@ LOOP_END2:;
     } while(!eow);
 
     assert(itr->stackDepth > 1 && itr->stackDepth <= BOARD_LENGTH);
-    *outWord = itr->tmpWord;
+    assert(BOARD_LENGTH + 1 == 16 && sizeof(long) == 8);
+    for(int i = 0; i < 2; i++) {
+        ((long*restrict)outWord)[i] = ((long*restrict)itr->tmpWord)[i];
+    }
     //NSLog(@"Evaluating %.*s", length, tmpWord);
 
-    assert(isValidWord(itr->mgr, *outWord, itr->stackDepth));
+    assert(isValidWord(itr->mgr, outWord, itr->stackDepth));
     return itr->stackDepth;
 }
 
@@ -180,38 +195,30 @@ LOOP_END2:;
     return itr->stackDepth;
 }
 
-bool loadPrefix(DictionaryIterator *itr, const char *restrict prefix, int length) {
+bool loadPrefix(DictionaryIterator *itr, const char *restrict prefix, const int length) {
     resetIterator(itr);
 
-    dictStack *restrict item = &(itr->stack[0]);
-    item->index = prefix[0] - 'a' + 1;
-    item->node = itr->mgr->nodeArray[item->index];
+    int index = prefix[0] - 'a' + 1;
+    int node = itr->mgr->nodeArray[index];
+    itr->tmpWord[0] = *prefix++;
 
-    for(int i = 1; i < length; i++) {
-        if(!(item->node & CHILD_INDEX_BIT_MASK)) {
-            return false;
-        }
+    for(int i = 1; i < length; ++i) {
+        assert(node & CHILD_INDEX_BIT_MASK);
 
-        int letterIndex = prefix[i];
-        int node = item->node;
-        item = &(itr->stack[i]);
+        char letterIndex = *prefix++;
+        itr->tmpWord[i] = letterIndex;
 
         //setup the next node
-        item->index = (node & CHILD_INDEX_BIT_MASK) >> CHILD_BIT_SHIFT;
-        for(; !(itr->mgr->nodeArray[item->index] & END_OF_LIST_BIT_MASK) && letterIndex != (itr->mgr->nodeArray[item->index] & LETTER_BIT_MASK); item->index++);
-        if(letterIndex != (itr->mgr->nodeArray[item->index] & LETTER_BIT_MASK)) {
-            return false;
+        for(index = (node & CHILD_INDEX_BIT_MASK) >> CHILD_BIT_SHIFT; letterIndex != (itr->mgr->nodeArray[index] & LETTER_BIT_MASK); ++index) {
+            assert(!(itr->mgr->nodeArray[index] & END_OF_LIST_BIT_MASK));
         }
-        item->node = itr->mgr->nodeArray[item->index];
-    }
-    for(int i = 0; i < length; i++) {
-        itr->tmpWord[i] = prefix[i];
+        assert(letterIndex == (itr->mgr->nodeArray[index] & LETTER_BIT_MASK));
+        node = itr->mgr->nodeArray[index];
     }
     itr->prefixLength = length;
     itr->stackDepth = length;
 
-    int node = item->node;
-    item++;
+    dictStack *item = &(itr->stack[length]);
     item->index = (node & CHILD_INDEX_BIT_MASK) >> CHILD_BIT_SHIFT;
     item->node = itr->mgr->nodeArray[item->index];
     return true;
@@ -254,7 +261,6 @@ LOOP_END2:;
         if(itr->stackDepth > maxDepth) {
             goto START;
         }
-        assert(isValidPrefix(itr->mgr, itr->tmpWord, itr->stackDepth) >= 0);
     } while(!eow);
 
     assert(itr->stackDepth > itr->prefixLength && itr->stackDepth <= maxDepth);
@@ -280,63 +286,6 @@ void resetIteratorToPrefix(DictionaryIterator *itr) {
 }
 
 #pragma mark -  Setup / Teardown
-
-char *CWGOfDictionaryFile(const char *dictionary, int numWords, bool validate) {
-#if BUILD_DATASTRUCTURES
-    char *words = calloc(numWords * BOARD_LENGTH, sizeof(char));
-    assert(words);
-    int *wordLengths = malloc(numWords * sizeof(int));
-    assert(wordLengths);
-
-    FILE *wordFile = fopen(dictionary, "r");
-    assert(wordFile);
-    char buffer[40];
-    int i = 0;
-    char *word = words;
-    while(fgets(buffer, 40, wordFile)) {
-        int len = (int)strlen(buffer);
-        if(buffer[len - 1] == '\n') {
-            --len;
-        }
-        if(len <= BOARD_LENGTH) {
-            strncpy(word, buffer, len);
-            assert(i < numWords);
-            wordLengths[i++] = len;
-            word += BOARD_LENGTH * sizeof(char);
-        }
-    }
-    fclose(wordFile);
-    numWords = i;
-
-    NSLog(@"evaluating %d words", numWords);
-
-    const WordInfo info = {.words = words, .numWords = numWords, .lengths = wordLengths};
-
-    if(validate) {
-        for(int i = 0; i < numWords; i++) {
-            char *word = &(words[i * BOARD_LENGTH]);
-            const int length = wordLengths[i];
-
-            if(!playable(word, length, &info)) {
-                words[i * BOARD_LENGTH] = 0;
-                wordLengths[i] = 0;
-                continue;
-            }
-        }
-    }
-#endif
-
-    char *ret = calloc(strlen(dictionary) + 5, sizeof(char));
-    strncpy(ret, dictionary, strlen(dictionary));
-    strcat(ret, ".dat");
-#if BUILD_DATASTRUCTURES
-    createDataStructure(&info, ret);
-    free(words);
-    free(wordLengths);
-#endif
-    
-    return ret;
-}
 
 DictionaryManager *createDictManager(char *dictionary) {
     DictionaryManager *ret = malloc(sizeof(DictionaryManager));

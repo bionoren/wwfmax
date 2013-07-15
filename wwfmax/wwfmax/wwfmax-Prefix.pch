@@ -6,7 +6,7 @@
     #import <Foundation/Foundation.h>
 #endif
 
-#define BUILD_DATASTRUCTURES 1
+#define BUILD_DATASTRUCTURES 0
 
 #ifdef DEBUG
 #define NUM_THREADS 1

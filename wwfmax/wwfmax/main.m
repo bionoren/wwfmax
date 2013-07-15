@@ -42,9 +42,10 @@ char *prefixStringInPath(const char *string, const char *prefix) {
     return ret;
 }
 
-char *CWGOfDictionaryFile(const char *dictionary, int numWords, char **validatedDict) {
+char *CWGOfDictionaryFile(const char *dictionary, char **validatedDict) {
 #if BUILD_DATASTRUCTURES
-    char *words = calloc(numWords * BOARD_LENGTH, sizeof(char));
+    int numWords = 1024;
+    char *words = malloc(numWords * BOARD_LENGTH * sizeof(char));
     assert(words);
     int *wordLengths = malloc(numWords * sizeof(int));
     assert(wordLengths);
@@ -53,7 +54,6 @@ char *CWGOfDictionaryFile(const char *dictionary, int numWords, char **validated
     assert(wordFile);
     char buffer[40];
     int i = 0;
-    char *word = words;
     while(fgets(buffer, 40, wordFile)) {
         int len = (int)strlen(buffer);
         if(buffer[len - 1] == '\n') {
@@ -63,10 +63,13 @@ char *CWGOfDictionaryFile(const char *dictionary, int numWords, char **validated
             continue;
         }
         if(len <= BOARD_LENGTH) {
-            strncpy(word, buffer, len);
-            assert(i < numWords);
+            strncpy(&(words[BOARD_LENGTH * i]), buffer, len);
             wordLengths[i++] = len;
-            word += BOARD_LENGTH * sizeof(char);
+            if(i >= numWords) {
+                numWords *= 2;
+                words = realloc(words, numWords * BOARD_LENGTH * sizeof(char));
+                wordLengths = realloc(wordLengths, numWords * sizeof(int));
+            }
         }
     }
     fclose(wordFile);
@@ -122,17 +125,17 @@ int main(int argc, const char * argv[]) {
         //NOTE: generated datastructures account for approximately 3Mb of storage
         const char *dictionaryPath = DICTIONARY;
         char *validDictionary;
-        char *dictionary = CWGOfDictionaryFile(dictionaryPath, 173101, &validDictionary);
+        char *dictionary = CWGOfDictionaryFile(dictionaryPath, &validDictionary);
         char *reversedDictionary = prefixStringInPath(dictionaryPath, "reversed-");
         shellprintf("cat %s | rev > %s", validDictionary, reversedDictionary);
-        char *dictionaryReversed = CWGOfDictionaryFile(reversedDictionary, 173101, NULL);
+        char *dictionaryReversed = CWGOfDictionaryFile(reversedDictionary, NULL);
 
         char *suffixedDictionary = prefixStringInPath(dictionaryPath, "suffixes-");
         char *reversedSuffixedDictionary = prefixStringInPath(suffixedDictionary, "reversed-");
         shellprintf("python %s %s %s", DICT_PERMUTER, validDictionary, suffixedDictionary);
-        char *dictionarySuffixes = CWGOfDictionaryFile(suffixedDictionary, 952650, NULL);
+        char *dictionarySuffixes = CWGOfDictionaryFile(suffixedDictionary, NULL);
         shellprintf("cat %s | rev > %s", suffixedDictionary, reversedSuffixedDictionary);
-        char *dictionarySuffixesReversed = CWGOfDictionaryFile(reversedSuffixedDictionary, 952650, NULL);
+        char *dictionarySuffixesReversed = CWGOfDictionaryFile(reversedSuffixedDictionary, NULL);
 
         free(validDictionary);
         free(reversedDictionary);

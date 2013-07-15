@@ -127,14 +127,20 @@ int main(int argc, const char * argv[]) {
         char *validDictionary;
         char *dictionary = CWGOfDictionaryFile(dictionaryPath, &validDictionary);
         char *reversedDictionary = prefixStringInPath(dictionaryPath, "reversed-");
+#if BUILD_DATASTRUCTURES
         shellprintf("cat %s | rev > %s", validDictionary, reversedDictionary);
+#endif
         char *dictionaryReversed = CWGOfDictionaryFile(reversedDictionary, NULL);
 
         char *suffixedDictionary = prefixStringInPath(dictionaryPath, "suffixes-");
         char *reversedSuffixedDictionary = prefixStringInPath(suffixedDictionary, "reversed-");
+#if BUILD_DATASTRUCTURES
         shellprintf("python %s %s %s", DICT_PERMUTER, validDictionary, suffixedDictionary);
+#endif
         char *dictionarySuffixes = CWGOfDictionaryFile(suffixedDictionary, NULL);
+#if BUILD_DATASTRUCTURES
         shellprintf("cat %s | rev > %s", suffixedDictionary, reversedSuffixedDictionary);
+#endif
         char *dictionarySuffixesReversed = CWGOfDictionaryFile(reversedSuffixedDictionary, NULL);
 
         free(validDictionary);

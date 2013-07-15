@@ -329,7 +329,7 @@ static int maxBonusTileScores[BOARD_LENGTH * BOARD_LENGTH][26] = {0};
         }
     }
 
-    printf("%d viable candidates\n", temp);
+    printf("%d viable candidates (estimated to take %.3f days)\n", temp, temp * 10 / 60.0 / 24.0);
 
     return ret;
 }

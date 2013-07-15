@@ -54,8 +54,7 @@ static const int letterCounts[] = {
 static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGTH * BOARD_LENGTH - 1] = DEFAULT_CHAR };
 
 static int maxBaseScore = 0;
-static int maxPrescore = 0;
-static NSMutableDictionary *maxBonusTileScores = nil;
+static int maxBonusTileScores[BOARD_LENGTH * BOARD_LENGTH][26] = {0};
 
 @interface Board ()
 
@@ -70,20 +69,6 @@ static NSMutableDictionary *maxBonusTileScores = nil;
         _letters = calloc(NUM_LETTERS, sizeof(int));
         RESET_LETTERS;
         NSAssert(self.letters[1] == 9, @"self.letters[1] = %d, self.letters[4] = %d", self.letters[1], self.letters[4]);
-        if(!maxBonusTileScores) {
-            maxBonusTileScores = [[NSMutableDictionary alloc] initWithCapacity:60];
-            for(int y = 0; y < BOARD_LENGTH; y++) {
-                if(y % 2 == 0 && (y != 0 && y != 14)) { //high scoring plays will involve a word multiplier
-                    continue;
-                }
-                for(int x = 0; x < BOARD_LENGTH; x++) {
-                    int hash = HASH(x, y);
-                    if(isBonusSquareHash(hash)) {
-                        maxBonusTileScores[@(hash)] = [[NSMutableDictionary alloc] initWithCapacity:NUM_LETTERS];
-                    }
-                }
-            }
-        }
     }
     return self;
 }
@@ -93,7 +78,22 @@ static NSMutableDictionary *maxBonusTileScores = nil;
     _letters = NULL;
 }
 
--(void)preprocess:(Dictionaries)dicts {
++(void)loadPreprocessedData:(PreprocessedData*)data {
+    maxBaseScore = data->maxBaseScore;
+    memcpy(maxBonusTileScores, data->maxBonusTileScores, BOARD_LENGTH * BOARD_LENGTH * 26 * sizeof(int));
+
+#ifdef DEBUG
+    printf("Max base score = %d\n", maxBaseScore);
+#endif
+}
+
+-(PreprocessedData*)preprocess:(Dictionaries)dicts {
+    PreprocessedData *ret = calloc(1, sizeof(PreprocessedData));
+#ifdef DEBUG
+    int maxPrescore;
+#endif
+    assert(ret);
+
     NSMutableSet *playableWords = [NSMutableSet set];
     assert(BOARD_LENGTH + 1 == 16 && sizeof(int) == 4);
     char word[BOARD_LENGTH + 1] = {0};
@@ -127,9 +127,11 @@ static NSMutableDictionary *maxBonusTileScores = nil;
                         prescore -= valuel(word[locs[i]]);
                     }
                 }
+#ifdef DEBUG
                 if(prescore > maxPrescore) {
                     maxPrescore = prescore;
                 }
+#endif
 
                 int bonus = (wordStruct->_numLetters == NUM_LETTERS_TURN)?35:0;
 
@@ -141,18 +143,24 @@ static NSMutableDictionary *maxBonusTileScores = nil;
                         int wordScore = scoreLettersWithPrescore(prescore, wordStruct->_numLetters, chars, locs, x, y) + bonus;
                         for(int xb = 0; xb < wordStruct->_numLetters; xb++) {
                             int hash = HASH(x + locs[xb], y);
-                            if(isBonusSquareHash(hash)) {
-                                NSNumber *index = @(hash);
-                                NSNumber *letterIndex = @(chars[xb]);
-                                int bonusScore = (prescore + scoreSquarePrescoredHash(chars[xb], hash)) * wordMultiplierHash(hash);
-                                if(bonusScore > [maxBonusTileScores[index][letterIndex] intValue]) {
-                                    maxBonusTileScores[index][letterIndex] = @(bonusScore);
+                            //if(isBonusSquareHash(hash)) {
+                                int index = y * BOARD_LENGTH + x + locs[xb];
+                                assert(index < BOARD_LENGTH * BOARD_LENGTH && index >= 0);
+                                int letterIndex = chars[xb] - LETTER_OFFSET_LC;
+                                if(letterIndex < 0) {
+                                    letterIndex = chars[xb] - LETTER_OFFSET_UC;
                                 }
-                            }
+                                assert(letterIndex < 26 && letterIndex >= 0);
+                                int bonusScore = (prescore + scoreSquarePrescoredHash(chars[xb], hash)) * wordMultiplierHash(hash);
+                                assert(isBonusSquareHash(hash) || (bonusScore == prescore && prescore <= maxPrescore));
+                                if(bonusScore > ret->maxBonusTileScores[index][letterIndex]) {
+                                    ret->maxBonusTileScores[index][letterIndex] = bonusScore;
+                                }
+                            //}
                         }
 
-                        if(wordScore > maxBaseScore) {
-                            maxBaseScore = wordScore;
+                        if(wordScore > ret->maxBaseScore) {
+                            ret->maxBaseScore = wordScore;
                         }
                     }
                 }
@@ -163,18 +171,20 @@ static NSMutableDictionary *maxBonusTileScores = nil;
         }
     }
 
-#ifdef DEBUG
-    printf("Max prescore = %d\n", maxPrescore);
-    printf("Max base score = %d\n", maxBaseScore);
-    NSLog(@"Max bonus tile scores = %@", maxBonusTileScores);
-#endif
+    for(int i = 0; i < BOARD_LENGTH * BOARD_LENGTH; i++) {
+        for(int j = 0; j < 26; j++) {
+            assert(isBonusSquareHash(HASH(i % BOARD_LENGTH, i / BOARD_LENGTH)) || ret->maxBonusTileScores[i][j] <= maxPrescore);
+        }
+    }
+
+    return ret;
 }
 
 /**
  I'm strictly interested in horizontal words because of bonus tile symetry.
  */
 -(Solution)solve:(Dictionaries)dicts {
-    assert(maxPrescore); //need to run preprocess: first
+    assert(maxBaseScore); //need to run preprocess: first
 
     Solution ret;
     ret.maxScore = 0;
@@ -248,14 +258,14 @@ static NSMutableDictionary *maxBonusTileScores = nil;
                         int wordScore = scoreLettersWithPrescore(prescore, wordStruct->_numLetters, chars, locs, x, y) + bonus;
                         int maxTotalWordScore = wordScore;
                         for(int xb = 0; xb < wordStruct->_numLetters; xb++) {
-                            int hash = HASH(x + locs[xb], y);
-                            if(isBonusSquareHash(hash)) {
-                                NSNumber *index = @(hash);
-                                NSNumber *letterIndex = @(chars[xb]);
-                                maxTotalWordScore += [maxBonusTileScores[index][letterIndex] intValue];
-                            } else {
-                                maxTotalWordScore += maxPrescore;
+                            int index = y * BOARD_LENGTH + x + locs[xb];
+                            assert(index < BOARD_LENGTH * BOARD_LENGTH);
+                            int letterIndex = chars[xb] - LETTER_OFFSET_LC;
+                            if(letterIndex < 0) {
+                                letterIndex = chars[xb] - LETTER_OFFSET_UC;
                             }
+                            assert(letterIndex < 26 && letterIndex >= 0);
+                            maxTotalWordScore += maxBonusTileScores[index][letterIndex];
                         }
                         if(maxTotalWordScore <= MAX(maxBaseScore, ret.maxScore)) {
                             continue;

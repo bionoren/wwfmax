@@ -21,6 +21,11 @@ typedef struct {
 } Solution;
 
 typedef struct {
+    int maxBaseScore;
+    int maxBonusTileScores[BOARD_LENGTH * BOARD_LENGTH][26];
+} PreprocessedData;
+
+typedef struct {
     DictionaryIterator *words;
     DictionaryManager *rwords;
     DictionaryManager *pwords;
@@ -29,7 +34,8 @@ typedef struct {
 
 @interface Board : NSObject
 
--(void)preprocess:(Dictionaries)dicts;
++(void)loadPreprocessedData:(PreprocessedData*)data;
+-(PreprocessedData*)preprocess:(Dictionaries)dicts;
 -(Solution)solve:(Dictionaries)dicts;
 +(NSString*)debugBoard:(char*)board;
 

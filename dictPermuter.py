@@ -1,9 +1,16 @@
 #It's not so much permutations now as it is suffixes - allowing indexing of words by the first letter of their suffix
 #What I really want are words or suffixes for which the string is a word with the first letter removed
 from iohelper import IOHelper
+import sys
+
+if(len(sys.argv) < 3):
+    print "python dictPermuter.py [inputDict] [outputDict]"
+    sys.exit(1)
+inputDictName = sys.argv[1]
+outputDictName = sys.argv[2]
 
 helper = IOHelper()
-indict = helper.readlines("validDict.txt")
+indict = helper.readlines(inputDictName)
 
 outDict = {}
 
@@ -20,4 +27,4 @@ for word in indict:
         if binary_search(indict, string[1:]) >= 0:
             outDict[string[:len(string) - 1]] = True
 
-helper.writelines("dictPermuted.txt", sorted(outDict.keys()), "\n")
+helper.writelines(outputDictName, sorted(outDict.keys()), "\n")

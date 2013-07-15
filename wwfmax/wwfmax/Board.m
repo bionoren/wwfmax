@@ -116,6 +116,7 @@ static int maxBonusTileScores[BOARD_LENGTH * BOARD_LENGTH][26] = {0};
                     assert([self testValidate:subwordPointer length:subwordLen]);
                 }
 #endif
+                //letter allocation and caching
                 char chars[NUM_LETTERS_TURN]; //letters being played
                 int locs[NUM_LETTERS_TURN]; //offsets of said letters (within the word)
                 int prescore = prescoreWord(word, length);
@@ -126,6 +127,20 @@ static int maxBonusTileScores[BOARD_LENGTH * BOARD_LENGTH][26] = {0};
                     if(chars[i] < LETTER_OFFSET_LC) {
                         prescore -= valuel(word[locs[i]]);
                     }
+                }
+
+                for(int i = 0, j = 0; i < length; i++) {
+                    if(j < wordStruct->_numLetters && locs[j] == i) {
+                        j++;
+                        continue;
+                    }
+                    Letter l = (typeof(Letter))HASH(i, word[i]);
+                    bool valid = [self validateLetters:&l length:1];
+                    word[i] = (char)Y_FROM_HASH(l);
+                    if(word[i] < LETTER_OFFSET_LC) {
+                        prescore -= valuel(word[i]);
+                    }
+                    assert(valid);
                 }
 #ifdef DEBUG
                 if(prescore > maxPrescore) {
@@ -140,23 +155,41 @@ static int maxBonusTileScores[BOARD_LENGTH * BOARD_LENGTH][26] = {0};
                         continue;
                     }
                     for(int x = 0; x < BOARD_LENGTH - length + 1; ++x) {
+                        //get blank tiles off bonus letter squares
+                        for(int i = 0; i < wordStruct->_numLetters; i++) {
+                            if(chars[i] < LETTER_OFFSET_LC && isLetterBonusSquare(x + locs[i], y)) {
+                                for(int j = 0; j < wordStruct->_numLetters; j++) {
+                                    if(j == i) {
+                                        continue;
+                                    }
+                                    if(!isLetterBonusSquare(x + locs[j], y)) {
+                                        chars[j] ^= chars[i];
+                                        chars[i] ^= chars[j];
+                                        chars[j] ^= chars[i];
+                                        break;
+                                    }
+                                    if(j + 1 == i) {
+                                        abort(); //if it turns out with the latest dictionary that this is an irresolvable optimization, we'll at least find out early in preprocessing
+                                    }
+                                }
+                            }
+                        }
+
                         int wordScore = scoreLettersWithPrescore(prescore, wordStruct->_numLetters, chars, locs, x, y) + bonus;
                         for(int xb = 0; xb < wordStruct->_numLetters; xb++) {
                             int hash = HASH(x + locs[xb], y);
-                            //if(isBonusSquareHash(hash)) {
-                                int index = y * BOARD_LENGTH + x + locs[xb];
-                                assert(index < BOARD_LENGTH * BOARD_LENGTH && index >= 0);
-                                int letterIndex = chars[xb] - LETTER_OFFSET_LC;
-                                if(letterIndex < 0) {
-                                    letterIndex = chars[xb] - LETTER_OFFSET_UC;
-                                }
-                                assert(letterIndex < 26 && letterIndex >= 0);
-                                int bonusScore = (prescore + scoreSquarePrescoredHash(chars[xb], hash)) * wordMultiplierHash(hash);
-                                assert(isBonusSquareHash(hash) || (bonusScore == prescore && prescore <= maxPrescore));
-                                if(bonusScore > ret->maxBonusTileScores[index][letterIndex]) {
-                                    ret->maxBonusTileScores[index][letterIndex] = bonusScore;
-                                }
-                            //}
+                            int index = y * BOARD_LENGTH + x + locs[xb];
+                            assert(index < BOARD_LENGTH * BOARD_LENGTH && index >= 0);
+                            int letterIndex = chars[xb] - LETTER_OFFSET_LC;
+                            if(letterIndex < 0) {
+                                letterIndex = chars[xb] - LETTER_OFFSET_UC;
+                            }
+                            assert(letterIndex < 26 && letterIndex >= 0);
+                            int bonusScore = (prescore + scoreSquarePrescoredHash(chars[xb], hash)) * wordMultiplierHash(hash);
+                            assert(isBonusSquareHash(hash) || (bonusScore == prescore && prescore <= maxPrescore));
+                            if(bonusScore > ret->maxBonusTileScores[index][letterIndex]) {
+                                ret->maxBonusTileScores[index][letterIndex] = bonusScore;
+                            }
                         }
 
                         if(wordScore > ret->maxBaseScore) {
@@ -164,8 +197,12 @@ static int maxBonusTileScores[BOARD_LENGTH * BOARD_LENGTH][26] = {0};
                         }
                     }
                 }
-
                 RESET_LETTERS;
+                for(int i = 0; i < length; i++) {
+                    if(word[i] < LETTER_OFFSET_LC) {
+                        word[i] = word[i] - LETTER_OFFSET_UC + LETTER_OFFSET_LC;
+                    }
+                }
             }
             [playableWords removeAllObjects];
         }
@@ -215,6 +252,7 @@ static int maxBonusTileScores[BOARD_LENGTH * BOARD_LENGTH][26] = {0};
                 assert(wordStruct->_numLetters > 0);
                 [self validateLetters:wordStruct->_letters length:wordStruct->_numLetters]; //assign tiles to the played letters first
 
+                //letter allocation and caching
                 char chars[NUM_LETTERS_TURN]; //letters being played
                 int locs[NUM_LETTERS_TURN]; //offsets of said letters (within the word)
                 int prescore = prescoreWord(word, length);
@@ -234,6 +272,10 @@ static int maxBonusTileScores[BOARD_LENGTH * BOARD_LENGTH][26] = {0};
                     }
                     Letter l = (typeof(Letter))HASH(i, word[i]);
                     bool valid = [self validateLetters:&l length:1];
+                    word[i] = (char)Y_FROM_HASH(l);
+                    if(word[i] < LETTER_OFFSET_LC) {
+                        prescore -= valuel(word[i]);
+                    }
                     assert(valid);
                 }
 
@@ -255,6 +297,23 @@ static int maxBonusTileScores[BOARD_LENGTH * BOARD_LENGTH][26] = {0};
                         continue;
                     }
                     for(int x = 0; x < BOARD_LENGTH - length + 1; ++x) {
+                        //get blank tiles off bonus letter squares
+                        for(int i = 0; i < wordStruct->_numLetters; i++) {
+                            if(chars[i] < LETTER_OFFSET_LC && isLetterBonusSquare(x + locs[i], y)) {
+                                for(int j = 0; j < wordStruct->_numLetters; j++) {
+                                    if(j == i) {
+                                        continue;
+                                    }
+                                    if(!isLetterBonusSquare(x + locs[j], y)) {
+                                        chars[j] ^= chars[i];
+                                        chars[i] ^= chars[j];
+                                        chars[j] ^= chars[i];
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
                         int wordScore = scoreLettersWithPrescore(prescore, wordStruct->_numLetters, chars, locs, x, y) + bonus;
                         int maxTotalWordScore = wordScore;
                         for(int xb = 0; xb < wordStruct->_numLetters; xb++) {
@@ -324,6 +383,11 @@ static int maxBonusTileScores[BOARD_LENGTH * BOARD_LENGTH][26] = {0};
                     }
                 }
                 RESET_LETTERS;
+                for(int i = 0; i < length; i++) {
+                    if(word[i] < LETTER_OFFSET_LC) {
+                        word[i] = word[i] - LETTER_OFFSET_UC + LETTER_OFFSET_LC;
+                    }
+                }
             }
             [playableWords removeAllObjects];
         }

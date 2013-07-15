@@ -295,6 +295,58 @@ bool isBonusSquare(int x, int y) {
     return isBonusSquareHash(HASH(x, y));
 }
 
+bool isLetterBonusSquareHash(int hash) {
+    switch(hash) {
+        case HASH(6, 0):
+        case HASH(8, 0):
+        case HASH(3, 3):
+        case HASH(11, 3):
+        case HASH(5, 5):
+        case HASH(9, 5):
+        case HASH(0, 6):
+        case HASH(14, 6):
+        case HASH(0, 8):
+        case HASH(14, 8):
+        case HASH(5, 9):
+        case HASH(9, 9):
+        case HASH(3, 11):
+        case HASH(11, 11):
+        case HASH(6, 14):
+        case HASH(8, 14):
+        case HASH(2, 1):
+        case HASH(12, 1):
+        case HASH(1, 2):
+        case HASH(4, 2):
+        case HASH(10, 2):
+        case HASH(13, 2):
+        case HASH(2, 4):
+        case HASH(6, 4):
+        case HASH(8, 4):
+        case HASH(12, 4):
+        case HASH(4, 6):
+        case HASH(10, 6):
+        case HASH(4, 8):
+        case HASH(10, 8):
+        case HASH(2, 10):
+        case HASH(6, 10):
+        case HASH(8, 10):
+        case HASH(12, 10):
+        case HASH(1, 12):
+        case HASH(4, 12):
+        case HASH(10, 12):
+        case HASH(13, 12):
+        case HASH(2, 13):
+        case HASH(12, 13):
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool isLetterBonusSquare(int x, int y) {
+    return isLetterBonusSquareHash(HASH(x, y));
+}
+
 #pragma mark - Validation
 
 BOOL validate(const char *restrict word, const int length, const WordInfo *info) {
@@ -340,16 +392,18 @@ void subwordsAtLocation(DictionaryIterator *itr, NSMutableSet **ret, char *restr
     }
     
     //max in my testing is 25
-    Subword subwords[32];
+#define NUM_SUBWORDS 32
+    assert(NUM_SUBWORDS <= sizeof(int) * CHAR_BIT);
+    Subword subwords[NUM_SUBWORDS];
     int numSubwords = 0;
     for(int i = 0; i < length - 1; ++i) { //wwf doesn't acknowledge single letter words
         const int tmpLength = MIN(i + NUM_LETTERS_TURN, length - 1);
         for(int j = i + 2; j < tmpLength; ++j) {
             const char *subword = &word[i];
             if(isValidWord(itr->mgr, subword, j - i)) {
+                assert(numSubwords < NUM_SUBWORDS);
                 Subword sub = {.start = i, .end = j};
                 subwords[numSubwords++] = sub;
-                assert(numSubwords <= 25);
             }
         }
     }
@@ -377,9 +431,9 @@ void subwordsAtLocation(DictionaryIterator *itr, NSMutableSet **ret, char *restr
         if([wordStruct validateSubwords:comboSubwords length:comboSubwordsLength iterator:itr wordInfo:NULL]) {
             [*ret addObject:wordStruct];
         }
-    OVERLAP:
-        ;
+    OVERLAP:;
     }
+#undef NUM_SUBWORDS
 }
 
 BOOL playable(char *word, const int length, const WordInfo *info) {
@@ -428,8 +482,7 @@ BOOL playable(char *word, const int length, const WordInfo *info) {
         if([wordStruct validateSubwords:comboSubwords length:comboSubwordsLength iterator:NULL wordInfo:info]) {
             return YES;
         }
-    OVERLAP:
-        ;
+    OVERLAP:;
     }
     return NO;
 }

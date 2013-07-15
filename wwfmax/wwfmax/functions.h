@@ -40,6 +40,10 @@ bool isBonusSquareHash(int hash);
 
 bool isBonusSquare(int x, int y);
 
+bool isLetterBonusSquareHash(int hash);
+
+bool isLetterBonusSquare(int x, int y);
+
 #pragma mark - Validation
 
 BOOL validate(const char *word, const int length, const WordInfo *info);

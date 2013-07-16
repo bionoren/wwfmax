@@ -356,7 +356,6 @@ BOOL validate(const char *restrict word, const int length, const WordInfo *info)
     //   imin unrestricted when using truncate toward minus infinity divide
     //     imid = (imin+imax)>>1; or
     //     imid = (int)floor((imin+imax)/2.0);
-    //int binary_search(int A[], int key, int imin, int imax)
     
     int imin = 0, imax = info->numWords - 1;
     
@@ -374,9 +373,6 @@ BOOL validate(const char *restrict word, const int length, const WordInfo *info)
             imax = imid;
         }
     }
-    // At exit of while:
-    //   if A[] is empty, then imax < imin
-    //   otherwise imax == imin
     
     // deferred test for equality
     if(imax == imin && info->lengths[imin] == length && strncmp(&(info->words[imin * BOARD_LENGTH]), word, length) == 0) {
@@ -413,13 +409,13 @@ void subwordsAtLocation(DictionaryIterator *itr, NSMutableSet **ret, char *restr
         //forward declarations to make goto happy
         WordStructure *wordStruct;
         
-        Subword comboSubwords[BOARD_LENGTH];
+        Subword comboSubwords[BOARD_LENGTH / 2];
         int comboSubwordsLength = 0;
         int lastEnd = 0;
         for(int i = 1, index = 0; index < numSubwords; i <<= 1, ++index) {
             if(i & powerset) {
                 Subword s = subwords[index];
-                if(s.start <= lastEnd) {
+                if(s.start < lastEnd) {
                     goto OVERLAP;
                 } else {
                     lastEnd = s.end;
@@ -440,37 +436,39 @@ BOOL playable(char *word, const int length, const WordInfo *info) {
     if(length <= NUM_LETTERS_TURN) {
         return YES;
     }
-    
+
     //max in my testing is 25
-    Subword subwords[25];
+#define NUM_SUBWORDS 32
+    assert(NUM_SUBWORDS <= sizeof(int) * CHAR_BIT);
+    Subword subwords[NUM_SUBWORDS];
     int numSubwords = 0;
     for(int i = 0; i < length - 1; ++i) { //wwf doesn't acknowledge single letter words
         const int tmpLength = MIN(i + NUM_LETTERS_TURN, length - 1);
         for(int j = i + 2; j < tmpLength; ++j) {
             const char *subword = &word[i];
             if(validate(subword, j - i, info)) {
+                assert(numSubwords < NUM_SUBWORDS);
                 Subword sub = {.start = i, .end = j};
                 subwords[numSubwords++] = sub;
-                assert(numSubwords <= 25);
             }
         }
     }
     if(numSubwords == 0) {
         return NO;
     }
-    
+
     const int count = (int)exp2(numSubwords);
     for(int powerset = 1; powerset < count; powerset++) {
         //forward declarations to make goto happy
         WordStructure *wordStruct;
-        
-        Subword comboSubwords[BOARD_LENGTH];
+
+        Subword comboSubwords[BOARD_LENGTH / 2];
         int comboSubwordsLength = 0;
         int lastEnd = 0;
         for(int i = 1, index = 0; index < numSubwords; i <<= 1, ++index) {
             if(i & powerset) {
                 Subword s = subwords[index];
-                if(s.start <= lastEnd) {
+                if(s.start < lastEnd) {
                     goto OVERLAP;
                 } else {
                     lastEnd = s.end;
@@ -479,10 +477,11 @@ BOOL playable(char *word, const int length, const WordInfo *info) {
             }
         }
         wordStruct = [[WordStructure alloc] initWithWord:word length:length];
-        if([wordStruct validateSubwords:comboSubwords length:comboSubwordsLength iterator:NULL wordInfo:info]) {
+        if([wordStruct validateSubwords:comboSubwords length:comboSubwordsLength iterator:nil wordInfo:info]) {
             return YES;
         }
     OVERLAP:;
     }
     return NO;
+#undef NUM_SUBWORDS
 }

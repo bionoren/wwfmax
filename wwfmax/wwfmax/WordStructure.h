@@ -15,7 +15,7 @@
     int _numLetters;
     char *_word;
     int _length;
-    Subword _subwords[BOARD_LENGTH];
+    Subword _subwords[BOARD_LENGTH / 2];
     int _numSubwords;
 }
 

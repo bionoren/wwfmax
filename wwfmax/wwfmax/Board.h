@@ -38,6 +38,7 @@ typedef struct {
 -(PreprocessedData*)preprocess:(Dictionaries)dicts;
 -(Solution)solve:(Dictionaries)dicts;
 +(NSString*)debugBoard:(char*)board;
+-(BOOL)testValidate:(char*restrict)word length:(int)length;
 
 @end
 

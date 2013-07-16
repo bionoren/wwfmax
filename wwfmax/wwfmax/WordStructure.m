@@ -47,10 +47,11 @@
 
 -(BOOL)validateSubwords:(Subword*)subwords length:(int)numSubwords iterator:(DictionaryIterator*)itr wordInfo:(const WordInfo*)info {
     //validate and organize self.parts into an ordered breakdown of the word
+    assert(numSubwords);
     Subword next = subwords[0];
     int letters = NUM_LETTERS_TURN;
     for(int i = 0, subwordIndex = 0; i < _length; i++) {
-        if(i > next.end && ++subwordIndex < numSubwords) {
+        if(i >= next.end && ++subwordIndex < numSubwords) {
             next = subwords[subwordIndex];
         }
         if(i == next.start) {
@@ -60,7 +61,6 @@
                 char c = _word[i];
                 assert(c <= 'z');
                 Letter l = (typeof(Letter))HASH(i, c);
-                assert(l >= 16);
                 _letters[_numLetters++] = l;
             } else {
                 return NO;
@@ -68,17 +68,20 @@
         }
     }
 
-    assert(numSubwords);
+    Subword startSubword = subwords[0];
     Subword lastSubword = subwords[0];
     for(int i = 1; i < numSubwords; i++) {
         Subword s = subwords[i];
         if(lastSubword.end == s.start) {
-            if(itr && !isValidWord(itr->mgr, &(self->_word[lastSubword.start]), s.end - lastSubword.start)) {
+            if(itr && !isValidWord(itr->mgr, &(self->_word[startSubword.start]), s.end - startSubword.start)) {
                 return NO;
-            } else if(validate(&(self->_word[lastSubword.start]), s.end - lastSubword.start, info)) {
+            } else if(info && !validate(&(self->_word[startSubword.start]), s.end - startSubword.start, info)) {
                 return NO;
             }
+        } else {
+            startSubword = s;
         }
+        lastSubword = s;
     }
     memcpy(_subwords, subwords, numSubwords * sizeof(Subword));
     

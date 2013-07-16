@@ -168,7 +168,7 @@ static int maxBonusTileScores[BOARD_LENGTH * BOARD_LENGTH][26] = {0};
                                         chars[j] ^= chars[i];
                                         break;
                                     }
-                                    if(j + 1 == i) {
+                                    if(j + 1 == wordStruct->_numLetters) {
                                         abort(); //if it turns out with the latest dictionary that this is an irresolvable optimization, we'll at least find out early in preprocessing
                                     }
                                 }

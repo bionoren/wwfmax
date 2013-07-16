@@ -80,6 +80,7 @@ char *CWGOfDictionaryFile(const char *dictionary, char **validatedDict) {
     const WordInfo info = {.words = words, .numWords = numWords, .lengths = wordLengths};
 
     if(validatedDict) {
+        Board *board = [[Board alloc] init];
         *validatedDict = prefixStringInPath(dictionary, "valid-");
         FILE *validFile = fopen(*validatedDict, "w");
 
@@ -87,8 +88,8 @@ char *CWGOfDictionaryFile(const char *dictionary, char **validatedDict) {
             char *word = &(words[i * BOARD_LENGTH]);
             const int length = wordLengths[i];
 
-            if(!playable(word, length, &info)) {
-                words[i * BOARD_LENGTH] = 0;
+            if(![board testValidate:word length:length] || !playable(word, length, &info)) {
+                words[i * BOARD_LENGTH] = '\0';
                 wordLengths[i] = 0;
                 continue;
             }

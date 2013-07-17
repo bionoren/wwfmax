@@ -34,7 +34,7 @@ int wordMultiplier(int x, int y);
 
 int prescoreWord(const char *word, const int length);
 
-int scoreLettersWithPrescore(const int prescore, const int length, char *chars, int *offsets, const int x, const int y);
+int scoreLettersWithPrescore(const int prescore, const int length, char *restrict chars, int *restrict offsets, const int baseHash);
 
 bool isBonusSquareHash(int hash);
 

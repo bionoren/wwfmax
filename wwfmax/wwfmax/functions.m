@@ -208,18 +208,43 @@ int prescoreWord(const char *restrict word, const int length) {
     return ret;
 }
 
-int scoreLettersWithPrescore(const int prescore, const int length, char *restrict chars, int *restrict offsets, const int x, const int y) {
+int scoreLettersWithPrescore(const int prescore, const int length, char *restrict chars, int *restrict offsets, const int baseHash) {
     int val = prescore;
     int mult = 1;
-    
+
     //score the letters and note the word multipliers
-    for(int i = 0; i < length; ++i) {
-        assert(chars[i] <= 'z' && chars[i] >= 'A');
-        int hash = HASH(offsets[i] + x, y);
-        val += scoreSquarePrescoredHash(chars[i], hash);
-        mult *= wordMultiplierHash(hash);
+    assert(length >= 2 && length <= NUM_LETTERS_TURN);
+    switch(length) {
+        case 7:
+            assert(chars[6] <= 'z' && chars[6] >= 'A');
+            val += scoreSquarePrescoredHash(chars[6], baseHash + offsets[6]);
+            mult *= wordMultiplierHash(baseHash + offsets[6]);
+        case 6:
+            assert(chars[5] <= 'z' && chars[5] >= 'A');
+            val += scoreSquarePrescoredHash(chars[5], baseHash + offsets[5]);
+            mult *= wordMultiplierHash(baseHash + offsets[5]);
+        case 5:
+            assert(chars[4] <= 'z' && chars[4] >= 'A');
+            val += scoreSquarePrescoredHash(chars[4], baseHash + offsets[4]);
+            mult *= wordMultiplierHash(baseHash + offsets[4]);
+        case 4:
+            assert(chars[3] <= 'z' && chars[3] >= 'A');
+            val += scoreSquarePrescoredHash(chars[3], baseHash + offsets[3]);
+            mult *= wordMultiplierHash(baseHash + offsets[3]);
+        case 3:
+            assert(chars[2] <= 'z' && chars[2] >= 'A');
+            val += scoreSquarePrescoredHash(chars[2], baseHash + offsets[2]);
+            mult *= wordMultiplierHash(baseHash + offsets[2]);
+        case 2:
+            break;
     }
-    
+    assert(chars[1] <= 'z' && chars[1] >= 'A');
+    val += scoreSquarePrescoredHash(chars[1], baseHash + offsets[1]);
+    mult *= wordMultiplierHash(baseHash + offsets[1]);
+    assert(chars[0] <= 'z' && chars[0] >= 'A');
+    val += scoreSquarePrescoredHash(chars[0], baseHash + offsets[0]);
+    mult *= wordMultiplierHash(baseHash + offsets[0]);
+
     return val * mult;
 }
 

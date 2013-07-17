@@ -131,20 +131,20 @@ int preprocessWordStruct(Board *self, WordStructure *wordStruct, char *word, int
 }
 
 /** get blank tiles off bonus letter squares. */
-void shuffleBonusTilesForWordStruct(WordStructure *wordStruct, int x, int y, char *chars, int *locs) {
-    for(int i = 0; i < wordStruct->_numLetters; i++) {
-        if(chars[i] < LETTER_OFFSET_LC && isLetterBonusSquare(x + locs[i], y)) {
-            for(int j = 0; j < wordStruct->_numLetters; j++) {
+void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char *chars, int *locs) {
+    for(int i = 0; i < numLetters; i++) {
+        if(chars[i] < LETTER_OFFSET_LC && isLetterBonusSquareHash(baseHash + locs[i])) {
+            for(int j = 0; j < numLetters; j++) {
                 if(j == i) {
                     continue;
                 }
-                if(!isLetterBonusSquare(x + locs[j], y)) {
+                if(!isLetterBonusSquareHash(baseHash + locs[j])) {
                     chars[j] ^= chars[i];
                     chars[i] ^= chars[j];
                     chars[j] ^= chars[i];
                     break;
                 }
-                if(j + 1 == wordStruct->_numLetters) {
+                if(j + 1 == numLetters) {
                     abort(); //if it turns out with the latest dictionary that this is an irresolvable optimization, we'll at least find out early in preprocessing
                 }
             }
@@ -192,11 +192,12 @@ void shuffleBonusTilesForWordStruct(WordStructure *wordStruct, int x, int y, cha
                         continue;
                     }
                     for(int x = 0; x < BOARD_LENGTH - length + 1; ++x) {
-                        shuffleBonusTilesForWordStruct(wordStruct, x, y, chars, locs);
+                        int baseHash = HASH(x, y);
+                        shuffleBonusTilesForWordStruct(wordStruct->_numLetters, baseHash, chars, locs);
 
-                        int wordScore = scoreLettersWithPrescore(prescore, wordStruct->_numLetters, chars, locs, x, y) + bonus;
+                        int wordScore = scoreLettersWithPrescore(prescore, wordStruct->_numLetters, chars, locs, baseHash) + bonus;
                         for(int xb = 0; xb < wordStruct->_numLetters; xb++) {
-                            int hash = HASH(x + locs[xb], y);
+                            int hash = baseHash + locs[xb];
                             int index = y * BOARD_LENGTH + x + locs[xb];
                             assert(index < BOARD_LENGTH * BOARD_LENGTH && index >= 0);
                             int letterIndex = chars[xb] - LETTER_OFFSET_LC;
@@ -288,9 +289,10 @@ void shuffleBonusTilesForWordStruct(WordStructure *wordStruct, int x, int y, cha
                         continue;
                     }
                     for(int x = 0; x < BOARD_LENGTH - length + 1; ++x) {
-                        shuffleBonusTilesForWordStruct(wordStruct, x, y, chars, locs);
+                        int baseHash = HASH(x, y);
+                        shuffleBonusTilesForWordStruct(wordStruct->_numLetters, baseHash, chars, locs);
 
-                        int wordScore = scoreLettersWithPrescore(prescore, wordStruct->_numLetters, chars, locs, x, y) + bonus;
+                        int wordScore = scoreLettersWithPrescore(prescore, wordStruct->_numLetters, chars, locs, baseHash) + bonus;
                         int maxTotalWordScore = wordScore;
                         for(int xb = 0; xb < wordStruct->_numLetters; xb++) {
                             int index = y * BOARD_LENGTH + x + locs[xb];

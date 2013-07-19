@@ -22,6 +22,7 @@ typedef struct {
 
 typedef struct {
     int maxBaseScore;
+    float maxScoreRatio;
     int maxBonusTileScores[BOARD_LENGTH * BOARD_LENGTH][26];
 } PreprocessedData;
 

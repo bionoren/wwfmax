@@ -174,6 +174,9 @@ int main(int argc, const char * argv[]) {
                 if(preprocessedData->maxBaseScore > masterPreprocessedData->maxBaseScore) {
                     masterPreprocessedData->maxBaseScore = preprocessedData->maxBaseScore;
                 }
+                if(preprocessedData->maxScoreRatio > masterPreprocessedData->maxScoreRatio) {
+                    masterPreprocessedData->maxScoreRatio = preprocessedData->maxScoreRatio;
+                }
                 for(int j = 0; j < BOARD_LENGTH * BOARD_LENGTH; j++) {
                     for(int k = 0; k < 26; k++) {
                         if(preprocessedData->maxBonusTileScores[j][k] > masterPreprocessedData->maxBonusTileScores[j][k]) {

@@ -54,6 +54,7 @@ static const int letterCounts[] = {
 static const char blankBoard[BOARD_LENGTH * BOARD_LENGTH] = { [0 ... BOARD_LENGTH * BOARD_LENGTH - 1] = DEFAULT_CHAR };
 
 static int maxBaseScore = 0;
+static float maxScoreRatio = 0;
 static int maxBonusTileScores[BOARD_LENGTH * BOARD_LENGTH][NUM_LETTERS - 1] = {0};
 
 @interface Board () {
@@ -82,10 +83,12 @@ static int maxBonusTileScores[BOARD_LENGTH * BOARD_LENGTH][NUM_LETTERS - 1] = {0
 
 +(void)loadPreprocessedData:(PreprocessedData*)data {
     maxBaseScore = data->maxBaseScore;
+    maxScoreRatio = data->maxScoreRatio;
     memcpy(maxBonusTileScores, data->maxBonusTileScores, BOARD_LENGTH * BOARD_LENGTH * (NUM_LETTERS - 1) * sizeof(int));
 
 #ifdef DEBUG
     printf("Max base score = %d\n", maxBaseScore);
+    printf("Max ratio wordScore / prescore = %.3f\n", maxScoreRatio);
 #endif
 }
 
@@ -215,6 +218,10 @@ void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char *chars, i
                         if(wordScore > ret->maxBaseScore) {
                             ret->maxBaseScore = wordScore;
                         }
+                        float scoreRatio = wordScore / (float)prescore;
+                        if(scoreRatio > ret->maxScoreRatio) {
+                            ret->maxScoreRatio = scoreRatio;
+                        }
                     }
                 }
                 RESET_LETTERS;
@@ -258,9 +265,45 @@ void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char *chars, i
     char word[BOARD_LENGTH + 1] = {0};
     int length;
     int temp = 0;
+    int temp2 = 0;
+    int temp3 = 0;
     while((length = nextWord_threadsafe(dicts.words, word))) {
         //NSLog(@"Evaluating %.*s\n", length, word);
         @autoreleasepool {
+            //avoid examining pre-placed vertical word scenarios
+            if(length > NUM_LETTERS_TURN) {
+                int maxLetterScores[BOARD_LENGTH] = {0};
+                int tempMaxBaseScore = (int)(prescoreWord(word, length) * maxScoreRatio);
+                for(int i = 0; i < length; i++) {
+                    int letterIndex = word[i] - LETTER_OFFSET_LC;
+                    assert(letterIndex < NUM_LETTERS - 1 && letterIndex >= 0);
+                    for(int index = 0; index < BOARD_LENGTH * BOARD_LENGTH; ++index) {
+                        if(maxBonusTileScores[letterIndex][index] > maxLetterScores[i]) {
+                            maxLetterScores[i] = maxBonusTileScores[index][letterIndex];
+                        }
+                    }
+                }
+                //selection sort
+                for(int i = 0; i < BOARD_LENGTH; i++) {
+                    int maxIndex = i;
+                    for(int j = i + 1; j < BOARD_LENGTH; j++) {
+                        if(maxLetterScores[j] > maxLetterScores[maxIndex]) {
+                            maxIndex = j;
+                        }
+                    }
+                    maxLetterScores[i] ^= maxLetterScores[maxIndex];
+                    maxLetterScores[maxIndex] ^= maxLetterScores[i];
+                    maxLetterScores[i] ^= maxLetterScores[maxIndex];
+                }
+                for(int i = 0; i < length - NUM_LETTERS_TURN; i++) {
+                    tempMaxBaseScore += maxLetterScores[i];
+                }
+                if(tempMaxBaseScore <= maxBaseScore) {
+                    temp3++;
+                    continue;
+                }
+            }
+
             subwordsAtLocation(dicts.words, &playableWords, word, length);
             assert(playableWords.count > 0);
 
@@ -270,6 +313,29 @@ void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char *chars, i
                 char chars[NUM_LETTERS_TURN]; //letters being played
                 int locs[NUM_LETTERS_TURN]; //offsets of said letters (within the word)
                 int prescore = preprocessWordStruct(self, wordStruct, word, length, chars, locs);
+
+                //avoid examining pre-placed vertical word scenarios
+                if(length > NUM_LETTERS_TURN) {
+                    int tempMaxBaseScore = (int)(prescore * maxScoreRatio);
+                    for(int xb = 0; xb < wordStruct->_numLetters; ++xb) {
+                        int letterIndex = chars[xb] - LETTER_OFFSET_LC;
+                        if(letterIndex < 0) {
+                            letterIndex = chars[xb] - LETTER_OFFSET_UC;
+                        }
+                        assert(letterIndex < NUM_LETTERS - 1 && letterIndex >= 0);
+                        int maxLetterScore = 0;
+                        for(int index = 0; index < BOARD_LENGTH * BOARD_LENGTH; ++index) {
+                            if(maxBonusTileScores[letterIndex][index] > maxLetterScore) {
+                                maxLetterScore = maxBonusTileScores[index][letterIndex];
+                            }
+                        }
+                        tempMaxBaseScore += maxLetterScore;
+                    }
+                    if(tempMaxBaseScore <= maxBaseScore) {
+                        temp2++;
+                        goto WORDSTRUCT_LOOP_END;
+                    }
+                }
 
                 /*int numCharGroups = 0;
                 int charGroupSize[NUM_LETTERS_TURN] = {0};
@@ -293,6 +359,7 @@ void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char *chars, i
                         shuffleBonusTilesForWordStruct(wordStruct->_numLetters, baseHash, chars, locs);
 
                         int wordScore = scoreLettersWithPrescore(prescore, wordStruct->_numLetters, chars, locs, baseHash) + bonus;
+                        assert(wordScore <= prescore * maxScoreRatio);
                         int maxTotalWordScore = wordScore;
                         for(int xb = 0; xb < wordStruct->_numLetters; xb++) {
                             int index = y * BOARD_LENGTH + x + locs[xb];
@@ -360,6 +427,7 @@ void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char *chars, i
                         }
                     }
                 }
+            WORDSTRUCT_LOOP_END:;
                 RESET_LETTERS;
                 for(int i = 0; i < length; i++) {
                     if(word[i] < LETTER_OFFSET_LC) {
@@ -372,6 +440,8 @@ void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char *chars, i
     }
 
     printf("%d viable candidates (estimated to take %.3f days)\n", temp, temp * 10 / 60.0 / 24.0);
+    printf("Avoided processing %d words longer than 7 letters\n", temp3);
+    printf("Avoided processing %d word structures longer than 7 letters\n", temp2);
 
     return ret;
 }

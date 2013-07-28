@@ -17,11 +17,12 @@
     int _length;
     Subword _subwords[BOARD_LENGTH / 2];
     int _numSubwords;
+    bool _hasVerticalWords;
+    bool _verticalLetters[BOARD_LENGTH];
 }
 
 +(WordStructure*)wordAsLetters:(char*)word length:(const int)length;
--(id)initWithWord:(char*)word length:(const int)length;
 
--(BOOL)validateSubwords:(Subword*)subwords length:(int)numSubwords iterator:(DictionaryIterator*)itr wordInfo:(const WordInfo*)info;
++(NSArray*)validateWord:(char*)word length:(int)length subwords:(Subword*)subwords length:(int)numSubwords iterator:(DictionaryIterator*)itr wordInfo:(const WordInfo*)info;
 
 @end

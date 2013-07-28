@@ -94,8 +94,8 @@ static int maxBonusTileScores[BOARD_LENGTH * BOARD_LENGTH][NUM_LETTERS - 1] = {0
 
 /** @return prescore. */
 int preprocessWordStruct(Board *self, WordStructure *wordStruct, char *word, int length, char *chars, int *locs) {
-    bool valid = [self validateLetters:wordStruct->_letters length:wordStruct->_numLetters];
-    assert(valid);
+    bool debugValid = [self validateLetters:wordStruct->_letters length:wordStruct->_numLetters];
+    assert(debugValid);
 #if DEBUG
     for(int i = 0; i < wordStruct->_numSubwords; ++i) {
         Subword subword = wordStruct->_subwords[i];
@@ -171,10 +171,6 @@ void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char *chars, i
         @autoreleasepool {
             subwordsAtLocation(dicts.words, &playableWords, word, length);
             assert(playableWords.count > 0);
-
-            int numPreplacedWords;
-            char preplacedVerticalChars[BOARD_LENGTH - NUM_LETTERS_TURN];
-            int preplacedVerticalLocs[BOARD_LENGTH - NUM_LETTERS_TURN];
 
             for(WordStructure *wordStruct in playableWords) {
                 assert(wordStruct->_numLetters > 0);

@@ -236,7 +236,7 @@ int scoreLettersWithPrescore(const int prescore, const int length, char *restric
             val += scoreSquarePrescoredHash(chars[2], baseHash + offsets[2]);
             mult *= wordMultiplierHash(baseHash + offsets[2]);
         case 2:
-            break;
+            break;  
     }
     assert(chars[1] <= 'z' && chars[1] >= 'A');
     val += scoreSquarePrescoredHash(chars[1], baseHash + offsets[1]);
@@ -430,10 +430,7 @@ void subwordsAtLocation(DictionaryIterator *itr, NSMutableSet **ret, char *restr
     }
     
     const int count = (int)exp2(numSubwords);
-    for(int powerset = 1; powerset < count; powerset++) {
-        //forward declarations to make goto happy
-        WordStructure *wordStruct;
-        
+    for(int powerset = 0; powerset < count; powerset++) {
         Subword comboSubwords[BOARD_LENGTH / 2];
         int comboSubwordsLength = 0;
         int lastEnd = 0;
@@ -448,65 +445,12 @@ void subwordsAtLocation(DictionaryIterator *itr, NSMutableSet **ret, char *restr
                 comboSubwords[comboSubwordsLength++] = s;
             }
         }
-        wordStruct = [[WordStructure alloc] initWithWord:word length:length];
-        if([wordStruct validateSubwords:comboSubwords length:comboSubwordsLength iterator:itr wordInfo:NULL]) {
-            [*ret addObject:wordStruct];
-        }
+        [*ret addObjectsFromArray:[WordStructure validateWord:word length:length subwords:comboSubwords length:comboSubwordsLength iterator:itr wordInfo:NULL]];
     OVERLAP:;
     }
 #undef NUM_SUBWORDS
 }
 
 BOOL playable(char *word, const int length, const WordInfo *info) {
-    if(length <= NUM_LETTERS_TURN) {
-        return YES;
-    }
-
-    //max in my testing is 25
-#define NUM_SUBWORDS 32
-    assert(NUM_SUBWORDS <= sizeof(int) * CHAR_BIT);
-    Subword subwords[NUM_SUBWORDS];
-    int numSubwords = 0;
-    for(int i = 0; i < length - 1; ++i) { //wwf doesn't acknowledge single letter words
-        const int tmpLength = MIN(i + NUM_LETTERS_TURN, length - 1);
-        for(int j = i + 2; j < tmpLength; ++j) {
-            const char *subword = &word[i];
-            if(validate(subword, j - i, info)) {
-                assert(numSubwords < NUM_SUBWORDS);
-                Subword sub = {.start = i, .end = j};
-                subwords[numSubwords++] = sub;
-            }
-        }
-    }
-    if(numSubwords == 0) {
-        return NO;
-    }
-
-    const int count = (int)exp2(numSubwords);
-    for(int powerset = 1; powerset < count; powerset++) {
-        //forward declarations to make goto happy
-        WordStructure *wordStruct;
-
-        Subword comboSubwords[BOARD_LENGTH / 2];
-        int comboSubwordsLength = 0;
-        int lastEnd = 0;
-        for(int i = 1, index = 0; index < numSubwords; i <<= 1, ++index) {
-            if(i & powerset) {
-                Subword s = subwords[index];
-                if(s.start < lastEnd) {
-                    goto OVERLAP;
-                } else {
-                    lastEnd = s.end;
-                }
-                comboSubwords[comboSubwordsLength++] = s;
-            }
-        }
-        wordStruct = [[WordStructure alloc] initWithWord:word length:length];
-        if([wordStruct validateSubwords:comboSubwords length:comboSubwordsLength iterator:nil wordInfo:info]) {
-            return YES;
-        }
-    OVERLAP:;
-    }
-    return NO;
-#undef NUM_SUBWORDS
+    return YES;
 }

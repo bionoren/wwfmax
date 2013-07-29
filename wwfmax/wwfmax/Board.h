@@ -10,7 +10,7 @@
 #import "DictionaryManager.h"
 
 typedef struct {
-    NSUInteger maxScore;
+    int maxScore;
     char maxWord[BOARD_LENGTH];
     int maxWordLength;
     Letter maxLetters[NUM_LETTERS_TURN];
@@ -37,7 +37,7 @@ typedef struct {
 
 +(void)loadPreprocessedData:(PreprocessedData*)data;
 -(PreprocessedData*)preprocess:(Dictionaries)dicts;
--(Solution*)solveWord:(char[BOARD_LENGTH + 1])word length:(int)length dict:(Dictionaries)dicts;
+-(Solution*)solveWord:(char[BOARD_LENGTH + 1])word length:(int)length maxScore:(int)maxScore dict:(Dictionaries)dicts;
 +(NSString*)debugBoard:(char*)board;
 -(BOOL)testValidate:(char*restrict)word length:(int)length;
 
@@ -50,7 +50,7 @@ static void printSolution(Solution *sol) {
         int offset = X_FROM_HASH(sol->maxLetters[k]);
         maxWordLetters[offset] = c;
     }
-    NSLog(@"Highest scoring play is %.*s (%.*s) at (%d, %d) on (%@) for %ld points", sol->maxWordLength, maxWordLetters, sol->maxWordLength, sol->maxWord, sol->maxx, sol->maxy, [Board debugBoard:sol->maxBoard], sol->maxScore);
+    NSLog(@"Highest scoring play is %.*s (%.*s) at (%d, %d) on (%@) for %d points", sol->maxWordLength, maxWordLetters, sol->maxWordLength, sol->maxWord, sol->maxx, sol->maxy, [Board debugBoard:sol->maxBoard], sol->maxScore);
 }
 
 static void freeDictionaries(Dictionaries dicts) {

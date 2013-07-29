@@ -239,11 +239,12 @@ void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char chars[NUM
 /**
  I'm strictly interested in horizontal words because of bonus tile symetry.
  */
--(Solution*)solveWord:(char[BOARD_LENGTH + 1])word length:(int)length dict:(Dictionaries)dicts {
+-(Solution*)solveWord:(char[BOARD_LENGTH + 1])word length:(int)length maxScore:(int)maxScore dict:(Dictionaries)dicts {
     assert(maxBaseScore); //need to run preprocess: first
 
     Solution *ret = malloc(sizeof(Solution));
-    ret->maxScore = 0;
+    ret->maxScore = maxScore;
+    ret->maxWordLength = 0;
 
     /*DictionaryIterator *verticalItrs[NUM_LETTERS_TURN][3];
     VerticalState verticalState[NUM_LETTERS_TURN] = {{0, 0}};
@@ -385,6 +386,8 @@ void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char chars[NUM
                         ret->numMaxLetters = wordStruct->_numLetters;
                         ret->maxx = x;
                         ret->maxy = y;
+                    } else if(!ret->maxScore) {
+                        ret->maxWordLength = -1; //this is truthy (nonzero), and so will trigger a save in the main runloop, making sure we don't recompute this word on a resume from save
                     }
                 }
             }

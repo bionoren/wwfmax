@@ -21,8 +21,7 @@
     bool _verticalLetters[BOARD_LENGTH];
 }
 
-+(WordStructure*)wordAsLetters:(char*)word length:(const int)length;
-
-+(NSArray*)validateWord:(char*)word length:(int)length subwords:(Subword*)subwords length:(int)numSubwords iterator:(DictionaryIterator*)itr wordInfo:(const WordInfo*)info;
++(WordStructure*)wordAsLetters:(char[BOARD_LENGTH + 1])word length:(const int)length;
++(NSArray*)validateWord:(char[BOARD_LENGTH + 1])word length:(int)length subwords:(Subword*)subwords length:(int)numSubwords iterator:(DictionaryIterator*)itr wordInfo:(const WordInfo*)info;
 
 @end

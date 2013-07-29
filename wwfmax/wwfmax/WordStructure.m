@@ -15,7 +15,7 @@
 
 @implementation WordStructure
 
-+(WordStructure*)wordAsLetters:(char*)word length:(const int)length {
++(WordStructure*)wordAsLetters:(char[BOARD_LENGTH + 1])word length:(const int)length {
     WordStructure *ret = [[WordStructure alloc] initWithWord:word length:length subwords:NULL numSubwords:0];
     ret->_numLetters = length;
     for(int i = 0; i < ret->_length; i++) {
@@ -29,7 +29,7 @@
     return ret;
 }
 
--(id)initWithWord:(char*)word length:(const int)length subwords:(Subword*)subwords numSubwords:(int)numSubwords  {
+-(id)initWithWord:(char[BOARD_LENGTH + 1])word length:(const int)length subwords:(Subword*)subwords numSubwords:(int)numSubwords  {
     if(self = [super init]) {
         _word = word;
         _length = length;
@@ -39,7 +39,7 @@
     return self;
 }
 
-+(NSArray*)validateWord:(char*)word length:(int)length subwords:(Subword*)subwords length:(int)numSubwords iterator:(DictionaryIterator*)itr wordInfo:(const WordInfo*)info {
++(NSArray*)validateWord:(char[BOARD_LENGTH + 1])word length:(int)length subwords:(Subword*)subwords length:(int)numSubwords iterator:(DictionaryIterator*)itr wordInfo:(const WordInfo*)info {
     //make sure consecutive subwords are also words
     if(numSubwords > 1) {
         Subword startSubword = subwords[0];

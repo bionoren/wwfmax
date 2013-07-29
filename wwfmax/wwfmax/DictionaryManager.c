@@ -13,7 +13,7 @@
 #import "assert.h"
 #import "dawg.h"
 
-bool isValidWord(DictionaryManager *mgr, const char *word, int length) {
+bool isValidWord(DictionaryManager *mgr, const char word[BOARD_LENGTH + 1], int length) {
     int *node = &mgr->nodeArray[word[0] - 'a' + 1]; //root node
     for(int i = 1; i < length; i++) {
         if(!(*node & CHILD_INDEX_BIT_MASK)) {
@@ -29,7 +29,7 @@ bool isValidWord(DictionaryManager *mgr, const char *word, int length) {
     return *node & END_OF_WORD_BIT_MASK;
 }
 
-bool isValidPrefix(DictionaryManager *mgr, const char *word, int length) {
+bool isValidPrefix(DictionaryManager *mgr, const char word[BOARD_LENGTH + 1], int length) {
     int *node = &mgr->nodeArray[word[0] - 'a' + 1]; //root node
     for(int i = 1; i < length; ++i) {
         if(!(*node & CHILD_INDEX_BIT_MASK)) {
@@ -45,7 +45,7 @@ bool isValidPrefix(DictionaryManager *mgr, const char *word, int length) {
     return true;
 }
 
-bool isPrefixWord(DictionaryManager *mgr, const char *word, int length) {
+bool isPrefixWord(DictionaryManager *mgr, const char word[BOARD_LENGTH + 1], int length) {
     int *node = &mgr->nodeArray[word[0] - 'a' + 1]; //root node
     for(int i = 1; i < length; ++i) {
         assert(*node & CHILD_INDEX_BIT_MASK);
@@ -57,7 +57,7 @@ bool isPrefixWord(DictionaryManager *mgr, const char *word, int length) {
     return (*node & END_OF_WORD_BIT_MASK);
 }
 
-int nextWord_threadsafe(DictionaryIterator *itr, char *outWord) {
+int nextWord_threadsafe(DictionaryIterator *itr, char outWord[BOARD_LENGTH + 1]) {
     OSSpinLockLock(&itr->lock);
     if(itr->stackDepth < 0) {
         OSSpinLockUnlock(&itr->lock);
@@ -112,7 +112,7 @@ LOOP_END:;
     return ret;
 }
 
-int nextWord(DictionaryIterator *itr, char *outWord) {
+int nextWord(DictionaryIterator *itr, char outWord[BOARD_LENGTH + 1]) {
     assert(itr->stackDepth >= 0 && itr->stackDepth <= BOARD_LENGTH);
 
     dictStack *restrict item = &(itr->stack[itr->stackDepth]);
@@ -224,7 +224,7 @@ bool loadPrefix(DictionaryIterator *itr, const char *restrict prefix, const int 
     return true;
 }
 
-int nextWordWithPrefix(DictionaryIterator *itr, char *outWord, int maxDepth) {
+int nextWordWithPrefix(DictionaryIterator *itr, char outWord[BOARD_LENGTH + 1], int maxDepth) {
     assert(itr->prefixLength > 0);
     assert(itr->stackDepth >= itr->prefixLength - 1);
 

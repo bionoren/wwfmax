@@ -200,7 +200,7 @@ int wordMultiplier(int x, int y) {
     return wordMultiplierHash(HASH(x, y));
 }
 
-int prescoreWord(const char *restrict word, const int length) {
+int prescoreWord(const char word[BOARD_LENGTH + 1], const int length) {
     int ret = 0;
     for(int i = 0; i < length; i++) {
         ret += valuel(word[i]);
@@ -208,7 +208,7 @@ int prescoreWord(const char *restrict word, const int length) {
     return ret;
 }
 
-int scoreLettersWithPrescore(const int prescore, const int length, char *restrict chars, int *restrict offsets, const int baseHash) {
+int scoreLettersWithPrescore(const int prescore, const int length, char chars[NUM_LETTERS_TURN], int offsets[NUM_LETTERS_TURN], const int baseHash) {
     int val = prescore;
     int mult = 1;
 
@@ -407,7 +407,7 @@ BOOL validate(const char *restrict word, const int length, const WordInfo *info)
     }
 }
 
-void subwordsAtLocation(DictionaryIterator *itr, NSMutableSet **ret, char *restrict word, const int length) {
+void subwordsAtLocation(DictionaryIterator *itr, NSMutableSet **ret, char word[BOARD_LENGTH + 1], const int length) {
     if(length <= NUM_LETTERS_TURN) {
         return [*ret addObject:[WordStructure wordAsLetters:word length:length]];
     }

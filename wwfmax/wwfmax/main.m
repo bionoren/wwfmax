@@ -197,20 +197,29 @@ int main(int argc, const char * argv[]) {
         free(masterPreprocessedData);
         resetIterator(dicts.words);
         
-        __block Solution sol;
-        sol.maxScore = 0;
+        __block Solution *sol = malloc(sizeof(Solution));
+        sol->maxScore = 0;
         for(int i = 0; i < NUM_THREADS; ++i) {
             dispatch_group_async(dispatchGroup, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                 Board *board = [[Board alloc] init];
-                Solution temp = [board solve:dicts];
+                assert(BOARD_LENGTH + 1 == 16 && sizeof(int) == 4);
+                char word[BOARD_LENGTH + 1];
+                int length;
+                while((length = nextWord_threadsafe(dicts.words, word))) {
+                    Solution *temp = [board solveWord:word length:length dict:dicts];
+                    if(temp->maxScore) {
+                        OSSpinLockLock(&lock);
 
-                OSSpinLockLock(&lock);
+                        if(temp->maxScore > sol->maxScore) {
+                            sol = temp;
+#ifdef DEBUG
+                            printSolution(temp);
+#endif
+                        }
 
-                if(temp.maxScore > sol.maxScore) {
-                    sol = temp;
+                        OSSpinLockUnlock(&lock);
+                    }
                 }
-
-                OSSpinLockUnlock(&lock);
             });
         }
         

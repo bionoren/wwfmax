@@ -37,20 +37,20 @@ typedef struct {
 
 +(void)loadPreprocessedData:(PreprocessedData*)data;
 -(PreprocessedData*)preprocess:(Dictionaries)dicts;
--(Solution)solve:(Dictionaries)dicts;
+-(Solution*)solveWord:(char[BOARD_LENGTH + 1])word length:(int)length dict:(Dictionaries)dicts;
 +(NSString*)debugBoard:(char*)board;
 -(BOOL)testValidate:(char*restrict)word length:(int)length;
 
 @end
 
-static void printSolution(Solution sol) {
+static void printSolution(Solution *sol) {
     char maxWordLetters[BOARD_LENGTH + 1] = { [0 ... BOARD_LENGTH - 1] = '_', '\0' };
-    for(int k = 0; k < sol.numMaxLetters; k++) {
-        char c = (char)Y_FROM_HASH(sol.maxLetters[k]);
-        int offset = X_FROM_HASH(sol.maxLetters[k]);
+    for(int k = 0; k < sol->numMaxLetters; k++) {
+        char c = (char)Y_FROM_HASH(sol->maxLetters[k]);
+        int offset = X_FROM_HASH(sol->maxLetters[k]);
         maxWordLetters[offset] = c;
     }
-    NSLog(@"Highest scoring play is %.*s (%.*s) at (%d, %d) on (%@) for %ld points", sol.maxWordLength, maxWordLetters, sol.maxWordLength, sol.maxWord, sol.maxx, sol.maxy, [Board debugBoard:sol.maxBoard], sol.maxScore);
+    NSLog(@"Highest scoring play is %.*s (%.*s) at (%d, %d) on (%@) for %ld points", sol->maxWordLength, maxWordLetters, sol->maxWordLength, sol->maxWord, sol->maxx, sol->maxy, [Board debugBoard:sol->maxBoard], sol->maxScore);
 }
 
 static void freeDictionaries(Dictionaries dicts) {

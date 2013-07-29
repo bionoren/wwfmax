@@ -32,9 +32,9 @@ int wordMultiplierHash(int hash);
 
 int wordMultiplier(int x, int y);
 
-int prescoreWord(const char *word, const int length);
+int prescoreWord(const char word[BOARD_LENGTH + 1], const int length);
 
-int scoreLettersWithPrescore(const int prescore, const int length, char *restrict chars, int *restrict offsets, const int baseHash);
+int scoreLettersWithPrescore(const int prescore, const int length, char chars[NUM_LETTERS_TURN], int offsets[NUM_LETTERS_TURN], const int baseHash);
 
 bool isBonusSquareHash(int hash);
 
@@ -48,7 +48,7 @@ bool isLetterBonusSquare(int x, int y);
 
 BOOL validate(const char *word, const int length, const WordInfo *info);
 
-void subwordsAtLocation(DictionaryIterator *itr, NSMutableSet **ret, char *word, const int length);
+void subwordsAtLocation(DictionaryIterator *itr, NSMutableSet **ret, char word[BOARD_LENGTH + 1], const int length);
 
 BOOL playable(char *word, const int length, const WordInfo *info);
 

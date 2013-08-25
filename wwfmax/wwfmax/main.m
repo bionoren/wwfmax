@@ -112,6 +112,60 @@ char *CWGOfDictionaryFile(const char *dictionary, char **validatedDict) {
     return ret;
 }
 
+int **createLetterPairLookupTableForDictionary(DictionaryIterator *itr) {
+    resetIterator(itr);
+    int **ret = (int**)malloc(26 * 26 * sizeof(int*));
+    int *lengths = (int*)calloc(26 * 26, sizeof(int));
+    for(int i = 0; i < 26 * 26; i++) {
+        ret[i] = calloc(1, sizeof(int)); //first element is the size of the sublist, which calloc conveniently 0s
+        assert(ret[i][0] == 0);
+    }
+
+    assert(BOARD_LENGTH + 1 == 16 && sizeof(int) == 4);
+    char word[BOARD_LENGTH + 1] = {0};
+    int length;
+    while((length = nextWord(itr, word))) {
+        for(int i = 0; i < length - 1;) {
+            int l1 = word[i] - 'a';
+            int l1index = itr->stack[i].index;
+            i++;
+            int l2 = word[i] - 'a';
+
+            int index = l1 + l2 * 26;
+            int *row = ret[index];
+            for(int j = 1; j < row[0] + 1; j++) {
+                if(row[j] == l1index) {
+                    goto LOOP_END;
+                }
+            }
+            if(++row[0] >= lengths[index]) {
+                lengths[index] = row[0] * 2; //this gets rid of "not counting the first element" problems
+                row = ret[index] = realloc(row, (lengths[index] + 1) * sizeof(int));
+                assert(row);
+            }
+            row[row[0]] = l1index;
+        LOOP_END:;
+        }
+    }
+    //tighten up memory use
+    free(lengths);
+    for(int i = 0; i < 26 * 26; i++) {
+        ret[i] = realloc(ret[i], (ret[i][0] + 1) * sizeof(int));
+    }
+
+    resetIterator(itr);
+#if DEBUG
+    int numInts = 0;
+    int avglinks = 0;
+    for(int i = 0; i < 26 * 26; i++) {
+        avglinks += ret[i][0] + 1;
+        numInts += ret[i][0] + 1;
+    }
+    printf("Letter pair index lookup table takes %d bytes (avg links = %.2f)\n", numInts * 4, avglinks / (26.0 * 26.0));
+#endif
+    return ret;
+}
+
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
 #if DEBUG
@@ -144,7 +198,9 @@ int main(int argc, const char * argv[]) {
 #endif
         char *dictionarySuffixesReversed = CWGOfDictionaryFile(reversedSuffixedDictionary, NULL);
 
+#if BUILD_DATASTRUCTURES
         free(validDictionary);
+#endif
         free(reversedDictionary);
         free(suffixedDictionary);
         free(reversedSuffixedDictionary);
@@ -159,6 +215,7 @@ int main(int argc, const char * argv[]) {
         free(dictionarySuffixes);
         free(dictionaryReversed);
         free(dictionarySuffixesReversed);
+        int **lookupTable = createLetterPairLookupTableForDictionary(dicts.words);
 
         __block OSSpinLock lock = OS_SPINLOCK_INIT;
         dispatch_group_t dispatchGroup = dispatch_group_create();

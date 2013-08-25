@@ -61,52 +61,50 @@ int valuel(char letter) {
 }
 
 int scoreSquarePrescoredHash(char letter, int hash) {
-    switch(hash) {
-        case HASH(6, 0):
-        case HASH(8, 0):
-        case HASH(3, 3):
-        case HASH(11, 3):
-        case HASH(5, 5):
-        case HASH(9, 5):
-        case HASH(0, 6):
-        case HASH(14, 6):
-        case HASH(0, 8):
-        case HASH(14, 8):
-        case HASH(5, 9):
-        case HASH(9, 9):
-        case HASH(3, 11):
-        case HASH(11, 11):
-        case HASH(6, 14):
-        case HASH(8, 14):
-            return valuel(letter)*2;
-        case HASH(2, 1):
-        case HASH(12, 1):
-        case HASH(1, 2):
-        case HASH(4, 2):
-        case HASH(10, 2):
-        case HASH(13, 2):
-        case HASH(2, 4):
-        case HASH(6, 4):
-        case HASH(8, 4):
-        case HASH(12, 4):
-        case HASH(4, 6):
-        case HASH(10, 6):
-        case HASH(4, 8):
-        case HASH(10, 8):
-        case HASH(2, 10):
-        case HASH(6, 10):
-        case HASH(8, 10):
-        case HASH(12, 10):
-        case HASH(1, 12):
-        case HASH(4, 12):
-        case HASH(10, 12):
-        case HASH(13, 12):
-        case HASH(2, 13):
-        case HASH(12, 13):
-            return valuel(letter);
-        default:
-            return 0;
-    }
+    /*static char lookupTable[255] = {0};
+    lookupTable[HASH(6, 0)] = 2;
+    lookupTable[HASH(8, 0)] = 2;
+    lookupTable[HASH(3, 3)] = 2;
+    lookupTable[HASH(11, 3)] = 2;
+    lookupTable[HASH(5, 5)] = 2;
+    lookupTable[HASH(9, 5)] = 2;
+    lookupTable[HASH(0, 6)] = 2;
+    lookupTable[HASH(14, 6)] = 2;
+    lookupTable[HASH(0, 8)] = 2;
+    lookupTable[HASH(14, 8)] = 2;
+    lookupTable[HASH(5, 9)] = 2;
+    lookupTable[HASH(9, 9)] = 2;
+    lookupTable[HASH(3, 11)] = 2;
+    lookupTable[HASH(11, 11)] = 2;
+    lookupTable[HASH(6, 14)] = 2;
+    lookupTable[HASH(8, 14)] = 2;
+    lookupTable[HASH(2, 1)] = 1;
+    lookupTable[HASH(12, 1)] = 1;
+    lookupTable[HASH(1, 2)] = 1;
+    lookupTable[HASH(4, 2)] = 1;
+    lookupTable[HASH(10, 2)] = 1;
+    lookupTable[HASH(13, 2)] = 1;
+    lookupTable[HASH(2, 4)] = 1;
+    lookupTable[HASH(6, 4)] = 1;
+    lookupTable[HASH(8, 4)] = 1;
+    lookupTable[HASH(12, 4)] = 1;
+    lookupTable[HASH(4, 6)] = 1;
+    lookupTable[HASH(10, 6)] = 1;
+    lookupTable[HASH(4, 8)] = 1;
+    lookupTable[HASH(10, 8)] = 1;
+    lookupTable[HASH(2, 10)] = 1;
+    lookupTable[HASH(6, 10)] = 1;
+    lookupTable[HASH(8, 10)] = 1;
+    lookupTable[HASH(12, 10)] = 1;
+    lookupTable[HASH(1, 12)] = 1;
+    lookupTable[HASH(4, 12)] = 1;
+    lookupTable[HASH(10, 12)] = 1;
+    lookupTable[HASH(13, 12)] = 1;
+    lookupTable[HASH(2, 13)] = 1;
+    lookupTable[HASH(12, 13)] = 1;*/
+    static const char lookupTable[255] = {0,0,0,0,0,0,2,0,2,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,1,0,0,0,0,0,1,0,0,1,0,0,0,0,0,2,0,0,0,0,0,0,0,2,0,0,0,0,0,0,1,0,0,0,1,0,1,0,0,0,1,0,0,0,0,0,0,0,0,2,0,0,0,2,0,0,0,0,0,0,2,0,0,0,1,0,0,0,0,0,1,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,1,0,0,0,0,0,1,0,0,0,2,0,0,0,0,0,0,2,0,0,0,2,0,0,0,0,0,0,0,0,1,0,0,0,1,0,1,0,0,0,1,0,0,0,0,0,0,2,0,0,0,0,0,0,0,2,0,0,0,0,0,1,0,0,1,0,0,0,0,0,1,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,2,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+
+    return valuel(letter) * lookupTable[hash];
 }
 
 int scoreSquarePrescored(char letter, int x, int y) {
@@ -114,53 +112,54 @@ int scoreSquarePrescored(char letter, int x, int y) {
 }
 
 int scoreSquareHash(char letter, int hash) {
-    int ret = valuel(letter);
-    switch(hash) {
-        case HASH(6, 0):
-        case HASH(8, 0):
-        case HASH(3, 3):
-        case HASH(11, 3):
-        case HASH(5, 5):
-        case HASH(9, 5):
-        case HASH(0, 6):
-        case HASH(14, 6):
-        case HASH(0, 8):
-        case HASH(14, 8):
-        case HASH(5, 9):
-        case HASH(9, 9):
-        case HASH(3, 11):
-        case HASH(11, 11):
-        case HASH(6, 14):
-        case HASH(8, 14):
-            return ret*3;
-        case HASH(2, 1):
-        case HASH(12, 1):
-        case HASH(1, 2):
-        case HASH(4, 2):
-        case HASH(10, 2):
-        case HASH(13, 2):
-        case HASH(2, 4):
-        case HASH(6, 4):
-        case HASH(8, 4):
-        case HASH(12, 4):
-        case HASH(4, 6):
-        case HASH(10, 6):
-        case HASH(4, 8):
-        case HASH(10, 8):
-        case HASH(2, 10):
-        case HASH(6, 10):
-        case HASH(8, 10):
-        case HASH(12, 10):
-        case HASH(1, 12):
-        case HASH(4, 12):
-        case HASH(10, 12):
-        case HASH(13, 12):
-        case HASH(2, 13):
-        case HASH(12, 13):
-            return ret*2;
-        default:
-            return ret;
-    }
+    /*static char lookupTable[255];
+     for(int i = 0; i < 255; i++) {
+     lookupTable[i] = 1;
+     }
+    lookupTable[HASH(6, 0)] = 3;
+    lookupTable[HASH(8, 0)] = 3;
+    lookupTable[HASH(3, 3)] = 3;
+    lookupTable[HASH(11, 3)] = 3;
+    lookupTable[HASH(5, 5)] = 3;
+    lookupTable[HASH(9, 5)] = 3;
+    lookupTable[HASH(0, 6)] = 3;
+    lookupTable[HASH(14, 6)] = 3;
+    lookupTable[HASH(0, 8)] = 3;
+    lookupTable[HASH(14, 8)] = 3;
+    lookupTable[HASH(5, 9)] = 3;
+    lookupTable[HASH(9, 9)] = 3;
+    lookupTable[HASH(3, 11)] = 3;
+    lookupTable[HASH(11, 11)] = 3;
+    lookupTable[HASH(6, 14)] = 3;
+    lookupTable[HASH(8, 14)] = 3;
+    lookupTable[HASH(2, 1)] = 2;
+    lookupTable[HASH(12, 1)] = 2;
+    lookupTable[HASH(1, 2)] = 2;
+    lookupTable[HASH(4, 2)] = 2;
+    lookupTable[HASH(10, 2)] = 2;
+    lookupTable[HASH(13, 2)] = 2;
+    lookupTable[HASH(2, 4)] = 2;
+    lookupTable[HASH(6, 4)] = 2;
+    lookupTable[HASH(8, 4)] = 2;
+    lookupTable[HASH(12, 4)] = 2;
+    lookupTable[HASH(4, 6)] = 2;
+    lookupTable[HASH(10, 6)] = 2;
+    lookupTable[HASH(4, 8)] = 2;
+    lookupTable[HASH(10, 8)] = 2;
+    lookupTable[HASH(2, 10)] = 2;
+    lookupTable[HASH(6, 10)] = 2;
+    lookupTable[HASH(8, 10)] = 2;
+    lookupTable[HASH(12, 10)] = 2;
+    lookupTable[HASH(1, 12)] = 2;
+    lookupTable[HASH(4, 12)] = 2;
+    lookupTable[HASH(10, 12)] = 2;
+    lookupTable[HASH(13, 12)] = 2;
+    lookupTable[HASH(2, 13)] = 2;
+    lookupTable[HASH(12, 13)] = 2;*/
+    static const char lookupTable[255] = {1,1,1,1,1,1,3,1,3,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1,1,2,1,1,2,1,1,1,1,1,2,1,1,2,1,1,1,1,1,3,1,1,1,1,1,1,1,3,1,1,1,1,1,1,2,1,1,1,2,1,2,1,1,1,2,1,1,1,1,1,1,1,1,3,1,1,1,3,1,1,1,1,1,1,3,1,1,1,2,1,1,1,1,1,2,1,1,1,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1,1,1,2,1,1,1,1,1,2,1,1,1,3,1,1,1,1,1,1,3,1,1,1,3,1,1,1,1,1,1,1,1,2,1,1,1,2,1,2,1,1,1,2,1,1,1,1,1,1,3,1,1,1,1,1,1,1,3,1,1,1,1,1,2,1,1,2,1,1,1,1,1,2,1,1,2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,3,1,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+
+
+    return valuel(letter) * lookupTable[hash];
 }
 
 int scoreSquare(char letter, int x, int y) {
@@ -168,32 +167,33 @@ int scoreSquare(char letter, int x, int y) {
 }
 
 int wordMultiplierHash(int hash) {
-    switch(hash) {
-        case HASH(3, 0):
-        case HASH(11, 0):
-        case HASH(0, 3):
-        case HASH(14, 3):
-        case HASH(0, 11):
-        case HASH(14, 11):
-        case HASH(3, 14):
-        case HASH(11, 14):
-            return 3;
-        case HASH(5, 1):
-        case HASH(9, 1):
-        case HASH(7, 3):
-        case HASH(1, 5):
-        case HASH(13, 5):
-        case HASH(3, 7):
-        case HASH(11, 7):
-        case HASH(1, 9):
-        case HASH(13, 9):
-        case HASH(7, 11):
-        case HASH(5, 13):
-        case HASH(9, 13):
-            return 2;
-        default:
-            return 1;
-    }
+    /*static char lookupTable[255];
+     for(int i = 0; i < 255; i++) {
+     lookupTable[i] = 1;
+     }
+    lookupTable[HASH(3, 0)] = 3;
+    lookupTable[HASH(11, 0)] = 3;
+    lookupTable[HASH(0, 3)] = 3;
+    lookupTable[HASH(14, 3)] = 3;
+    lookupTable[HASH(0, 11)] = 3;
+    lookupTable[HASH(14, 11)] = 3;
+    lookupTable[HASH(3, 14)] = 3;
+    lookupTable[HASH(11, 14)] = 3;
+    lookupTable[HASH(5, 1)] = 2;
+    lookupTable[HASH(9, 1)] = 2;
+    lookupTable[HASH(7, 3)] = 2;
+    lookupTable[HASH(1, 5)] = 2;
+    lookupTable[HASH(13, 5)] = 2;
+    lookupTable[HASH(3, 7)] = 2;
+    lookupTable[HASH(11, 7)] = 2;
+    lookupTable[HASH(1, 9)] = 2;
+    lookupTable[HASH(13, 9)] = 2;
+    lookupTable[HASH(7, 11)] = 2;
+    lookupTable[HASH(5, 13)] = 2;
+    lookupTable[HASH(9, 13)] = 2;*/
+    static const char lookupTable[255] = {1,1,1,3,1,1,1,1,1,1,1,3,1,1,1,1,1,1,1,1,1,2,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1,1,1,1,1,1,2,1,1,1,1,1,1,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1,1,1,1,1,1,2,1,1,1,1,1,1,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,2,1,1,1,1,1,1,1,1,1,3,1,1,1,1,1,1,1,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+
+    return lookupTable[hash];
 }
 
 int wordMultiplier(int x, int y) {
@@ -213,37 +213,11 @@ int scoreLettersWithPrescore(const int prescore, const int length, char chars[NU
     int mult = 1;
 
     //score the letters and note the word multipliers
-    assert(length >= 2 && length <= NUM_LETTERS_TURN);
-    switch(length) {
-        case 7:
-            assert(chars[6] <= 'z' && chars[6] >= 'A');
-            val += scoreSquarePrescoredHash(chars[6], baseHash + offsets[6]);
-            mult *= wordMultiplierHash(baseHash + offsets[6]);
-        case 6:
-            assert(chars[5] <= 'z' && chars[5] >= 'A');
-            val += scoreSquarePrescoredHash(chars[5], baseHash + offsets[5]);
-            mult *= wordMultiplierHash(baseHash + offsets[5]);
-        case 5:
-            assert(chars[4] <= 'z' && chars[4] >= 'A');
-            val += scoreSquarePrescoredHash(chars[4], baseHash + offsets[4]);
-            mult *= wordMultiplierHash(baseHash + offsets[4]);
-        case 4:
-            assert(chars[3] <= 'z' && chars[3] >= 'A');
-            val += scoreSquarePrescoredHash(chars[3], baseHash + offsets[3]);
-            mult *= wordMultiplierHash(baseHash + offsets[3]);
-        case 3:
-            assert(chars[2] <= 'z' && chars[2] >= 'A');
-            val += scoreSquarePrescoredHash(chars[2], baseHash + offsets[2]);
-            mult *= wordMultiplierHash(baseHash + offsets[2]);
-        case 2:
-            break;  
+    for(int i = 0; i < length; ++i) {
+        assert(chars[i] <= 'z' && chars[i] >= 'A');
+        val += scoreSquarePrescoredHash(chars[i], baseHash + offsets[i]);
+        mult *= wordMultiplierHash(baseHash + offsets[i]);
     }
-    assert(chars[1] <= 'z' && chars[1] >= 'A');
-    val += scoreSquarePrescoredHash(chars[1], baseHash + offsets[1]);
-    mult *= wordMultiplierHash(baseHash + offsets[1]);
-    assert(chars[0] <= 'z' && chars[0] >= 'A');
-    val += scoreSquarePrescoredHash(chars[0], baseHash + offsets[0]);
-    mult *= wordMultiplierHash(baseHash + offsets[0]);
 
     return val * mult;
 }

@@ -11,6 +11,9 @@
 
 #define NUM_LETTERS 27
 #define DEFAULT_CHAR '.'
+#define ITERATOR_BOTTOM 0
+#define ITERATOR_EXTENDER 1
+#define ITERATOR_TOP 2
 
 #define BOARD_COORDINATE(xvar, yvar) ((xvar) + (yvar) * BOARD_LENGTH)
 
@@ -246,16 +249,16 @@ void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char chars[NUM
     ret->maxScore = maxScore;
     ret->maxWordLength = 0;
 
-    /*DictionaryIterator *verticalItrs[NUM_LETTERS_TURN][3];
+    DictionaryIterator *verticalItrs[NUM_LETTERS_TURN][3];
     VerticalState verticalState[NUM_LETTERS_TURN] = {{0, 0}};
     for(int i = 0; i < NUM_LETTERS_TURN; i++) {
-        verticalItrs[i][0] = createDictIterator(dicts.pwords); //for building the bottom word
-        verticalItrs[i][1] = createDictIterator(dicts.rwords); //for extending the bottom word to the top
-        verticalItrs[i][2] = createDictIterator(dicts.rwords); //for building the top word
+        verticalItrs[i][ITERATOR_BOTTOM] = createDictIterator(dicts.pwords); //for building the bottom word
+        verticalItrs[i][ITERATOR_EXTENDER] = createDictIterator(dicts.rwords); //for extending the bottom word to the top
+        verticalItrs[i][ITERATOR_TOP] = createDictIterator(dicts.rwords); //for building the top word
     }
     assert(BOARD_LENGTH + 1 == 16 && sizeof(int) == 4);
     char vwords[NUM_LETTERS_TURN][BOARD_LENGTH + 1];
-    int vlengths[NUM_LETTERS_TURN] = {0};*/
+    int vlengths[NUM_LETTERS_TURN] = {0};
 
     NSMutableSet *playableWords = [NSMutableSet set];
     //NSLog(@"Evaluating %.*s\n", length, word);
@@ -301,7 +304,7 @@ void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char chars[NUM
             int locs[NUM_LETTERS_TURN]; //offsets of said letters (within the word)
             int prescore = preprocessWordStruct(self, wordStruct, word, length, chars, locs);
 
-            /*int numCharGroups = 0;
+            int numCharGroups = 0;
             int charGroupSize[NUM_LETTERS_TURN] = {0};
             char charGroups[NUM_LETTERS_TURN][NUM_LETTERS_TURN] = {'\0'};
             for(int j = 0; j < wordStruct->_numLetters; j++) {
@@ -310,7 +313,7 @@ void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char chars[NUM
                     numCharGroups++;
                 }
             }
-            assert(numCharGroups > 0);*/
+            assert(numCharGroups > 0);
             
             int bonus = (wordStruct->_numLetters == NUM_LETTERS_TURN)?35:0;
             
@@ -339,18 +342,17 @@ void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char chars[NUM
                         continue;
                     }
 
-                    /*if(wordScore < prescore * 2) {
-                        continue; //we didn't use a word multiplier
+                    for(int j = 0; j < wordStruct->_numLetters; ++j) {
+                        loadPrefix(verticalItrs[j][ITERATOR_BOTTOM], &chars[j], 1);
+                        loadPrefix(verticalItrs[j][ITERATOR_TOP], &chars[j], 1);
                     }
-                    for(int j = 0; j < wordStruct->_numLetters; j++) {
-                        loadPrefix(verticalItrs[j][0], &chars[j], 1);
-                        loadPrefix(verticalItrs[j][2], &chars[j], 1);
-                    }
-
                     int baseIndex = 0;
-                    for(int j = 0; j < numCharGroups; j++) {
+                    for(int j = 0; j < numCharGroups; ++j) {
                         while(true) {
                             //do work here
+                            //TODO: horizontal word validation (from vertical words). Don't forget to consider extensions beyond the play columns
+
+                            //TODO: final scoring
 
                             vlengths[baseIndex] = nextVerticalWord(verticalItrs[baseIndex], &verticalState[baseIndex], vwords[baseIndex], y, dicts.words->mgr);
                             for(int k = 0; !vlengths[baseIndex + k];) {
@@ -362,9 +364,8 @@ void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char chars[NUM
                             }
                         }
                     PERMUTATION_END:;
-                    }*/
+                    }
 
-                    //max score is somewhere between 1043 and 1539
                     if(wordScore > ret->maxScore) {
                         ret->maxScore = wordScore;
                         for(int i = 0; i < wordStruct->_numLetters; ++i) {
@@ -435,13 +436,13 @@ typedef struct {
 int nextVerticalWord(DictionaryIterator *restrict*restrict iterators, VerticalState *state, char word[BOARD_LENGTH + 1], int y, DictionaryManager *wordMgr) {
     int ret = 0;
     switch(state->state) {
-        case 0:
+        case 0: //top/bottom combo words
             if(BOARD_LENGTH - (y + 1) >= 2) {
                 if(state->prefixLength) {
                 COMPLETE_WORD:;
                     do {
-                        ret = nextWordWithPrefix(iterators[1], word, y + state->prefixLength);
-                    } while(ret && !isValidWord(iterators[1]->mgr, word + state->prefixLength, ret - state->prefixLength));
+                        ret = nextWordWithPrefix(iterators[ITERATOR_EXTENDER], word, y + state->prefixLength);
+                    } while(ret && !isValidWord(iterators[ITERATOR_EXTENDER]->mgr, word + state->prefixLength, ret - state->prefixLength));
                     if(ret) {
                         STR_REV_IN_PLACE(word, ret);
                         return ret;
@@ -449,42 +450,43 @@ int nextVerticalWord(DictionaryIterator *restrict*restrict iterators, VerticalSt
                 }
 
             BOTTOM_WORD:;
-                ret = nextWordWithPrefix(iterators[0], word, BOARD_LENGTH - (y + 1));
+                ret = nextWordWithPrefix(iterators[ITERATOR_BOTTOM], word, BOARD_LENGTH - (y + 1));
                 if(ret) {
-                    assert(isValidWord(iterators[0]->mgr, word, ret));
+                    assert(isValidWord(iterators[ITERATOR_BOTTOM]->mgr, word, ret));
                     assert(ret <= BOARD_LENGTH - (y + 1));
                     if(y > 2) {
                         state->prefixLength = ret;
                         char revword[BOARD_LENGTH + 1];
                         STR_REV(revword, word, ret);
-                        loadPrefix(iterators[1], revword, ret);
+                        loadPrefix(iterators[ITERATOR_EXTENDER], revword, ret);
                     }
                     return ret;
                 } else {
-                    resetIteratorToPrefix(iterators[0]);
+                    resetIteratorToPrefix(iterators[ITERATOR_BOTTOM]);
                     state->state++;
                     state->prefixLength = 0;
                 }
             } else {
                 state->state++;
             }
-        case 1:
+        case 1: //top only
             if(y - 1 >= 2) {
-                ret = nextWordWithPrefix(iterators[2], word, y - 1);
+                ret = nextWordWithPrefix(iterators[ITERATOR_TOP], word, y - 1);
                 if(ret) {
                     assert(ret <= y - 1);
                     return ret;
                 } else {
-                    resetIteratorToPrefix(iterators[2]);
-                    state->state++;
+                    resetIteratorToPrefix(iterators[ITERATOR_TOP]);
+                    state->state++; //NOTE: If this line appears in release optimized instruments traces, the compiler is missing an optimization (I'm skeptical about the compiler's optimizations of switch fall-through
                 }
             } else {
-                state->state++;
+                state->state++; //NOTE: If this line appears in release optimized instruments traces, the compiler is missing an optimization (I'm skeptical about the compiler's optimizations of switch fall-through
             }
-        case 2:
+        case 2: //reset
             state->state = 0;
             return ret;
-        default:
+        default: //problem
+            assert(false);
             return -1;
     }
 }

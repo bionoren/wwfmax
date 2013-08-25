@@ -8,6 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		BE39047E161F986100A0A630 /* WordStructure.m in Sources */ = {isa = PBXBuildFile; fileRef = BE39047D161F986100A0A630 /* WordStructure.m */; };
+		BE4028B917C9BD140023802B /* functions.m in Sources */ = {isa = PBXBuildFile; fileRef = BEFE74F61638F8C900FD191F /* functions.m */; };
+		BE4028BA17C9BD170023802B /* Board.m in Sources */ = {isa = PBXBuildFile; fileRef = BEC0171D161A2FD40078129A /* Board.m */; };
+		BE4028BB17C9BD2B0023802B /* WordStructure.m in Sources */ = {isa = PBXBuildFile; fileRef = BE39047D161F986100A0A630 /* WordStructure.m */; };
+		BE4028BC17C9BD510023802B /* dawg.c in Sources */ = {isa = PBXBuildFile; fileRef = BEBCFBDE178238950007DB03 /* dawg.c */; };
 		BE50649E161A2DAE003B237A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE50649D161A2DAE003B237A /* Foundation.framework */; };
 		BE5064A1161A2DAE003B237A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = BE5064A0161A2DAE003B237A /* main.m */; };
 		BE5A94DF178DECA6001DD575 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE5A94D7178DEAE4001DD575 /* XCTest.framework */; };
@@ -50,7 +54,7 @@
 		BE5064A0161A2DAE003B237A /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		BE5064A3161A2DAE003B237A /* wwfmax-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "wwfmax-Prefix.pch"; sourceTree = "<group>"; };
 		BE5A94D7178DEAE4001DD575 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
-		BE5A94DE178DECA6001DD575 /* wwfmax Tests.xctest */ = {isa = PBXFileReference; explicitFileType = folder; includeInIndex = 0; path = "wwfmax Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		BE5A94DE178DECA6001DD575 /* wwfmax Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "wwfmax Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE5A94E2178DECA6001DD575 /* wwfmax Tests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "wwfmax Tests-Info.plist"; sourceTree = "<group>"; };
 		BE5A94E4178DECA6001DD575 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		BE5A94E6178DECA6001DD575 /* wwfmax_Tests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = wwfmax_Tests.m; sourceTree = "<group>"; };
@@ -135,6 +139,7 @@
 		BE5064A2161A2DAE003B237A /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				BEBCFBE01782390F0007DB03 /* dawg.h */,
 				BE5064A3161A2DAE003B237A /* wwfmax-Prefix.pch */,
 			);
 			name = "Supporting Files";
@@ -163,7 +168,6 @@
 			isa = PBXGroup;
 			children = (
 				BEBCFBDD178238950007DB03 /* CRC-32.dat */,
-				BEBCFBE01782390F0007DB03 /* dawg.h */,
 				BEBCFBDE178238950007DB03 /* dawg.c */,
 			);
 			name = DAWG;
@@ -269,6 +273,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				BE5A94E7178DECA6001DD575 /* wwfmax_Tests.m in Sources */,
+				BE4028B917C9BD140023802B /* functions.m in Sources */,
+				BE4028BC17C9BD510023802B /* dawg.c in Sources */,
+				BE4028BA17C9BD170023802B /* Board.m in Sources */,
+				BE4028BB17C9BD2B0023802B /* WordStructure.m in Sources */,
 				BE5A94EF178DED5C001DD575 /* DictionaryManager.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -366,7 +374,7 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(SYSTEM_APPS_DIR)/Xcode5-DP4.app/Contents/Developer/Library/Frameworks",
+					"$(SYSTEM_APPS_DIR)/Xcode5-DP5.app/Contents/Developer/Library/Frameworks",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "wwfmax/wwfmax-Prefix.pch";
@@ -384,14 +392,16 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(SYSTEM_APPS_DIR)/Xcode5-DP4.app/Contents/Developer/Library/Frameworks",
+					"$(SYSTEM_APPS_DIR)/Xcode5-DP5.app/Contents/Developer/Library/Frameworks",
 				);
+				GCC_OPTIMIZATION_LEVEL = 4;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "wwfmax/wwfmax-Prefix.pch";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SDKROOT)/usr/lib/system\"",
 				);
+				"OTHER_CFLAGS[arch=*]" = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

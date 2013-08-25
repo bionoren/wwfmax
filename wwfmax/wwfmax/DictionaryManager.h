@@ -35,17 +35,17 @@ typedef struct DictionaryIterator {
     int prefixLength;
 } DictionaryIterator;
 
-bool isValidWord(DictionaryManager *mgr, const char word[BOARD_LENGTH + 1], int length);
-bool isValidPrefix(DictionaryManager *mgr, const char word[BOARD_LENGTH + 1], int length);
+bool isValidWord(DictionaryManager *mgr, const char *word, int length);
+bool isValidPrefix(DictionaryManager *mgr, const char *word, int length);
 /** Returns true if the prefix is also a word, false otherwise (assumes 'word' is a valid prefix) */
-bool isPrefixWord(DictionaryManager *mgr, const char word[BOARD_LENGTH + 1], int length);
-int nextWord_threadsafe(DictionaryIterator *itr, char outWord[BOARD_LENGTH + 1]);
-int nextWord(DictionaryIterator *itr, char outWord[BOARD_LENGTH + 1]);
+bool isPrefixWord(DictionaryManager *mgr, const char *word, int length);
+int nextWord_threadsafe(DictionaryIterator *itr, char *outWord);
+int nextWord(DictionaryIterator *itr, char *outWord);
 int nextPrefix(DictionaryIterator *itr, char **outWord);
 //NOTE: Resets the iterator
 bool loadPrefix(DictionaryIterator *itr, const char *prefix, const int length);
 //WARNING: Using this function with maxDepth < BOARD_LENGTH is UNDEFINED. Therefore, only use this method with maxDepth < BOARD_LENGTH on permutation dictionaries.
-int nextWordWithPrefix(DictionaryIterator *itr, char outWord[BOARD_LENGTH + 1], int maxDepth);
+int nextWordWithPrefix(DictionaryIterator *itr, char *outWord, int maxDepth);
 void resetIterator(DictionaryIterator *itr);
 void resetIteratorToPrefix(DictionaryIterator *itr);
 

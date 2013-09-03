@@ -10,103 +10,10 @@
 #import <sys/time.h>
 #import "DictionaryManager.h"
 #import "Board.h"
+#import "DictionaryFunctions.h"
+#import "dawg.h"
 
-#define DICTIONARY "/Users/bion/projects/objc/wwfmax/dict.txt"
 #define DICTIONARY_VALID "/Users/bion/projects/objc/wwfmax/valid-dict.txt"
-#define DICT_PERMUTER "/Users/bion/projects/objc/wwfmax/dictPermuter.py"
-
-void shellprintf(const char *command, ...) {
-    va_list ap;
-    va_start(ap, command);
-    char *cmd = malloc(sizeof(char) * 512); //surely your path isn't longer than this...
-    vsprintf(cmd, command, ap);
-    perror(cmd);
-    va_end(ap);
-
-    system(cmd);
-}
-
-char *prefixStringInPath(const char *string, const char *prefix) {
-    char *ret = calloc(strlen(string) + strlen(prefix), sizeof(char));
-    const char *pathEnd = strrchr(string, '/');
-    size_t prefixLength = pathEnd - string;
-    strncpy(ret, string, prefixLength);
-    strncpy(ret + prefixLength, "/", 1);
-    strncpy(ret + prefixLength + 1, prefix, strlen(prefix));
-    strncpy(ret + prefixLength + strlen(prefix) + 1, pathEnd + 1, strlen(pathEnd));
-
-    return ret;
-}
-
-char *CWGOfDictionaryFile(const char *dictionary, char **validatedDict) {
-#if BUILD_DATASTRUCTURES
-    int numWords = 1024;
-    char *words = malloc(numWords * BOARD_LENGTH * sizeof(char));
-    assert(words);
-    int *wordLengths = malloc(numWords * sizeof(int));
-    assert(wordLengths);
-
-    FILE *wordFile = fopen(dictionary, "r");
-    assert(wordFile);
-    char buffer[40];
-    int i = 0;
-    while(fgets(buffer, 40, wordFile)) {
-        int len = (int)strlen(buffer);
-        if(buffer[len - 1] == '\n') {
-            --len;
-        }
-        if(len == 0) { //blank line
-            continue;
-        }
-        if(len <= BOARD_LENGTH) {
-            strncpy(&(words[BOARD_LENGTH * i]), buffer, len);
-            wordLengths[i++] = len;
-            if(i >= numWords) {
-                numWords *= 2;
-                words = realloc(words, numWords * BOARD_LENGTH * sizeof(char));
-                wordLengths = realloc(wordLengths, numWords * sizeof(int));
-            }
-        }
-    }
-    fclose(wordFile);
-    numWords = i;
-
-    printf("evaluating %d words\n", numWords);
-
-    const WordInfo info = {.words = words, .numWords = numWords, .lengths = wordLengths};
-
-    if(validatedDict) {
-        Board *board = [[Board alloc] init];
-        *validatedDict = prefixStringInPath(dictionary, "valid-");
-        FILE *validFile = fopen(*validatedDict, "w");
-
-        for(int i = 0; i < numWords; i++) {
-            char *word = &(words[i * BOARD_LENGTH]);
-            const int length = wordLengths[i];
-
-            if(![board testValidate:word length:length] || !playable(word, length, &info)) {
-                words[i * BOARD_LENGTH] = '\0';
-                wordLengths[i] = 0;
-                continue;
-            }
-            fprintf(validFile, "%.*s\n", length, word);
-        }
-
-        fclose(validFile);
-    }
-#endif
-
-    char *ret = calloc(strlen(dictionary) + 5, sizeof(char));
-    strncpy(ret, dictionary, strlen(dictionary));
-    strcat(ret, ".dat");
-#if BUILD_DATASTRUCTURES
-    createDataStructure(&info, ret);
-    free(words);
-    free(wordLengths);
-#endif
-    
-    return ret;
-}
 
 #warning The 4th manager has issues, but I suspect it's a bug in the DAWG creation code. Since we don't use this manager in production, I'm bypassing the tests
 #define NUM_MGRS 3
@@ -162,7 +69,8 @@ char *CWGOfDictionaryFile(const char *dictionary, char **validatedDict) {
     _mgrs[i++] = _wordMgr;
     _mgrs[i++] = _rwordMgr;
     _mgrs[i++] = _pwordMgr;
-    _mgrs[i++] = _rpwordMgr;
+    //_mgrs[i++] = _rpwordMgr;
+    assert(i <= NUM_MGRS);
 
     free(dictionary);
     free(dictionarySuffixes);
@@ -195,6 +103,10 @@ char *CWGOfDictionaryFile(const char *dictionary, char **validatedDict) {
 
     for(int i = 0; i < NUM_MGRS; i++) {
         tempDictStruct dict = dicts[i];
+
+        for(int j = 0; j < 26; j++) {
+            XCTAssertTrue((dict.mgr->nodeArray[j + 1] & LETTER_BIT_MASK) == 'a' + j, @"%c != %c", (dict.mgr->nodeArray[j + 1] & LETTER_BIT_MASK), 'a' + j);
+        }
 
         int numWords = 1024;
         char *words = malloc(numWords * BOARD_LENGTH * sizeof(char));
@@ -335,6 +247,65 @@ char *CWGOfDictionaryFile(const char *dictionary, char **validatedDict) {
         }
         free(prefixOutWord);
     }
+}
+
+-(void)testLetterPairIteration {
+    DictionaryIterator *tmpitr = createDictIterator(self.wordMgr);
+    int **letterPairLookupTable = createLetterPairLookupTableForDictionary(tmpitr);
+    freeDictIterator(tmpitr);
+
+    DictionaryIterator *checkItr = createDictIterator(self.wordMgr);
+    loadPrefix(checkItr, "aa", 2);
+    DictionaryIterator *hackItr = iteratorsForLetterPair(self.wordMgr, 'a', 'a', letterPairLookupTable)[0];
+    XCTAssertEqual(checkItr->prefixLength, hackItr->prefixLength);
+    XCTAssertEqual(checkItr->stackDepth, hackItr->stackDepth);
+    for(int i = 0; i < BOARD_LENGTH + 1; i++) {
+        XCTAssertEqual(checkItr->stack[i].index, hackItr->stack[i].index, @"i = %d, %d != %d", i, checkItr->stack[i].index, hackItr->stack[i].index);
+        XCTAssertEqual(checkItr->stack[i].node, hackItr->stack[i].node, @"i = %d, %d != %d", i, checkItr->stack[i].node, hackItr->stack[i].node);
+        XCTAssertEqual(checkItr->tmpWord[i], hackItr->tmpWord[i], @"i = %d, %c != %c", i, checkItr->tmpWord[i], hackItr->tmpWord[i]);
+    }
+    freeDictIterator(checkItr);
+    freeDictIterator(hackItr);
+
+    checkItr = createDictIterator(self.wordMgr);
+    loadPrefix(checkItr, "ab", 2);
+    hackItr = iteratorsForLetterPair(self.wordMgr, 'a', 'b', letterPairLookupTable)[0];
+    XCTAssertEqual(checkItr->prefixLength, hackItr->prefixLength);
+    XCTAssertEqual(checkItr->stackDepth, hackItr->stackDepth);
+    for(int i = 0; i < BOARD_LENGTH + 1; i++) {
+        XCTAssertEqual(checkItr->stack[i].index, hackItr->stack[i].index, @"i = %d, %d != %d", i, checkItr->stack[i].index, hackItr->stack[i].index);
+        XCTAssertEqual(checkItr->stack[i].node, hackItr->stack[i].node, @"i = %d, %d != %d", i, checkItr->stack[i].node, hackItr->stack[i].node);
+        XCTAssertEqual(checkItr->tmpWord[i], hackItr->tmpWord[i], @"i = %d, %c != %c", i, checkItr->tmpWord[i], hackItr->tmpWord[i]);
+    }
+    freeDictIterator(checkItr);
+    freeDictIterator(hackItr);
+
+    int len = 0;
+    char outWord[BOARD_LENGTH + 1];
+    for(char c1 = 'a'; c1 <= 'z'; c1++) {
+        for(char c2 = 'a'; c2 <= 'z'; c2++) {
+            DictionaryIterator **itrs = iteratorsForLetterPair(self.wordMgr, c1, c2, letterPairLookupTable);
+            if(!itrs) {
+                continue;
+            }
+            for(int i = 0; itrs[i]; i++) {
+                DictionaryIterator *itr = itrs[i];
+                while((len = nextWordWithPrefix(itr, outWord, BOARD_LENGTH))) {
+                    XCTAssert(len >= 2, @"Fail");
+                    XCTAssert(outWord[0] == c1, @"%.*s does not start with %c", len, outWord, c1);
+                    XCTAssert(outWord[1] == c2, @"%.*s does not start with %c%c", len, outWord, c1, c2);
+                }
+                freeDictIterator(itr);
+            }
+
+            free(itrs);
+        }
+    }
+
+    for(int i = 0; i < 26 * 26; i++) {
+        free(letterPairLookupTable[i]);
+    }
+    free(letterPairLookupTable);
 }
 
 -(void)testCreateConstInitializer {

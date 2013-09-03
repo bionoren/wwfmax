@@ -31,6 +31,7 @@ typedef struct {
     DictionaryManager *rwords;
     DictionaryManager *pwords;
     DictionaryManager *rpwords;
+    int **letterPairLookupTable;
 } Dictionaries;
 
 @interface Board : NSObject
@@ -58,4 +59,8 @@ static void freeDictionaries(Dictionaries dicts) {
     freeDictManager(dicts.rwords);
     freeDictManager(dicts.pwords);
     freeDictManager(dicts.rpwords);
+    for(int i = 0; i < 26 * 26; i++) {
+        free(dicts.letterPairLookupTable[i]);
+    }
+    free(dicts.letterPairLookupTable);
 }

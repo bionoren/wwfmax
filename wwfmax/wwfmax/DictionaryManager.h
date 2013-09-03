@@ -39,13 +39,18 @@ bool isValidWord(DictionaryManager *mgr, const char *word, int length);
 bool isValidPrefix(DictionaryManager *mgr, const char *word, int length);
 /** Returns true if the prefix is also a word, false otherwise (assumes 'word' is a valid prefix) */
 bool isPrefixWord(DictionaryManager *mgr, const char *word, int length);
+
 int nextWord_threadsafe(DictionaryIterator *itr, char *outWord);
 int nextWord(DictionaryIterator *itr, char *outWord);
+
 int nextPrefix(DictionaryIterator *itr, char **outWord);
 //NOTE: Resets the iterator
 bool loadPrefix(DictionaryIterator *itr, const char *prefix, const int length);
 //WARNING: Using this function with maxDepth < BOARD_LENGTH is UNDEFINED. Therefore, only use this method with maxDepth < BOARD_LENGTH on permutation dictionaries.
 int nextWordWithPrefix(DictionaryIterator *itr, char *outWord, int maxDepth);
+
+DictionaryIterator **iteratorsForLetterPair(DictionaryManager *mgr, char c1, char c2, int **letterPairLookupTable);
+
 void resetIterator(DictionaryIterator *itr);
 void resetIteratorToPrefix(DictionaryIterator *itr);
 

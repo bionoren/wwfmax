@@ -59,55 +59,7 @@ bool isPrefixWord(DictionaryManager *mgr, const char *word, int length) {
 
 int nextWord_threadsafe(DictionaryIterator *itr, char *outWord) {
     OSSpinLockLock(&itr->lock);
-    if(itr->stackDepth < 0) {
-        OSSpinLockUnlock(&itr->lock);
-        return 0;
-    }
-
-    assert(itr->stackDepth >= 0 && itr->stackDepth <= BOARD_LENGTH);
-
-    dictStack *restrict item = &(itr->stack[itr->stackDepth]);
-    if(!item->index) {
-        item--;
-        itr->stackDepth--;
-        do {
-            assert(item->node);
-            if(item->node & END_OF_LIST_BIT_MASK) {
-                item--;
-            } else {
-                item->node = itr->mgr->nodeArray[++item->index];
-                goto LOOP_END;
-            }
-        } while(itr->stackDepth-- > 0);
-        OSSpinLockUnlock(&itr->lock);
-        return 0;
-    }
-LOOP_END:;
-
-    bool eow;
-    int node = item->node;
-    do {
-        eow = node & END_OF_WORD_BIT_MASK;
-
-        //store the letter and go down
-        itr->tmpWord[itr->stackDepth++] = node & LETTER_BIT_MASK;
-        assert(itr->stackDepth <= BOARD_LENGTH);
-
-        //setup the next node
-        item = &itr->stack[itr->stackDepth];
-        item->index = (node & CHILD_INDEX_BIT_MASK) >> CHILD_BIT_SHIFT;
-        item->node = node = itr->mgr->nodeArray[item->index];
-    } while(!eow);
-    
-    assert(itr->stackDepth > 1 && itr->stackDepth <= BOARD_LENGTH);
-    assert(BOARD_LENGTH + 1 == 16 && sizeof(long) == 8);
-    for(int i = 0; i < 2; i++) {
-        ((long*restrict)outWord)[i] = ((long*restrict)itr->tmpWord)[i];
-    }
-    //NSLog(@"Evaluating %.*s", length, tmpWord);
-
-    assert(isValidWord(itr->mgr, outWord, itr->stackDepth));
-    int ret = itr->stackDepth;
+    int ret = nextWord(itr, outWord);
     OSSpinLockUnlock(&itr->lock);
     return ret;
 }
@@ -152,7 +104,7 @@ LOOP_END2:;
     for(int i = 0; i < 2; i++) {
         ((long*restrict)outWord)[i] = ((long*restrict)itr->tmpWord)[i];
     }
-    //NSLog(@"Evaluating %.*s", length, tmpWord);
+    //printf("Evaluating %.*s\n", itr->stackDepth, outWord);
 
     assert(isValidWord(itr->mgr, outWord, itr->stackDepth));
     return itr->stackDepth;
@@ -203,6 +155,10 @@ bool loadPrefix(DictionaryIterator *itr, const char *restrict prefix, const int 
     itr->tmpWord[0] = *prefix++;
 
     for(int i = 1; i < length; ++i) {
+#if DEBUG
+        itr->stack[i - 1].index = index;
+        itr->stack[i - 1].node = node;
+#endif
         assert(node & CHILD_INDEX_BIT_MASK);
 
         char letterIndex = *prefix++;
@@ -221,6 +177,10 @@ bool loadPrefix(DictionaryIterator *itr, const char *restrict prefix, const int 
     dictStack *item = &(itr->stack[length]);
     item->index = (node & CHILD_INDEX_BIT_MASK) >> CHILD_BIT_SHIFT;
     item->node = itr->mgr->nodeArray[item->index];
+#if DEBUG
+    itr->stack[length - 1].index = index;
+    itr->stack[length - 1].node = node;
+#endif
     return true;
 }
 
@@ -270,8 +230,45 @@ LOOP_END2:;
     }
     //NSLog(@"Evaluating %.*s", length, tmpWord);
 
-    assert(isValidWord(itr->mgr, outWord, itr->stackDepth));
+    //assert(isValidWord(itr->mgr, outWord, itr->stackDepth));
     return itr->stackDepth;
+}
+
+DictionaryIterator **iteratorsForLetterPair(DictionaryManager *mgr, char c1, char c2, int **letterPairLookupTable) {
+    char l1 = c1 - 'a';
+    char l2 = c2 - 'a';
+    int index = l1 + l2 * 26;
+    int *row = letterPairLookupTable[index];
+    if(row[0] == 0) {
+        return NULL;
+    }
+    DictionaryIterator **ret = calloc(row[0] + 1, sizeof(DictionaryIterator*));
+    for(int i = 1; i < row[0] + 1; i++) {
+        DictionaryIterator *itr = createDictIterator(mgr);
+        itr->prefixLength = 2;
+        //load the first character
+        int node;
+        itr->stack[itr->stackDepth].index = row[i];
+        itr->stack[itr->stackDepth].node = node = mgr->nodeArray[itr->stack[itr->stackDepth].index];
+        itr->stackDepth++;
+        //load the second character
+        itr->stack[itr->stackDepth].index = (node & CHILD_INDEX_BIT_MASK) >> CHILD_BIT_SHIFT;
+        itr->stack[itr->stackDepth].node = node = mgr->nodeArray[itr->stack[itr->stackDepth].index];
+        while((node & LETTER_BIT_MASK) != c2) {
+            assert(!(node & END_OF_LIST_BIT_MASK));
+            itr->stack[itr->stackDepth].index++;
+            itr->stack[itr->stackDepth].node = node = mgr->nodeArray[itr->stack[itr->stackDepth].index];
+        }
+        itr->stackDepth++;
+        itr->stack[itr->stackDepth].index = node = (node & CHILD_INDEX_BIT_MASK) >> CHILD_BIT_SHIFT;
+        itr->stack[itr->stackDepth].node = mgr->nodeArray[itr->stack[itr->stackDepth].index];
+
+        itr->tmpWord[0] = c1;
+        itr->tmpWord[1] = c2;
+        ret[i - 1] = itr;
+    }
+
+    return ret;
 }
 
 void resetIterator(DictionaryIterator *itr) {
@@ -307,6 +304,13 @@ DictionaryIterator *createDictIterator(DictionaryManager *mgr) {
     DictionaryIterator *ret = malloc(sizeof(DictionaryIterator));
     ret->mgr = mgr;
     resetIterator(ret);
+#if DEBUG
+    for(int i = 0; i < BOARD_LENGTH + 1; i++) {
+        ret->stack[i].index = 0;
+        ret->stack[i].node = 0;
+        ret->tmpWord[i] = 0;
+    }
+#endif
     ret->lock = OS_SPINLOCK_INIT;
 
     return ret;

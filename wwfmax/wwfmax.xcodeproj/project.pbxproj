@@ -21,6 +21,8 @@
 		BEBCFBDF178238D70007DB03 /* dawg.c in Sources */ = {isa = PBXBuildFile; fileRef = BEBCFBDE178238950007DB03 /* dawg.c */; };
 		BEBCFBE117823AE40007DB03 /* DictionaryManager.c in Sources */ = {isa = PBXBuildFile; fileRef = BEC44C61177DEA2700BF6D4F /* DictionaryManager.c */; };
 		BEC0171E161A2FD40078129A /* Board.m in Sources */ = {isa = PBXBuildFile; fileRef = BEC0171D161A2FD40078129A /* Board.m */; };
+		BEFD047317CD5B8D00AC6864 /* DictionaryFunctions.c in Sources */ = {isa = PBXBuildFile; fileRef = BEFD047217CD5B8D00AC6864 /* DictionaryFunctions.c */; };
+		BEFD047417CD5B8F00AC6864 /* DictionaryFunctions.c in Sources */ = {isa = PBXBuildFile; fileRef = BEFD047217CD5B8D00AC6864 /* DictionaryFunctions.c */; };
 		BEFE74F71638F8C900FD191F /* functions.m in Sources */ = {isa = PBXBuildFile; fileRef = BEFE74F61638F8C900FD191F /* functions.m */; };
 /* End PBXBuildFile section */
 
@@ -67,6 +69,8 @@
 		BEC0171D161A2FD40078129A /* Board.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Board.m; sourceTree = "<group>"; };
 		BEC01729161A40500078129A /* functions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = functions.h; sourceTree = "<group>"; };
 		BEC44C61177DEA2700BF6D4F /* DictionaryManager.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = DictionaryManager.c; sourceTree = "<group>"; };
+		BEFD047117CD5B8200AC6864 /* DictionaryFunctions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DictionaryFunctions.h; sourceTree = "<group>"; };
+		BEFD047217CD5B8D00AC6864 /* DictionaryFunctions.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = DictionaryFunctions.c; sourceTree = "<group>"; };
 		BEFE74F61638F8C900FD191F /* functions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = functions.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -123,6 +127,8 @@
 			children = (
 				BEBCFBDC178238610007DB03 /* DAWG */,
 				BE5064A0161A2DAE003B237A /* main.m */,
+				BEFD047117CD5B8200AC6864 /* DictionaryFunctions.h */,
+				BEFD047217CD5B8D00AC6864 /* DictionaryFunctions.c */,
 				BEC01729161A40500078129A /* functions.h */,
 				BEFE74F61638F8C900FD191F /* functions.m */,
 				BE5064A2161A2DAE003B237A /* Supporting Files */,
@@ -139,7 +145,6 @@
 		BE5064A2161A2DAE003B237A /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				BEBCFBE01782390F0007DB03 /* dawg.h */,
 				BE5064A3161A2DAE003B237A /* wwfmax-Prefix.pch */,
 			);
 			name = "Supporting Files";
@@ -168,6 +173,7 @@
 			isa = PBXGroup;
 			children = (
 				BEBCFBDD178238950007DB03 /* CRC-32.dat */,
+				BEBCFBE01782390F0007DB03 /* dawg.h */,
 				BEBCFBDE178238950007DB03 /* dawg.c */,
 			);
 			name = DAWG;
@@ -260,6 +266,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BE5064A1161A2DAE003B237A /* main.m in Sources */,
+				BEFD047317CD5B8D00AC6864 /* DictionaryFunctions.c in Sources */,
 				BEC0171E161A2FD40078129A /* Board.m in Sources */,
 				BE39047E161F986100A0A630 /* WordStructure.m in Sources */,
 				BEFE74F71638F8C900FD191F /* functions.m in Sources */,
@@ -273,6 +280,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BE5A94E7178DECA6001DD575 /* wwfmax_Tests.m in Sources */,
+				BEFD047417CD5B8F00AC6864 /* DictionaryFunctions.c in Sources */,
 				BE4028B917C9BD140023802B /* functions.m in Sources */,
 				BE4028BC17C9BD510023802B /* dawg.c in Sources */,
 				BE4028BA17C9BD170023802B /* Board.m in Sources */,
@@ -374,7 +382,7 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(SYSTEM_APPS_DIR)/Xcode5-DP5.app/Contents/Developer/Library/Frameworks",
+					"$(SYSTEM_APPS_DIR)/Xcode5-DP6.app/Contents/Developer/Library/Frameworks",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "wwfmax/wwfmax-Prefix.pch";
@@ -392,7 +400,7 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(SYSTEM_APPS_DIR)/Xcode5-DP5.app/Contents/Developer/Library/Frameworks",
+					"$(SYSTEM_APPS_DIR)/Xcode5-DP6.app/Contents/Developer/Library/Frameworks",
 				);
 				GCC_OPTIMIZATION_LEVEL = 4;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;

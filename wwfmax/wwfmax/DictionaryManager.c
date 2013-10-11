@@ -304,13 +304,6 @@ DictionaryIterator *createDictIterator(DictionaryManager *mgr) {
     DictionaryIterator *ret = malloc(sizeof(DictionaryIterator));
     ret->mgr = mgr;
     resetIterator(ret);
-#if DEBUG
-    for(int i = 0; i < BOARD_LENGTH + 1; i++) {
-        ret->stack[i].index = 0;
-        ret->stack[i].node = 0;
-        ret->tmpWord[i] = 0;
-    }
-#endif
     ret->lock = OS_SPINLOCK_INIT;
 
     return ret;

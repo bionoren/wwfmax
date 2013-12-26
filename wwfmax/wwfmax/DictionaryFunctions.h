@@ -12,10 +12,12 @@
 #import "DictionaryManager.h"
 
 #define DICTIONARY "/Users/bion/projects/objc/wwfmax/dict.txt"
+#define DICTIONARY_TEST "/Users/bion/projects/objc/wwfmax/dict-test.txt"
 #define DICT_PERMUTER "/Users/bion/projects/objc/wwfmax/dictPermuter.py"
 
 //anecdotally, ~2.5% of the shipped dictionary is unplayable, mostly because the words are too long for the board, but also because there aren't enough of the required letters and because some words can't be broken down into sufficiently small subwords
 
+Dictionaries *loadDicts(const char *dictFile);
 void shellprintf(const char *command, ...);
 char *prefixStringInPath(const char *string, const char *prefix);
 char *CWGOfDictionaryFile(const char *dictionary, char **validatedDict);

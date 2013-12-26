@@ -60,4 +60,12 @@ DictionaryIterator *cloneDictIterator(DictionaryIterator *itr);
 void freeDictManager(DictionaryManager *mgr);
 void freeDictIterator(DictionaryIterator *itr);
 
+typedef struct {
+    DictionaryIterator *words;
+    DictionaryManager *rwords;
+    DictionaryManager *pwords;
+    DictionaryManager *rpwords;
+    int **letterPairLookupTable;
+} Dictionaries;
+
 #endif

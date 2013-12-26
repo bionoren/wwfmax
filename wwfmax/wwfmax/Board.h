@@ -21,46 +21,17 @@ typedef struct {
 } Solution;
 
 typedef struct {
-    int maxBaseScore;
-    float maxScoreRatio;
-    int maxBonusTileScores[BOARD_LENGTH * BOARD_LENGTH][26];
+    int maxBaseScore; //lower bound on max score
+    float maxScoreRatio; //lower bound on max ratio of (score / prescore)
+    int maxBonusTileScores[BOARD_LENGTH * BOARD_LENGTH][26]; //lower bound on max score for each square on a per-letter basis
 } PreprocessedData;
-
-typedef struct {
-    DictionaryIterator *words;
-    DictionaryManager *rwords;
-    DictionaryManager *pwords;
-    DictionaryManager *rpwords;
-    int **letterPairLookupTable;
-} Dictionaries;
 
 @interface Board : NSObject
 
 +(void)loadPreprocessedData:(PreprocessedData*)data;
--(PreprocessedData*)preprocess:(Dictionaries)dicts;
--(Solution*)solveWord:(char[BOARD_LENGTH + 1])word length:(int)length maxScore:(int)maxScore dict:(Dictionaries)dicts;
+-(PreprocessedData*)preprocess:(Dictionaries*)dicts;
+-(Solution*)solveWord:(char[BOARD_LENGTH + 1])word length:(int)length maxScore:(int)maxScore dict:(Dictionaries*)dicts;
 +(NSString*)debugBoard:(char*)board;
 -(BOOL)testValidate:(char*restrict)word length:(int)length;
 
 @end
-
-static void printSolution(Solution *sol) {
-    char maxWordLetters[BOARD_LENGTH + 1] = { [0 ... BOARD_LENGTH - 1] = '_', '\0' };
-    for(int k = 0; k < sol->numMaxLetters; k++) {
-        char c = (char)Y_FROM_HASH(sol->maxLetters[k]);
-        int offset = X_FROM_HASH(sol->maxLetters[k]);
-        maxWordLetters[offset] = c;
-    }
-    NSLog(@"Highest scoring play is %.*s (%.*s) at (%d, %d) on (%@) for %d points", sol->maxWordLength, maxWordLetters, sol->maxWordLength, sol->maxWord, sol->maxx, sol->maxy, [Board debugBoard:sol->maxBoard], sol->maxScore);
-}
-
-static void freeDictionaries(Dictionaries dicts) {
-    freeDictIterator(dicts.words);
-    freeDictManager(dicts.rwords);
-    freeDictManager(dicts.pwords);
-    freeDictManager(dicts.rpwords);
-    for(int i = 0; i < 26 * 26; i++) {
-        free(dicts.letterPairLookupTable[i]);
-    }
-    free(dicts.letterPairLookupTable);
-}

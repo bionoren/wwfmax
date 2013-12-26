@@ -16,13 +16,15 @@
 		BE5064A1161A2DAE003B237A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = BE5064A0161A2DAE003B237A /* main.m */; };
 		BE5A94DF178DECA6001DD575 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE5A94D7178DEAE4001DD575 /* XCTest.framework */; };
 		BE5A94E5178DECA6001DD575 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = BE5A94E3178DECA6001DD575 /* InfoPlist.strings */; };
-		BE5A94E7178DECA6001DD575 /* wwfmax_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = BE5A94E6178DECA6001DD575 /* wwfmax_Tests.m */; };
+		BE5A94E7178DECA6001DD575 /* DictionaryTests.m in Sources */ = {isa = PBXBuildFile; fileRef = BE5A94E6178DECA6001DD575 /* DictionaryTests.m */; };
 		BE5A94EF178DED5C001DD575 /* DictionaryManager.c in Sources */ = {isa = PBXBuildFile; fileRef = BEC44C61177DEA2700BF6D4F /* DictionaryManager.c */; };
+		BE6AD2D5186922CB00F4F41E /* BoardTests.m in Sources */ = {isa = PBXBuildFile; fileRef = BE6AD2D4186922CB00F4F41E /* BoardTests.m */; };
+		BE6AD2D8186BEAF600F4F41E /* FunctionTests.m in Sources */ = {isa = PBXBuildFile; fileRef = BE6AD2D7186BEAF600F4F41E /* FunctionTests.m */; };
 		BEBCFBDF178238D70007DB03 /* dawg.c in Sources */ = {isa = PBXBuildFile; fileRef = BEBCFBDE178238950007DB03 /* dawg.c */; };
 		BEBCFBE117823AE40007DB03 /* DictionaryManager.c in Sources */ = {isa = PBXBuildFile; fileRef = BEC44C61177DEA2700BF6D4F /* DictionaryManager.c */; };
 		BEC0171E161A2FD40078129A /* Board.m in Sources */ = {isa = PBXBuildFile; fileRef = BEC0171D161A2FD40078129A /* Board.m */; };
-		BEFD047317CD5B8D00AC6864 /* DictionaryFunctions.c in Sources */ = {isa = PBXBuildFile; fileRef = BEFD047217CD5B8D00AC6864 /* DictionaryFunctions.c */; };
-		BEFD047417CD5B8F00AC6864 /* DictionaryFunctions.c in Sources */ = {isa = PBXBuildFile; fileRef = BEFD047217CD5B8D00AC6864 /* DictionaryFunctions.c */; };
+		BEFD047317CD5B8D00AC6864 /* DictionaryFunctions.m in Sources */ = {isa = PBXBuildFile; fileRef = BEFD047217CD5B8D00AC6864 /* DictionaryFunctions.m */; };
+		BEFD047417CD5B8F00AC6864 /* DictionaryFunctions.m in Sources */ = {isa = PBXBuildFile; fileRef = BEFD047217CD5B8D00AC6864 /* DictionaryFunctions.m */; };
 		BEFE74F71638F8C900FD191F /* functions.m in Sources */ = {isa = PBXBuildFile; fileRef = BEFE74F61638F8C900FD191F /* functions.m */; };
 /* End PBXBuildFile section */
 
@@ -59,8 +61,11 @@
 		BE5A94DE178DECA6001DD575 /* wwfmax Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "wwfmax Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE5A94E2178DECA6001DD575 /* wwfmax Tests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "wwfmax Tests-Info.plist"; sourceTree = "<group>"; };
 		BE5A94E4178DECA6001DD575 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		BE5A94E6178DECA6001DD575 /* wwfmax_Tests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = wwfmax_Tests.m; sourceTree = "<group>"; };
+		BE5A94E6178DECA6001DD575 /* DictionaryTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DictionaryTests.m; sourceTree = "<group>"; };
 		BE5A94E8178DECA6001DD575 /* wwfmax Tests-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "wwfmax Tests-Prefix.pch"; sourceTree = "<group>"; };
+		BE6AD2D4186922CB00F4F41E /* BoardTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BoardTests.m; sourceTree = "<group>"; };
+		BE6AD2D618692AA800F4F41E /* Board-test.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Board-test.h"; sourceTree = "<group>"; };
+		BE6AD2D7186BEAF600F4F41E /* FunctionTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FunctionTests.m; sourceTree = "<group>"; };
 		BE805864167549B80093BB19 /* DictionaryManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DictionaryManager.h; sourceTree = "<group>"; };
 		BEBCFBDD178238950007DB03 /* CRC-32.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = "CRC-32.dat"; sourceTree = "<group>"; };
 		BEBCFBDE178238950007DB03 /* dawg.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = dawg.c; sourceTree = "<group>"; };
@@ -70,7 +75,7 @@
 		BEC01729161A40500078129A /* functions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = functions.h; sourceTree = "<group>"; };
 		BEC44C61177DEA2700BF6D4F /* DictionaryManager.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = DictionaryManager.c; sourceTree = "<group>"; };
 		BEFD047117CD5B8200AC6864 /* DictionaryFunctions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DictionaryFunctions.h; sourceTree = "<group>"; };
-		BEFD047217CD5B8D00AC6864 /* DictionaryFunctions.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = DictionaryFunctions.c; sourceTree = "<group>"; };
+		BEFD047217CD5B8D00AC6864 /* DictionaryFunctions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DictionaryFunctions.m; sourceTree = "<group>"; };
 		BEFE74F61638F8C900FD191F /* functions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = functions.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -128,11 +133,12 @@
 				BEBCFBDC178238610007DB03 /* DAWG */,
 				BE5064A0161A2DAE003B237A /* main.m */,
 				BEFD047117CD5B8200AC6864 /* DictionaryFunctions.h */,
-				BEFD047217CD5B8D00AC6864 /* DictionaryFunctions.c */,
+				BEFD047217CD5B8D00AC6864 /* DictionaryFunctions.m */,
 				BEC01729161A40500078129A /* functions.h */,
 				BEFE74F61638F8C900FD191F /* functions.m */,
 				BE5064A2161A2DAE003B237A /* Supporting Files */,
 				BEC0171C161A2FD40078129A /* Board.h */,
+				BE6AD2D618692AA800F4F41E /* Board-test.h */,
 				BEC0171D161A2FD40078129A /* Board.m */,
 				BE39047C161F986100A0A630 /* WordStructure.h */,
 				BE39047D161F986100A0A630 /* WordStructure.m */,
@@ -153,7 +159,9 @@
 		BE5A94E0178DECA6001DD575 /* wwfmax Tests */ = {
 			isa = PBXGroup;
 			children = (
-				BE5A94E6178DECA6001DD575 /* wwfmax_Tests.m */,
+				BE5A94E6178DECA6001DD575 /* DictionaryTests.m */,
+				BE6AD2D4186922CB00F4F41E /* BoardTests.m */,
+				BE6AD2D7186BEAF600F4F41E /* FunctionTests.m */,
 				BE5A94E1178DECA6001DD575 /* Supporting Files */,
 			);
 			path = "wwfmax Tests";
@@ -266,7 +274,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BE5064A1161A2DAE003B237A /* main.m in Sources */,
-				BEFD047317CD5B8D00AC6864 /* DictionaryFunctions.c in Sources */,
+				BEFD047317CD5B8D00AC6864 /* DictionaryFunctions.m in Sources */,
 				BEC0171E161A2FD40078129A /* Board.m in Sources */,
 				BE39047E161F986100A0A630 /* WordStructure.m in Sources */,
 				BEFE74F71638F8C900FD191F /* functions.m in Sources */,
@@ -279,13 +287,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BE5A94E7178DECA6001DD575 /* wwfmax_Tests.m in Sources */,
-				BEFD047417CD5B8F00AC6864 /* DictionaryFunctions.c in Sources */,
+				BE5A94E7178DECA6001DD575 /* DictionaryTests.m in Sources */,
+				BEFD047417CD5B8F00AC6864 /* DictionaryFunctions.m in Sources */,
+				BE6AD2D5186922CB00F4F41E /* BoardTests.m in Sources */,
 				BE4028B917C9BD140023802B /* functions.m in Sources */,
 				BE4028BC17C9BD510023802B /* dawg.c in Sources */,
 				BE4028BA17C9BD170023802B /* Board.m in Sources */,
 				BE4028BB17C9BD2B0023802B /* WordStructure.m in Sources */,
 				BE5A94EF178DED5C001DD575 /* DictionaryManager.c in Sources */,
+				BE6AD2D8186BEAF600F4F41E /* FunctionTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -380,10 +390,7 @@
 		BE5064A9161A2DAE003B237A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(SYSTEM_APPS_DIR)/Xcode5-DP6.app/Contents/Developer/Library/Frameworks",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "wwfmax/wwfmax-Prefix.pch";
 				HEADER_SEARCH_PATHS = "";
@@ -398,10 +405,7 @@
 		BE5064AA161A2DAE003B237A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(SYSTEM_APPS_DIR)/Xcode5-DP6.app/Contents/Developer/Library/Frameworks",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_OPTIMIZATION_LEVEL = 4;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "wwfmax/wwfmax-Prefix.pch";

@@ -18,7 +18,7 @@
 #warning The 4th manager has issues, but I suspect it's a bug in the DAWG creation code. Since we don't use this manager in production, I'm bypassing the tests
 #define NUM_MGRS 3
 
-@interface wwfmax_Tests : XCTestCase {
+@interface DictionaryTests : XCTestCase {
     DictionaryManager *_mgrs[NUM_MGRS];
 }
 
@@ -29,7 +29,7 @@
 
 @end
 
-@implementation wwfmax_Tests
+@implementation DictionaryTests
 
 - (void)setUp {
     [super setUp];

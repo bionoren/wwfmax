@@ -7,64 +7,15 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <string.h>
-#import <stdio.h>
 #import "Board.h"
-#import "functions.h"
-#import "DictionaryManager.h"
-#import "dawg.h"
 #import "DictionaryFunctions.h"
+
+static void freeDictionaries(Dictionaries *dicts);
+static void printSolution(Solution *sol);
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
-#if DEBUG
-        assert(sizeof(short) >= 2);
-        assert(HASH(11, 3) == 59); //3,11
-        Letter hash = HASH(BOARD_LENGTH, 'z');
-        assert(X_FROM_HASH(hash) == BOARD_LENGTH);
-        assert((char)Y_FROM_HASH(hash) == 'z');
-#endif
-        
-        NSLog(@"%@", [[[NSFileManager alloc] init] currentDirectoryPath]);
-        //NOTE: generated datastructures account for approximately 3Mb of storage
-        const char *dictionaryPath = DICTIONARY;
-        char *validDictionary;
-        char *dictionary = CWGOfDictionaryFile(dictionaryPath, &validDictionary);
-        char *reversedDictionary = prefixStringInPath(dictionaryPath, "reversed-");
-#if BUILD_DATASTRUCTURES
-        shellprintf("cat %s | rev > %s", validDictionary, reversedDictionary);
-#endif
-        char *dictionaryReversed = CWGOfDictionaryFile(reversedDictionary, NULL);
-
-        char *suffixedDictionary = prefixStringInPath(dictionaryPath, "suffixes-");
-        char *reversedSuffixedDictionary = prefixStringInPath(suffixedDictionary, "reversed-");
-#if BUILD_DATASTRUCTURES
-        shellprintf("python %s %s %s", DICT_PERMUTER, validDictionary, suffixedDictionary);
-#endif
-        char *dictionarySuffixes = CWGOfDictionaryFile(suffixedDictionary, NULL);
-#if BUILD_DATASTRUCTURES
-        shellprintf("cat %s | rev > %s", suffixedDictionary, reversedSuffixedDictionary);
-#endif
-        char *dictionarySuffixesReversed = CWGOfDictionaryFile(reversedSuffixedDictionary, NULL);
-
-#if BUILD_DATASTRUCTURES
-        free(validDictionary);
-#endif
-        free(reversedDictionary);
-        free(suffixedDictionary);
-        free(reversedSuffixedDictionary);
-
-        DictionaryManager *mgr = createDictManager(dictionary);
-        Dictionaries dicts;
-        dicts.words = createDictIterator(mgr);
-        dicts.pwords = createDictManager(dictionarySuffixes);
-        dicts.rwords = createDictManager(dictionaryReversed);
-        dicts.rpwords = createDictManager(dictionarySuffixesReversed);
-        free(dictionary);
-        free(dictionarySuffixes);
-        free(dictionaryReversed);
-        free(dictionarySuffixesReversed);
-        dicts.letterPairLookupTable = createLetterPairLookupTableForDictionary(dicts.words);
+        Dictionaries *dicts = loadDicts(DICTIONARY);
 
         __block OSSpinLock lock = OS_SPINLOCK_INIT;
         dispatch_group_t dispatchGroup = dispatch_group_create();
@@ -101,7 +52,7 @@ int main(int argc, const char * argv[]) {
         NSLog(@"Preprocessing complete");
         [Board loadPreprocessedData:masterPreprocessedData];
         free(masterPreprocessedData);
-        resetIterator(dicts.words);
+        resetIterator(dicts->words);
         
         __block Solution *sol = malloc(sizeof(Solution));
         sol->maxScore = 0;
@@ -119,7 +70,7 @@ int main(int argc, const char * argv[]) {
             //seek to the last word we confirmed was interesting (read time consuming) to evaluate
             char word[BOARD_LENGTH + 1];
             int length;
-            while((length = nextWord_threadsafe(dicts.words, word))) {
+            while((length = nextWord_threadsafe(dicts->words, word))) {
                 if(length == targetLength && strncmp(word, targetWord, length) == 0) {
                     break;
                 }
@@ -131,7 +82,7 @@ int main(int argc, const char * argv[]) {
                 assert(BOARD_LENGTH + 1 == 16 && sizeof(int) == 4);
                 char word[BOARD_LENGTH + 1];
                 int length;
-                while((length = nextWord_threadsafe(dicts.words, word))) {
+                while((length = nextWord_threadsafe(dicts->words, word))) {
                     Solution *temp = [board solveWord:word length:length maxScore:sol->maxScore dict:dicts]; //NOTE: It's possible this could be called while sol is being updated, but the pointer assignment is an atomic operation, so we will get *some* value (and not garbage); it just might be lower than necessary. This could result in some unnecessary computation.
                     if(temp->maxWordLength) {
                         OSSpinLockLock(&lock);
@@ -168,7 +119,29 @@ int main(int argc, const char * argv[]) {
         printSolution(sol);
 
         freeDictionaries(dicts);
-        freeDictManager(mgr);
     }
     return 0;
+}
+
+static void freeDictionaries(Dictionaries *dicts) {
+    freeDictManager(dicts->words->mgr);
+    freeDictIterator(dicts->words);
+    freeDictManager(dicts->rwords);
+    freeDictManager(dicts->pwords);
+    freeDictManager(dicts->rpwords);
+    for(int i = 0; i < 26 * 26; i++) {
+        free(dicts->letterPairLookupTable[i]);
+    }
+    free(dicts->letterPairLookupTable);
+    free(dicts);
+}
+
+static void printSolution(Solution *sol) {
+    char maxWordLetters[BOARD_LENGTH + 1] = { [0 ... BOARD_LENGTH - 1] = '_', '\0' };
+    for(int k = 0; k < sol->numMaxLetters; k++) {
+        char c = (char)Y_FROM_HASH(sol->maxLetters[k]);
+        int offset = X_FROM_HASH(sol->maxLetters[k]);
+        maxWordLetters[offset] = c;
+    }
+    NSLog(@"Highest scoring play is %.*s (%.*s) at (%d, %d) on (%@) for %d points", sol->maxWordLength, maxWordLetters, sol->maxWordLength, sol->maxWord, sol->maxx, sol->maxy, [Board debugBoard:sol->maxBoard], sol->maxScore);
 }

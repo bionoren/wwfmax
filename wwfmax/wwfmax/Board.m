@@ -110,27 +110,28 @@ int preprocessWordStruct(Board *self, WordStructure *wordStruct, char word[BOARD
 #endif
     //letter allocation and caching
     int prescore = prescoreWord(word, length);
+    //if the letter is a blank tile, remove it's value from the prescore
     for(int i = 0; i < wordStruct->_numLetters; ++i) {
         Letter l = wordStruct->_letters[i];
         chars[i] = (char)Y_FROM_HASH(l);
-        locs[i] = X_FROM_HASH(l);
         if(chars[i] < LETTER_OFFSET_LC) {
+            locs[i] = X_FROM_HASH(l);
             prescore -= valuel(word[locs[i]]);
         }
     }
 
+    //don't prescore letters we aren't playing right now
     for(int i = 0, j = 0; i < length; i++) {
         if(j < wordStruct->_numLetters && locs[j] == i) {
             j++;
             continue;
         }
         Letter l = (typeof(Letter))HASH(i, word[i]);
-        bool valid = [self validateLetters:&l length:1];
         word[i] = (char)Y_FROM_HASH(l);
         if(word[i] < LETTER_OFFSET_LC) {
             prescore -= valuel(word[i]);
         }
-        assert(valid);
+        assert([self validateLetters:&l length:1]);
     }
 
     return prescore;
@@ -158,7 +159,10 @@ void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char chars[NUM
     }
 }
 
--(PreprocessedData*)preprocess:(Dictionaries)dicts {
+/**
+ Calculates lower bounds on the max word score at various steps during the computation
+ */
+-(PreprocessedData*)preprocess:(Dictionaries*)dicts {
     PreprocessedData *ret = calloc(1, sizeof(PreprocessedData));
 #ifdef DEBUG
     int maxPrescore;
@@ -169,17 +173,21 @@ void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char chars[NUM
     assert(BOARD_LENGTH + 1 == 16 && sizeof(int) == 4);
     char word[BOARD_LENGTH + 1] = {0};
     int length;
-    while((length = nextWord_threadsafe(dicts.words, word))) {
+    //for each word...
+    while((length = nextWord_threadsafe(dicts->words, word))) {
         //NSLog(@"Evaluating %.*s\n", length, word);
         @autoreleasepool {
-            subwordsAtLocation(dicts.words, &playableWords, word, length);
+            //find all the subword combinations that could have been used as a base for this word
+            subwordsAtLocation(dicts->words, &playableWords, word, length);
             assert(playableWords.count > 0);
 
+            //for each preplacement scenario...
             for(WordStructure *wordStruct in playableWords) {
                 assert(wordStruct->_numLetters > 0);
 
                 char chars[NUM_LETTERS_TURN]; //letters being played
                 int locs[NUM_LETTERS_TURN]; //offsets of said letters (within the word)
+                //prescore the word (score not including bonus tiles)
                 int prescore = preprocessWordStruct(self, wordStruct, word, length, chars, locs);
 #ifdef DEBUG
                 if(prescore > maxPrescore) {
@@ -189,15 +197,26 @@ void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char chars[NUM
 
                 int bonus = (wordStruct->_numLetters == NUM_LETTERS_TURN)?35:0;
 
+                //examine bonus placement
                 for(int y = 0; y < BOARD_LENGTH; ++y) {
-                    if(y % 2 == 0 && (y != 0 && y != 14)) {
-                        continue;
+                    if(y % 2 == 0 && (y != 0 && y != BOARD_LENGTH - 1)) {
+                        continue; //you can always do better with a word multiplier
                     }
                     for(int x = 0; x < BOARD_LENGTH - length + 1; ++x) {
                         int baseHash = HASH(x, y);
                         shuffleBonusTilesForWordStruct(wordStruct->_numLetters, baseHash, chars, locs);
 
+                        //score the word
                         int wordScore = scoreLettersWithPrescore(prescore, wordStruct->_numLetters, chars, locs, baseHash) + bonus;
+                        if(wordScore > ret->maxBaseScore) {
+                            ret->maxBaseScore = wordScore;
+                        }
+                        float scoreRatio = wordScore / (float)prescore;
+                        if(scoreRatio > ret->maxScoreRatio) {
+                            ret->maxScoreRatio = scoreRatio;
+                        }
+
+                        //calculate the value of each individual square
                         for(int xb = 0; xb < wordStruct->_numLetters; xb++) {
                             int hash = baseHash + locs[xb];
                             int index = y * BOARD_LENGTH + x + locs[xb];
@@ -213,16 +232,9 @@ void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char chars[NUM
                                 ret->maxBonusTileScores[index][letterIndex] = bonusScore;
                             }
                         }
-
-                        if(wordScore > ret->maxBaseScore) {
-                            ret->maxBaseScore = wordScore;
-                        }
-                        float scoreRatio = wordScore / (float)prescore;
-                        if(scoreRatio > ret->maxScoreRatio) {
-                            ret->maxScoreRatio = scoreRatio;
-                        }
                     }
                 }
+                //reset internal state for the next board iteration
                 RESET_LETTERS;
                 for(int i = 0; i < length; i++) {
                     if(word[i] < LETTER_OFFSET_LC) {
@@ -230,6 +242,7 @@ void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char chars[NUM
                     }
                 }
             }
+            //reset internal state for the next preplacement scenario
             [playableWords removeAllObjects];
         }
     }
@@ -242,8 +255,8 @@ void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char chars[NUM
 /**
  I'm strictly interested in horizontal words because of bonus tile symetry.
  */
--(Solution*)solveWord:(char[BOARD_LENGTH + 1])word length:(int)length maxScore:(int)maxScore dict:(Dictionaries)dicts {
-    assert(maxBaseScore); //need to run preprocess: first
+-(Solution*)solveWord:(char[BOARD_LENGTH + 1])word length:(int)length maxScore:(int)maxScore dict:(Dictionaries*)dicts {
+    assert(maxBaseScore); //need to run preprocess first
 
     Solution *ret = malloc(sizeof(Solution));
     ret->maxScore = maxScore;
@@ -252,17 +265,18 @@ void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char chars[NUM
     DictionaryIterator *verticalItrs[NUM_LETTERS_TURN][3];
     VerticalState verticalState[NUM_LETTERS_TURN] = {{0, 0}};
     for(int i = 0; i < NUM_LETTERS_TURN; i++) {
-        verticalItrs[i][ITERATOR_BOTTOM] = createDictIterator(dicts.pwords); //for building the bottom word
-        verticalItrs[i][ITERATOR_EXTENDER] = createDictIterator(dicts.rwords); //for extending the bottom word to the top
-        verticalItrs[i][ITERATOR_TOP] = createDictIterator(dicts.rwords); //for building the top word
+        verticalItrs[i][ITERATOR_BOTTOM] = createDictIterator(dicts->pwords); //for building the bottom word
+        verticalItrs[i][ITERATOR_EXTENDER] = createDictIterator(dicts->rwords); //for extending the bottom word to the top
+        verticalItrs[i][ITERATOR_TOP] = createDictIterator(dicts->rwords); //for building the top word
     }
-    assert(BOARD_LENGTH + 1 == 16 && sizeof(int) == 4);
+    char workingBoard[BOARD_LENGTH][BOARD_LENGTH] = {'\0'};
     char vwords[NUM_LETTERS_TURN][BOARD_LENGTH + 1];
     int vlengths[NUM_LETTERS_TURN] = {0};
 
-    NSMutableSet *playableWords = [NSMutableSet set];
     //NSLog(@"Evaluating %.*s\n", length, word);
     @autoreleasepool {
+        NSMutableSet *playableWords = [NSMutableSet set];
+        
         //avoid examining words that clearly can't score well
         int maxLetterScores[BOARD_LENGTH] = {0};
         int tempMaxBaseScore = (int)(prescoreWord(word, length) * maxScoreRatio);
@@ -294,7 +308,7 @@ void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char chars[NUM
             return ret;
         }
 
-        subwordsAtLocation(dicts.words, &playableWords, word, length);
+        subwordsAtLocation(dicts->words, &playableWords, word, length);
         assert(playableWords.count > 0);
 
         for(WordStructure *wordStruct in playableWords) {
@@ -354,13 +368,13 @@ void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char chars[NUM
 
                             //TODO: final scoring
 
-                            vlengths[baseIndex] = nextVerticalWord(verticalItrs[baseIndex], &verticalState[baseIndex], vwords[baseIndex], y, dicts.words->mgr);
+                            vlengths[baseIndex] = nextVerticalWord(verticalItrs[baseIndex], &verticalState[baseIndex], vwords[baseIndex], y, dicts->words->mgr);
                             for(int k = 0; !vlengths[baseIndex + k];) {
                                 //nextVerticalWord handles its own resetting
                                 k++;
                                 //this exits the loop
                                 if(k == charGroupSize[j]) goto PERMUTATION_END;
-                                vlengths[baseIndex + k] = nextVerticalWord(verticalItrs[baseIndex + k], &verticalState[baseIndex + k], vwords[baseIndex + k], y, dicts.words->mgr);
+                                vlengths[baseIndex + k] = nextVerticalWord(verticalItrs[baseIndex + k], &verticalState[baseIndex + k], vwords[baseIndex + k], y, dicts->words->mgr);
                             }
                         }
                     PERMUTATION_END:;
@@ -377,7 +391,7 @@ void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char chars[NUM
                             Subword subword = wordStruct->_subwords[i];
                             int subwordLen = subword.end - subword.start;
                             char *subwordPointer = &(word[subword.start]);
-                            [self addSubword:subwordPointer length:subwordLen board:ret->maxBoard x:x + subword.start y:y];
+                            [self addHorizontalWord:subwordPointer length:subwordLen board:ret->maxBoard x:x + subword.start y:y];
                         }
                         //TODO: Add vertical words (including pre-placed vertical words) via a helper method
 
@@ -439,7 +453,6 @@ int nextVerticalWord(DictionaryIterator *restrict*restrict iterators, VerticalSt
         case 0: //top/bottom combo words
             if(BOARD_LENGTH - (y + 1) >= 2) {
                 if(state->prefixLength) {
-                COMPLETE_WORD:;
                     do {
                         ret = nextWordWithPrefix(iterators[ITERATOR_EXTENDER], word, y + state->prefixLength);
                     } while(ret && !isValidWord(iterators[ITERATOR_EXTENDER]->mgr, word + state->prefixLength, ret - state->prefixLength));
@@ -449,7 +462,6 @@ int nextVerticalWord(DictionaryIterator *restrict*restrict iterators, VerticalSt
                     }
                 }
 
-            BOTTOM_WORD:;
                 ret = nextWordWithPrefix(iterators[ITERATOR_BOTTOM], word, BOARD_LENGTH - (y + 1));
                 if(ret) {
                     assert(isValidWord(iterators[ITERATOR_BOTTOM]->mgr, word, ret));
@@ -529,11 +541,18 @@ int nextVerticalWord(DictionaryIterator *restrict*restrict iterators, VerticalSt
     return ret;
 }
 
-#pragma mark - Scoring
+#pragma mark - Board Management
 
--(void)addSubword:(char*restrict)word length:(int)length board:(char*restrict)board x:(int)x y:(int)y {
+-(void)addHorizontalWord:(char*restrict)word length:(int)length board:(char*restrict)board x:(int)x y:(int)y {
     int start = BOARD_COORDINATE(x, y);
     memcpy(&(board[start]), word, length * sizeof(char));
+}
+
+-(void)addVerticalWord:(char*restrict)word length:(int)length board:(char*restrict)board x:(int)x y:(int)y {
+    for(int i = 0; i < length; i++) {
+        int index = BOARD_COORDINATE(x, y + i);
+        board[index] = word[i];
+    }
 }
 
 -(void)clearBoard:(char*restrict)board {

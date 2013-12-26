@@ -12,11 +12,65 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include "dawg.h"
+#include "functions.h"
+#import "Board.h"
 
 #define DICTIONARY "/Users/bion/projects/objc/wwfmax/dict.txt"
 #define DICT_PERMUTER "/Users/bion/projects/objc/wwfmax/dictPermuter.py"
 
 //anecdotally, ~2.5% of the shipped dictionary is unplayable, mostly because the words are too long for the board, but also because there aren't enough of the required letters and because some words can't be broken down into sufficiently small subwords
+
+Dictionaries *loadDicts(const char *dictionaryPath) {
+#if DEBUG
+    assert(sizeof(short) >= 2);
+    assert(HASH(11, 3) == 59); //3,11
+    Letter hash = HASH(BOARD_LENGTH, 'z');
+    assert(X_FROM_HASH(hash) == BOARD_LENGTH);
+    assert((char)Y_FROM_HASH(hash) == 'z');
+#endif
+
+    //NOTE: generated datastructures account for approximately 3Mb of storage
+    char *validDictionary;
+    char *dictionary = CWGOfDictionaryFile(dictionaryPath, &validDictionary);
+    char *reversedDictionary = prefixStringInPath(dictionaryPath, "reversed-");
+#if BUILD_DATASTRUCTURES
+    shellprintf("cat %s | rev > %s", validDictionary, reversedDictionary);
+#endif
+    char *dictionaryReversed = CWGOfDictionaryFile(reversedDictionary, NULL);
+
+    char *suffixedDictionary = prefixStringInPath(dictionaryPath, "suffixes-");
+    char *reversedSuffixedDictionary = prefixStringInPath(suffixedDictionary, "reversed-");
+#if BUILD_DATASTRUCTURES
+    shellprintf("python %s %s %s", DICT_PERMUTER, validDictionary, suffixedDictionary);
+#endif
+    char *dictionarySuffixes = CWGOfDictionaryFile(suffixedDictionary, NULL);
+#if BUILD_DATASTRUCTURES
+    shellprintf("cat %s | rev > %s", suffixedDictionary, reversedSuffixedDictionary);
+#endif
+    char *dictionarySuffixesReversed = CWGOfDictionaryFile(reversedSuffixedDictionary, NULL);
+
+#if BUILD_DATASTRUCTURES
+    free(validDictionary);
+#endif
+    free(reversedDictionary);
+    free(suffixedDictionary);
+    free(reversedSuffixedDictionary);
+
+    DictionaryManager *mgr = createDictManager(dictionary);
+    Dictionaries *dicts = malloc(sizeof(Dictionaries));
+    dicts->words = createDictIterator(mgr);
+    dicts->pwords = createDictManager(dictionarySuffixes);
+    dicts->rwords = createDictManager(dictionaryReversed);
+    dicts->rpwords = createDictManager(dictionarySuffixesReversed);
+    free(dictionary);
+    free(dictionarySuffixes);
+    free(dictionaryReversed);
+    free(dictionarySuffixesReversed);
+    dicts->letterPairLookupTable = createLetterPairLookupTableForDictionary(dicts->words);
+
+    return dicts;
+}
 
 void shellprintf(const char *command, ...) {
     va_list ap;
@@ -30,7 +84,7 @@ void shellprintf(const char *command, ...) {
 }
 
 char *prefixStringInPath(const char *string, const char *prefix) {
-    char *ret = (char*)calloc(strlen(string) + strlen(prefix), sizeof(char));
+    char *ret = (char*)calloc(strlen(string) + strlen(prefix) + 1, sizeof(char));
     const char *pathEnd = strrchr(string, '/');
     size_t prefixLength = pathEnd - string;
     strncpy(ret, string, prefixLength);
@@ -83,7 +137,7 @@ char *CWGOfDictionaryFile(const char *dictionary, char **validatedDict) {
         *validatedDict = prefixStringInPath(dictionary, "valid-");
         FILE *validFile = fopen(*validatedDict, "w");
 
-        for(int i = 0; i < numWords; i++) {
+        for(i = 0; i < numWords; i++) {
             char *word = &(words[i * BOARD_LENGTH]);
             const int length = wordLengths[i];
 

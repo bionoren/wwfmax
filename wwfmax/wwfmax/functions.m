@@ -21,7 +21,7 @@ void printSubwords(char* word, int length, Subword *subwords, int numSubwords) {
 #pragma mark - Scoring
 
 int valuel(char letter) {
-    switch(letter) {
+    /*switch(letter) {
         case 'a':
         case 'e':
         case 'i':
@@ -57,7 +57,21 @@ int valuel(char letter) {
             return 10;
         default:
             return 0;
-    }
+    }*/
+    static const char lookupTable[123] = {0,0,0,0,0,0,0,0,0,0,0,
+                                        0,0,0,0,0,0,0,0,0,0,
+                                        0,0,0,0,0,0,0,0,0,0,
+                                        0,0,0,0,0,0,0,0,0,0,
+                                        0,0,0,0,0,0,0,0,0,0,
+                                        0,0,0,0,0,0,0,0,0,0,
+                                        0,0,0,0,0,0,0,0,0,0,
+                                        0,0,0,0,0,0,0,0,0,0,
+                                        0,0,0,0,0,0,0,0,0,0,
+                                        0,0,0,0,0,0,1,4,4,2,
+                                        1,4,3,3,1,10,5,2,4,2,
+                                        1,4,10,1,1,1,2,5,4,8,
+                                        3,10};
+    return lookupTable[letter];
 }
 
 int scoreSquarePrescoredHash(char letter, int hash) {
@@ -201,6 +215,7 @@ int wordMultiplier(int x, int y) {
 }
 
 int prescoreWord(const char word[BOARD_LENGTH + 1], const int length) {
+    assert(length <= BOARD_LENGTH);
     int ret = 0;
     for(int i = 0; i < length; i++) {
         ret += valuel(word[i]);
@@ -348,39 +363,6 @@ bool isLetterBonusSquare(int x, int y) {
 
 #pragma mark - Validation
 
-BOOL validate(const char *restrict word, const int length, const WordInfo *info) {
-    // inclusive indices
-    //   0 <= imin when using truncate toward zero divide
-    //     imid = (imin+imax)/2;
-    //   imin unrestricted when using truncate toward minus infinity divide
-    //     imid = (imin+imax)>>1; or
-    //     imid = (int)floor((imin+imax)/2.0);
-    
-    int imin = 0, imax = info->numWords - 1;
-    
-    // continually narrow search until just one element remains
-    while(imin < imax) {
-        int imid = (imin + imax) / 2;
-        
-        // code must guarantee the interval is reduced at each iteration
-        assert(imid < imax);
-        // note: 0 <= imin < imax implies imid will always be less than imax
-        
-        if(strncmp(&(info->words[imid * BOARD_LENGTH]), word, length) < 0) {
-            imin = imid + 1;
-        } else {
-            imax = imid;
-        }
-    }
-    
-    // deferred test for equality
-    if(imax == imin && info->lengths[imin] == length && strncmp(&(info->words[imin * BOARD_LENGTH]), word, length) == 0) {
-        return YES;
-    } else {
-        return NO;
-    }
-}
-
 void subwordsAtLocation(DictionaryIterator *itr, NSMutableSet **ret, char word[BOARD_LENGTH + 1], const int length) {
     if(length <= NUM_LETTERS_TURN) {
         return [*ret addObject:[WordStructure wordAsLetters:word length:length]];
@@ -419,7 +401,7 @@ void subwordsAtLocation(DictionaryIterator *itr, NSMutableSet **ret, char word[B
                 comboSubwords[comboSubwordsLength++] = s;
             }
         }
-        [*ret addObjectsFromArray:[WordStructure validateWord:word length:length subwords:comboSubwords length:comboSubwordsLength iterator:itr wordInfo:NULL]];
+        [*ret addObjectsFromArray:[WordStructure validateWord:word length:length subwords:comboSubwords length:comboSubwordsLength iterator:itr]];
     OVERLAP:;
     }
 #undef NUM_SUBWORDS

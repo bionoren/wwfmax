@@ -22,6 +22,6 @@
 }
 
 +(WordStructure*)wordAsLetters:(char[BOARD_LENGTH + 1])word length:(const int)length;
-+(NSArray*)validateWord:(char[BOARD_LENGTH + 1])word length:(int)length subwords:(Subword*)subwords length:(int)numSubwords iterator:(DictionaryIterator*)itr wordInfo:(const WordInfo*)info;
++(NSArray*)validateWord:(char[BOARD_LENGTH + 1])word length:(int)length subwords:(Subword*)subwords length:(int)numSubwords iterator:(DictionaryIterator*)itr;
 
 @end

@@ -34,7 +34,6 @@ bool isLetterBonusSquare(int x, int y);
 
 #pragma mark - Validation
 
-BOOL validate(const char *word, const int length, const WordInfo *info);
 void subwordsAtLocation(DictionaryIterator *itr, NSMutableSet **ret, char word[BOARD_LENGTH + 1], const int length);
 BOOL playable(char *word, const int length, const WordInfo *info);
 

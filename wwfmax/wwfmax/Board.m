@@ -360,6 +360,9 @@ void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char chars[NUM
                         loadPrefix(verticalItrs[j][ITERATOR_BOTTOM], &chars[j], 1);
                         loadPrefix(verticalItrs[j][ITERATOR_TOP], &chars[j], 1);
                     }
+                    //WARNING: It's possible that the word structure could require a vertical word but there is no valid vertical word
+                    //1. at this y position
+                    //2. with the currently available letters
                     int baseIndex = 0;
                     for(int j = 0; j < numCharGroups; ++j) {
                         while(true) {

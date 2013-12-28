@@ -8,7 +8,7 @@
     #import <Cocoa/Cocoa.h>
 #endif
 
-#define BUILD_DATASTRUCTURES 0
+#define BUILD_DATASTRUCTURES 1
 
 #ifdef DEBUG
 #define NUM_THREADS 1

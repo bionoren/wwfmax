@@ -1,5 +1,4 @@
 aa
-aah
 aahed
 aahing
 aahs
@@ -11,7 +10,8 @@ bad
 cab
 da
 each
-fa
+fast
+fasting
 gab
 ha
 hs
@@ -24,8 +24,8 @@ na
 oaf
 pa
 qi
-rabat
-sab
+refastinglys
+sting
 ta
 udo
 vex

@@ -104,11 +104,53 @@
     }
 }
 
+//tests word with subwords that can be broken down
 -(void)testSubwordsAtLocation {
-    //TODO tests word with subwords that can be broken down
-    //TODO tests word with 7 letters
-    //TODO tests word with overlapping subwords (eg. fasting -> fast + sting)
-    //TODO tests word that's too long and can't be broken down
+    char *word = "aahscdfu";
+    NSMutableSet *ret = [[NSMutableSet alloc] init];
+    subwordsAtLocation(self.dicts->words, &ret, word, (int)strlen(word));
+    XCTAssertEqual(ret.count, (NSUInteger)11, @"%@", ret);
+    XCTAssertEqual([ret objectsPassingTest:^BOOL(WordStructure *obj, BOOL *stop) {
+        return obj->_numSubwords == 1;
+    }].count, (NSUInteger)3);
+}
+
+//tests word with 7 letters and at least one valid subword
+-(void)testSubwordsAtLocation2 {
+    char *word = "aahfjkl";
+    NSMutableSet *ret = [[NSMutableSet alloc] init];
+    subwordsAtLocation(self.dicts->words, &ret, word, (int)strlen(word));
+    XCTAssertEqual(ret.count, (NSUInteger)1, @"%@", ret);
+}
+
+//tests word with overlapping subwords (eg. fasting -> fast + sting)
+-(void)testSubwordAtLocation3 {
+    char *word = "refastinglys";
+    NSMutableSet *ret = [[NSMutableSet alloc] init];
+    subwordsAtLocation(self.dicts->words, &ret, word, (int)strlen(word));
+    XCTAssertEqual([ret objectsPassingTest:^BOOL(WordStructure *obj, BOOL *stop) {
+        return obj->_numSubwords > 1;
+    }].count, (NSUInteger)0);
+    XCTAssertTrue([ret objectsPassingTest:^BOOL(WordStructure *obj, BOOL *stop) {
+        return obj->_numSubwords == 1;
+    }].count > 0);
+    //assert that fast appears, and more than once
+    int numFast = (int)[ret objectsPassingTest:^BOOL(WordStructure *obj, BOOL *stop) {
+        return obj->_numSubwords == 1 && obj->_subwords[0].start == 2 && obj->_subwords[0].end == 6;
+    }].count;
+    XCTAssertTrue(numFast > 1);
+    //asert that sting appears, and only once
+    XCTAssertEqual([ret objectsPassingTest:^BOOL(WordStructure *obj, BOOL *stop) {
+        return obj->_numSubwords == 1 && obj->_subwords[0].start == 4 && obj->_subwords[0].end == 9;
+    }].count, (NSUInteger)1);
+    //assert that fasting appears, and only once
+    XCTAssertEqual([ret objectsPassingTest:^BOOL(WordStructure *obj, BOOL *stop) {
+        return obj->_numSubwords == 1 && obj->_subwords[0].start == 2 && obj->_subwords[0].end == 9;
+    }].count, (NSUInteger)1);
+    //assert that no other subwords appear
+    XCTAssertEqual([ret objectsPassingTest:^BOOL(WordStructure *obj, BOOL *stop) {
+        return obj->_numSubwords == 1;
+    }].count, (NSUInteger)(numFast + 2));
 }
 
 @end

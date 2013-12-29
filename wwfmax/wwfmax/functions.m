@@ -374,10 +374,12 @@ void subwordsAtLocation(DictionaryIterator *itr, NSMutableSet **ret, char word[B
     Subword subwords[NUM_SUBWORDS];
     int numSubwords = 0;
     for(int i = 0; i < length - 1; ++i) { //wwf doesn't acknowledge single letter words
-        const int tmpLength = MIN(i + NUM_LETTERS_TURN, length - 1);
-        for(int j = i + 2; j < tmpLength; ++j) {
-            const char *subword = &word[i];
-            if(isValidWord(itr->mgr, subword, j - i)) {
+        const char *subword = &word[i];
+        for(int j = i + 2; j < length; ++j) {
+            if(!isValidPrefix(itr->mgr, subword, j - i)) {
+                break;
+            }
+            if(isPrefixWord(itr->mgr, subword, j - i)) {
                 assert(numSubwords < NUM_SUBWORDS);
                 Subword sub = {.start = i, .end = j};
                 subwords[numSubwords++] = sub;
@@ -386,7 +388,7 @@ void subwordsAtLocation(DictionaryIterator *itr, NSMutableSet **ret, char word[B
     }
     
     const int count = (int)exp2(numSubwords);
-    for(int powerset = 0; powerset < count; powerset++) {
+    for(int powerset = 0; powerset < count; ++powerset) {
         Subword comboSubwords[BOARD_LENGTH / 2];
         int comboSubwordsLength = 0;
         int lastEnd = 0;

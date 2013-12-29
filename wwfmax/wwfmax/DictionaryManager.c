@@ -37,7 +37,7 @@ bool isValidPrefix(DictionaryManager *mgr, const char *word, int length) {
         }
 
         int letterIndex = word[i];
-        for(node = &mgr->nodeArray[(*node & CHILD_INDEX_BIT_MASK) >> CHILD_BIT_SHIFT]; letterIndex != (*node & LETTER_BIT_MASK); ++node);
+        for(node = &mgr->nodeArray[(*node & CHILD_INDEX_BIT_MASK) >> CHILD_BIT_SHIFT]; !(*node & LETTER_BIT_MASK); ++node);
         if(letterIndex != (*node & LETTER_BIT_MASK)) {
             return false;
         }
@@ -51,7 +51,7 @@ bool isPrefixWord(DictionaryManager *mgr, const char *word, int length) {
         assert(*node & CHILD_INDEX_BIT_MASK);
 
         int letterIndex = word[i];
-        for(node = &mgr->nodeArray[(*node & CHILD_INDEX_BIT_MASK) >> CHILD_BIT_SHIFT]; letterIndex != (*node & LETTER_BIT_MASK); ++node);
+        for(node = &mgr->nodeArray[(*node & CHILD_INDEX_BIT_MASK) >> CHILD_BIT_SHIFT]; !(*node & LETTER_BIT_MASK); ++node);
         assert(letterIndex == (*node & LETTER_BIT_MASK));
     }
     return (*node & END_OF_WORD_BIT_MASK);

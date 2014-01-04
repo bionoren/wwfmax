@@ -376,10 +376,10 @@ void subwordsAtLocation(DictionaryIterator *itr, NSMutableSet **ret, char word[B
     for(int i = 0; i < length - 1; ++i) { //wwf doesn't acknowledge single letter words
         const char *subword = &word[i];
         for(int j = i + 2; j < length; ++j) {
-            if(!isValidPrefix(itr->mgr, subword, j - i)) {
+            if(!isValidPrefix(itr->nodeArray, subword, j - i)) {
                 break;
             }
-            if(isPrefixWord(itr->mgr, subword, j - i)) {
+            if(isPrefixWord(itr->nodeArray, subword, j - i)) {
                 assert(numSubwords < NUM_SUBWORDS);
                 Subword sub = {.start = i, .end = j};
                 subwords[numSubwords++] = sub;

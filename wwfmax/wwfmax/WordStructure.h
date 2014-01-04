@@ -11,14 +11,14 @@
 
 @interface WordStructure : NSObject {
     @public
-    Letter _letters[NUM_LETTERS_TURN];
-    int _numLetters;
     char *_word;
     int _length;
+    Letter _letters[NUM_LETTERS_TURN];
+    int _numLetters;
     Subword _subwords[BOARD_LENGTH / 2];
     int _numSubwords;
-    bool _hasVerticalWords;
     bool _verticalLetters[BOARD_LENGTH];
+    bool _hasVerticalWords;
 }
 
 +(WordStructure*)wordAsLetters:(char[BOARD_LENGTH + 1])word length:(const int)length;

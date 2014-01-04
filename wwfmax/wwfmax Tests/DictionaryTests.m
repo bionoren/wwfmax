@@ -19,13 +19,13 @@
 #define NUM_MGRS 3
 
 @interface DictionaryTests : XCTestCase {
-    DictionaryManager *_mgrs[NUM_MGRS];
+    DictionaryManager _mgrs[NUM_MGRS];
 }
 
-@property (nonatomic, assign) DictionaryManager *wordMgr;
-@property (nonatomic, assign) DictionaryManager *rwordMgr;
-@property (nonatomic, assign) DictionaryManager *pwordMgr;
-@property (nonatomic, assign) DictionaryManager *rpwordMgr;
+@property (nonatomic, assign) DictionaryManager wordMgr;
+@property (nonatomic, assign) DictionaryManager rwordMgr;
+@property (nonatomic, assign) DictionaryManager pwordMgr;
+@property (nonatomic, assign) DictionaryManager rpwordMgr;
 
 @end
 
@@ -95,17 +95,17 @@
     char *reversedSuffixedDictionary = prefixStringInPath(suffixedDictionary, "reversed-");
 
     typedef struct {
-        DictionaryManager *mgr;
+        DictionaryManager nodeArray;
         const char *file;
     } tempDictStruct;
 
-    tempDictStruct dicts[NUM_MGRS] = {{.mgr = _mgrs[0], .file = DICTIONARY_VALID}, {.mgr = _mgrs[1], .file = reversedDictionary}, {.mgr = _mgrs[2], .file = suffixedDictionary}, {.mgr = _mgrs[3], .file = reversedSuffixedDictionary}};
+    tempDictStruct dicts[NUM_MGRS] = {{.nodeArray = _mgrs[0], .file = DICTIONARY_VALID}, {.nodeArray = _mgrs[1], .file = reversedDictionary}, {.nodeArray = _mgrs[2], .file = suffixedDictionary}, {.nodeArray = _mgrs[3], .file = reversedSuffixedDictionary}};
 
     for(int i = 0; i < NUM_MGRS; i++) {
         tempDictStruct dict = dicts[i];
 
         for(int j = 0; j < 26; j++) {
-            XCTAssertTrue((dict.mgr->nodeArray[j + 1] & LETTER_BIT_MASK) == 'a' + j, @"%c != %c", (dict.mgr->nodeArray[j + 1] & LETTER_BIT_MASK), 'a' + j);
+            XCTAssertTrue((dict.nodeArray[j + 1] & LETTER_BIT_MASK) == 'a' + j, @"%c != %c", (dict.nodeArray[j + 1] & LETTER_BIT_MASK), 'a' + j);
         }
 
         int numWords = 1024;
@@ -142,9 +142,9 @@
         for(j = 0; j < numWords; j++) {
             int length = wordLengths[j];
             char *word = &words[j * BOARD_LENGTH];
-            XCTAssertTrue(isValidPrefix(dict.mgr, word, length), @"%.*s was not found to be a valid prefix for struct %d", length, word, i);
-            XCTAssertTrue(isValidWord(dict.mgr, word, length), @"%.*s was not found to be a valid word for struct %d", length, word, i);
-            XCTAssertTrue(isPrefixWord(dict.mgr, word, length), @"%.*s was not found to be a valid word-prefix for struct %d", length, word, i);
+            XCTAssertTrue(isValidPrefix(dict.nodeArray, word, length), @"%.*s was not found to be a valid prefix for struct %d", length, word, i);
+            XCTAssertTrue(isValidWord(dict.nodeArray, word, length), @"%.*s was not found to be a valid word for struct %d", length, word, i);
+            XCTAssertTrue(isPrefixWord(dict.nodeArray, word, length), @"%.*s was not found to be a valid word-prefix for struct %d", length, word, i);
         }
         free(words);
         free(wordLengths);
@@ -157,7 +157,7 @@
 
 -(void)testEnumeration {
     for(int i = 0; i < NUM_MGRS; i++) {
-        DictionaryManager *mgr = _mgrs[i];
+        DictionaryManager mgr = _mgrs[i];
         DictionaryIterator *itr = createDictIterator(mgr);
 
         int len = 0;
@@ -172,7 +172,7 @@
 
 -(void)testThreadsafeEnumeration {
     for(int i = 0; i < NUM_MGRS; i++) {
-        DictionaryManager *mgr = _mgrs[i];
+        DictionaryManager mgr = _mgrs[i];
 
         dispatch_group_t dispatchGroup = dispatch_group_create();
         for(int j = 0; j < 4; ++j) {
@@ -193,7 +193,7 @@
 
 -(void)testFastPrefixEnumeration {
     for(int i = 0; i < NUM_MGRS; i++) {
-        DictionaryManager *mgr = _mgrs[i];
+        DictionaryManager mgr = _mgrs[i];
         DictionaryIterator *itr = createDictIterator(mgr);
 
         int len = 0;
@@ -206,7 +206,7 @@
 
 -(void)testPrefixedEnumeration {
     for(int i = 0; i < 1; i++) {
-        DictionaryManager *mgr = _mgrs[i];
+        DictionaryManager mgr = _mgrs[i];
         DictionaryIterator *baseitr = createDictIterator(mgr);
         DictionaryIterator *prefixitr = createDictIterator(mgr);
 

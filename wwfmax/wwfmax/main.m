@@ -124,7 +124,7 @@ int main(int argc, const char * argv[]) {
 }
 
 static void freeDictionaries(Dictionaries *dicts) {
-    freeDictManager(dicts->words->mgr);
+    freeDictManager(dicts->words->nodeArray);
     freeDictIterator(dicts->words);
     freeDictManager(dicts->rwords);
     freeDictManager(dicts->pwords);

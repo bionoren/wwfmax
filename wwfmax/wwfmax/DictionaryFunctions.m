@@ -57,7 +57,7 @@ Dictionaries *loadDicts(const char *dictionaryPath) {
     free(suffixedDictionary);
     free(reversedSuffixedDictionary);
 
-    DictionaryManager *mgr = createDictManager(dictionary);
+    DictionaryManager mgr = createDictManager(dictionary);
     Dictionaries *dicts = malloc(sizeof(Dictionaries));
     dicts->words = createDictIterator(mgr);
     dicts->pwords = createDictManager(dictionarySuffixes);

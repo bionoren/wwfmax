@@ -32,6 +32,6 @@ typedef struct {
 
 typedef struct {
     char *words;
-    int numWords;
     int *lengths;
+    int numWords;
 } WordInfo;

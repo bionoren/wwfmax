@@ -371,13 +371,13 @@ void shuffleBonusTilesForWordStruct(int numLetters, int baseHash, char chars[NUM
 
                             //TODO: final scoring
 
-                            vlengths[baseIndex] = nextVerticalWord(verticalItrs[baseIndex], &verticalState[baseIndex], vwords[baseIndex], y, dicts->words->mgr);
+                            vlengths[baseIndex] = nextVerticalWord(verticalItrs[baseIndex], &verticalState[baseIndex], vwords[baseIndex], y, dicts->words->nodeArray);
                             for(int k = 0; !vlengths[baseIndex + k];) {
                                 //nextVerticalWord handles its own resetting
                                 k++;
                                 //this exits the loop
                                 if(k == charGroupSize[j]) goto PERMUTATION_END;
-                                vlengths[baseIndex + k] = nextVerticalWord(verticalItrs[baseIndex + k], &verticalState[baseIndex + k], vwords[baseIndex + k], y, dicts->words->mgr);
+                                vlengths[baseIndex + k] = nextVerticalWord(verticalItrs[baseIndex + k], &verticalState[baseIndex + k], vwords[baseIndex + k], y, dicts->words->nodeArray);
                             }
                         }
                     PERMUTATION_END:;
@@ -450,7 +450,7 @@ typedef struct {
     dst[z] = src[len - z - 1];\
 }
 
-int nextVerticalWord(DictionaryIterator *restrict*restrict iterators, VerticalState *state, char word[BOARD_LENGTH + 1], int y, DictionaryManager *wordMgr) {
+int nextVerticalWord(DictionaryIterator *restrict*restrict iterators, VerticalState *state, char word[BOARD_LENGTH + 1], int y, DictionaryManager wordMgr) {
     int ret = 0;
     switch(state->state) {
         case 0: //top/bottom combo words
@@ -458,7 +458,7 @@ int nextVerticalWord(DictionaryIterator *restrict*restrict iterators, VerticalSt
                 if(state->prefixLength) {
                     do {
                         ret = nextWordWithPrefix(iterators[ITERATOR_EXTENDER], word, y + state->prefixLength);
-                    } while(ret && !isValidWord(iterators[ITERATOR_EXTENDER]->mgr, word + state->prefixLength, ret - state->prefixLength));
+                    } while(ret && !isValidWord(iterators[ITERATOR_EXTENDER]->nodeArray, word + state->prefixLength, ret - state->prefixLength));
                     if(ret) {
                         STR_REV_IN_PLACE(word, ret);
                         return ret;
@@ -467,7 +467,7 @@ int nextVerticalWord(DictionaryIterator *restrict*restrict iterators, VerticalSt
 
                 ret = nextWordWithPrefix(iterators[ITERATOR_BOTTOM], word, BOARD_LENGTH - (y + 1));
                 if(ret) {
-                    assert(isValidWord(iterators[ITERATOR_BOTTOM]->mgr, word, ret));
+                    assert(isValidWord(iterators[ITERATOR_BOTTOM]->nodeArray, word, ret));
                     assert(ret <= BOARD_LENGTH - (y + 1));
                     if(y > 2) {
                         state->prefixLength = ret;
